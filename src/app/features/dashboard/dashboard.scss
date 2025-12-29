@@ -1,0 +1,159 @@
+/* --- CONFIGURATION GÉNÉRALE & THEMES --- */
+.mobile-wrapper {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  padding-bottom: 90px;
+
+  &.dark-mode {
+    --card-bg: #1e1e1e;
+    --border-color: #333;
+    --call-bg: rgba(46, 204, 113, 0.15);
+  }
+
+  &:not(.dark-mode) {
+    background: #f3f4f6;
+    --card-bg: #ffffff;
+    --border-color: #d1d5db;
+    --call-bg: #ecfdf5;
+  }
+}
+
+/* --- HEADER --- */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: var(--card-bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border-color);
+
+  .brand h1 { font-size: 1.4rem; font-weight: 800; margin: 0; }
+  .username { font-size: 0.9rem; color: #3498db; font-weight: 700; text-transform: uppercase; }
+}
+
+/* --- INTERVENTION CARDS --- */
+.recent-activity {
+  padding: 0 20px;
+  margin-top: 20px;
+  h3 { font-size: 1rem; margin-bottom: 15px; font-weight: 700; }
+}
+
+.intervention-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  transition: transform 0.1s;
+
+  &:active { transform: scale(0.98); }
+
+  &.waiting-card { border-left: 5px solid #3498db !important; }
+  &.started-card { border-left: 5px solid #2ecc71 !important; }
+  &.paused-card  { border-left: 5px solid #f1c40f !important; }
+  &.stopped-card { border-left: 5px solid #e74c3c !important; }
+  &.billed-card  { border-left: 5px solid #2ecc71 !important; }
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    .city { font-weight: 800; font-size: 1rem; text-transform: uppercase; }
+    .street { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+  }
+}
+
+/* --- BOUTONS ÉDITION & HISTORIQUE (FIXÉS) --- */
+.edit-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #7f8c8d;
+  padding: 8px;
+  display: flex;
+  border-radius: 50%;
+  cursor: pointer;
+  &:hover { background: rgba(52, 152, 219, 0.1) !important; color: #3498db; }
+}
+
+.btn-history {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.2);
+  color: #3498db;
+  transition: all 0.2s;
+
+  svg { stroke: currentColor; width: 16px; height: 16px; }
+  &:hover { background: #3498db; color: white; }
+}
+
+/* --- AUTRES ÉLÉMENTS --- */
+.paid-btn-style {
+  background: #2ecc71 !important;
+  color: white !important;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  &.open { background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; }
+}
+
+.habitant-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 8px;
+  .habitant { font-size: 0.85rem; font-weight: 700; }
+  .call-action {
+    padding: 4px 10px; border-radius: 20px; background: var(--call-bg);
+    color: #10b981; text-decoration: none; font-size: 0.75rem; font-weight: 700;
+  }
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0; height: 75px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex; justify-content: space-around; align-items: center;
+  z-index: 1000;
+  .nav-item {
+    text-decoration: none; display: flex; flex-direction: column; align-items: center;
+    color: var(--text-secondary);
+    span { font-size: 0.7rem; font-weight: 700; }
+    &.active { color: #3498db; }
+  }
+}
+
+.fab-btn {
+  position: fixed; right: 20px; bottom: 100px;
+  width: 60px; height: 60px; border-radius: 30px;
+  background: #3498db; border: none; color: white;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+/* MODE SOMBRE SPÉCIFIQUE */
+.dark-mode {
+  .btn-history { background: rgba(52, 152, 219, 0.2); color: #5dade2; border-color: rgba(93, 173, 226, 0.3); }
+  .edit-btn { color: #b0b0b0; }
+}

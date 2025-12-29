@@ -1,0 +1,87 @@
+/* --- RÉUTILISATION DU STYLE DASHBOARD --- */
+.mobile-wrapper {
+  min-height: 100vh; background: var(--bg-color); color: var(--text-primary);
+  padding-bottom: 90px; font-family: 'Segoe UI', sans-serif;
+
+  &.dark-mode { --card-bg: #1e1e1e; --border-color: #333; }
+  &:not(.dark-mode) { background: #f3f4f6; --card-bg: #ffffff; --border-color: #d1d5db; }
+}
+
+.app-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 20px; background: var(--card-bg); border-bottom: 1px solid var(--border-color);
+  position: sticky; top: 0; z-index: 100;
+  .brand h1 { font-size: 1.3rem; font-weight: 800; margin: 0; }
+  .username { font-size: 0.85rem; color: #3498db; font-weight: 700; text-transform: uppercase; }
+}
+
+.recent-activity {
+  padding: 0 20px; margin-top: 20px;
+  h3 { font-size: 0.9rem; margin-bottom: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); }
+}
+
+.intervention-list { display: flex; flex-direction: column; gap: 10px; }
+
+.intervention-card {
+  background: var(--card-bg); border: 1px solid var(--border-color);
+  border-radius: 16px; padding: 14px; display: flex; justify-content: space-between; align-items: center;
+  
+  &.waiting-card { border-left: 5px solid #3498db !important; } // Bleu (À commander)
+  &.billed-card { border-left: 5px solid #95a5a6 !important; opacity: 0.8; } // Gris (Fait)
+
+  .card-info {
+    display: flex; flex-direction: column;
+    .city { font-weight: 800; font-size: 0.95rem; }
+    .street { font-size: 0.8rem; color: var(--text-secondary); }
+  }
+}
+
+/* --- ACTIONS SPÉCIFIQUES COMMANDES --- */
+.order-actions-row {
+  display: flex; align-items: center; gap: 8px;
+
+  .price-input {
+    width: 70px; padding: 8px; border-radius: 8px;
+    border: 1px solid var(--border-color); background: var(--bg-color);
+    color: var(--text-primary); font-size: 0.85rem; font-weight: 700; text-align: center;
+    outline: none;
+    &:focus { border-color: #3498db; }
+  }
+}
+
+.price-display { font-weight: 800; font-size: 0.9rem; color: var(--text-primary); margin-right: 5px; }
+
+.badge {
+  padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700;
+  &.completed { background: rgba(46, 204, 113, 0.1); color: #2ecc71; border: 1px solid #2ecc71; }
+}
+
+.histo-btn {
+  background: #3498db; color: #fff; border: none;
+  padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+  &:active { transform: scale(0.9); }
+}
+
+.edit-btn {
+  background: transparent !important; border: none; color: var(--text-primary);
+  padding: 8px; border-radius: 50%; display: flex;
+  &:active { background: rgba(52, 152, 219, 0.1) !important; color: #3498db; }
+}
+
+/* --- BOTTOM NAV --- */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
+  background: var(--card-bg); border-top: 1px solid var(--border-color);
+  display: flex; justify-content: space-around; align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  
+  .nav-item {
+    text-decoration: none; color: var(--text-secondary);
+    display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1;
+    span { font-size: 0.7rem; font-weight: 700; }
+    &.active { color: #3498db; }
+    &:active { transform: scale(0.9); }
+  }
+}
+
+.loader, .empty-state { text-align: center; padding: 40px; opacity: 0.5; font-weight: 700; }

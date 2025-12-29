@@ -1,0 +1,168 @@
+.login-page {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-color);
+  padding: 20px;
+  position: relative;
+  transition: background 0.3s ease;
+}
+
+.theme-btn-float {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.login-card {
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  text-align: center;
+  border: 1px solid var(--border-color);
+
+  .header {
+    margin-bottom: 30px;
+    h1 { color: var(--text-primary); margin: 0; font-size: 2rem; }
+    p { color: var(--text-secondary); font-size: 0.9rem; }
+  }
+}
+
+.step-box {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-left: 5px;
+  }
+}
+
+.input-field {
+  padding: 14px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  &:focus { outline: 2px solid #3498db; }
+}
+
+.btn-primary, .btn-success {
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+  &:disabled { opacity: 0.6; }
+}
+
+.btn-primary { background: #3498db; }
+.btn-success { background: #27ae60; }
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.status-msg {
+  text-align: center;
+  font-weight: bold;
+  color: #3498db;
+  &.success { color: #27ae60; }
+}
+
+.error-banner {
+  margin-top: 20px;
+  padding: 10px;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.password-wrapper {
+  position: relative;
+  width: 100%;
+
+  .input-field {
+    width: 100%;
+    padding-right: 45px; // Espace pour le bouton
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted); // Ou une couleur fixe selon ton thème
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    
+    &:hover {
+      color: var(--primary-color);
+    }
+  }
+}
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex; // Assure que le wrapper se comporte bien
+  box-sizing: border-box;
+
+  .input-field {
+    width: 100%; // L'input prend toute la place interne
+    box-sizing: border-box; // IMPORTANT : inclut le padding dans la largeur de 100%
+    padding-right: 45px; // Laisse la place pour l'icône à droite
+    margin-right: 0;
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 5px; // Ajuste selon tes préférences
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #666; // Couleur de l'icône
+    
+    &:hover {
+      opacity: 0.8;
+    }
+
+    svg {
+      display: block;
+    }
+  }
+}

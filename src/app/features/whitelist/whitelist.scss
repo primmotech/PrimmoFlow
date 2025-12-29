@@ -1,0 +1,149 @@
+
+
+.mobile-wrapper {
+  min-height: 100vh;
+  transition: background-color 0.3s ease;
+  background-color: #f5f7fb;
+  --card-bg: #ffffff;
+  --border-color: #eeeeee;
+  --text-main: #333333;
+  --text-soft: #666666;
+  --bg-input: #f9f9f9;
+  --accent-color: #3498db;
+  --danger-red: #ff3b30;
+
+  &.dark-mode {
+    background-color: #121212 !important;
+    --card-bg: #1c1c1e;
+    --border-color: #2c2c2e;
+    --text-main: #ffffff;
+    --text-soft: #a0a0a2;
+    --bg-input: #2c2c2e;
+  }
+}
+
+.container { padding: 16px; padding-bottom: 110px; }
+
+/* CARTES */
+.settings-group {
+  margin-top: 25px;
+  h3 { font-size: 12px; text-transform: uppercase; color: var(--text-soft); margin: 0 0 10px 8px; letter-spacing: 0.5px; }
+}
+
+.settings-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+/* FORMULAIRE AJOUT */
+.add-user-form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  input {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);
+    background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none;
+    &:focus { border-color: var(--accent-color); }
+  }
+  .row { display: flex; gap: 10px; input { flex: 1; } }
+}
+
+.add-full-btn {
+  background: var(--accent-color); color: white; border: none;
+  border-radius: 10px; padding: 0 20px; font-weight: 700;
+  &:active { opacity: 0.8; transform: scale(0.98); }
+}
+
+/* LISTE & FIXES */
+.setting-item {
+  display: flex; align-items: center; padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  &:last-child { border-bottom: none; }
+}
+
+.setting-info {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  .user-details {
+    display: flex; flex-direction: column;
+    .user-nickname {
+      color: var(--text-main); font-weight: 600; font-size: 15px;
+      display: flex; align-items: center; gap: 6px;
+      
+      /* FIX CRAYON : Taille forcée miniature */
+      .edit-icon-mini {
+        width: 14px !important; 
+        height: 14px !important;
+        stroke: var(--accent-color);
+        opacity: 0.7;
+      }
+    }
+    .user-email-sub { color: var(--text-soft); font-size: 12px; }
+  }
+}
+
+/* FIX SELECT : Design compact et flèche */
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 8px;
+
+  .custom-select-small {
+    appearance: none;
+    -webkit-appearance: none;
+    font-size: 12px;
+    padding: 6px 26px 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-main);
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+  }
+
+  &::after {
+    content: ''; position: absolute; right: 10px;
+    width: 0; height: 0;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 5px solid var(--accent-color);
+    pointer-events: none;
+  }
+}
+
+/* FIX POUBELLE : Rouge vif et fond doux */
+.delete-btn-rounded {
+  background: rgba(255, 59, 48, 0.1); 
+  border: none;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+
+  svg {
+    stroke: var(--danger-red) !important; /* Force le rouge sur le blanc */
+    width: 18px; height: 18px;
+  }
+
+  &:active {
+    background: var(--danger-red);
+    svg { stroke: #ffffff !important; }
+  }
+}
+
+/* NAVIGATION */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
+  background: var(--card-bg); display: flex; justify-content: space-around;
+  border-top: 1px solid var(--border-color);
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    text-decoration: none; color: var(--text-soft);
+    span { font-size: 11px; font-weight: 600; }
+    svg { stroke: var(--text-soft); width: 22px; height: 22px; }
+    &.active { color: var(--accent-color); svg { stroke: var(--accent-color); } }
+  }
+}

@@ -1,0 +1,238 @@
+<div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+  
+<header class="app-header">
+  <div class="header-center" *ngIf="intervention() as item">
+    @let addr = parseJson(item.adresse);
+    
+    <h1 class="city-line">{{ addr?.ville || 'Ville inconnue' }}</h1>
+    <p class="address-line">
+      {{ addr?.numero }} {{ addr?.rue }}
+    </p>
+  </div>
+
+  <div class="header-side header-right">
+    <button (click)="openGPS()" class="gps-trigger" aria-label="Lancer l'itinéraire">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+      </svg>
+    </button>
+    <span class="header-total">{{ calculateTotal() | number:'1.2-2' }}€</span>
+  </div>
+</header>
+
+  <main class="container" *ngIf="intervention() as item">
+    
+    <div class="timer-card sticky-timer" [class.active]="isRunning()">
+      <div class="clock">{{ timerDisplay() }}</div>
+      <div class="timer-actions">
+        <button class="btn-timer {{ lastState === 'work' && isRunning() ? 'pause' : 'play' }}" 
+                (click)="lastState === 'work' && isRunning() ? pauseTimer() : playTimer()">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            @if (lastState === 'work' && isRunning()) {
+              <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>
+            } @else {
+              <path d="M8 5v14l11-7z"/>
+            }
+          </svg>
+        </button>
+        <button class="btn-timer stop" (click)="stopAndSaveTimer()" [disabled]="workSeconds === 0 && pauseSeconds === 0">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="info-group spacer-top">
+      <div class="group-header">
+        <h3>Main d'œuvre</h3>
+        <span class="sub-total">{{ getBreakdown().time | number:'1.2-2' }}€</span>
+      </div>
+
+      <div class="glass-card mb-10">
+        <div class="manual-time-input">
+          <div class="input-label">Ajout manuel :</div>
+          <div class="time-controls">
+            <div class="time-field-wrapper">
+              <input type="number" [(ngModel)]="manualHours" placeholder="00" min="0">
+              <span class="separator">h</span>
+              <input type="number" [(ngModel)]="manualMinutes" placeholder="00" min="0" max="59">
+              <span class="separator">m</span>
+            </div>
+            <button (click)="addManualSession()" class="add-btn circle-btn" [disabled]="!manualHours && !manualMinutes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="list-container">
+          @for (sStr of item.timeSessions; track sStr) {
+            @let s = parseJson(sStr);
+            <div class="list-item">
+              <div class="item-main-content">
+                <div class="session-type">
+                  @if (s.pauseDuration !== '00:00:00') {
+                    <svg viewBox="0 0 24 24" class="type-icon chrono" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  } @else {
+                    <svg viewBox="0 0 24 24" class="type-icon manual" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  }
+                </div>
+                <div class="item-info">
+                  <div class="top-line">
+                    <span class="date-text">{{ s.date | date:'dd/MM' }}</span>
+                    <strong class="duration-text">{{ s.workDuration.substring(0,5) }}</strong>
+                  </div>
+                </div>
+                <span class="item-price">{{ s.price | number:'1.2-2' }}€</span>
+              </div>
+              <div class="item-action-zone">
+                <button (click)="removeSession(sStr)" class="delete-btn">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header"><h3>Déplacements</h3></div>
+      <div class="glass-card">
+        <div class="list-item">
+          <div class="item-main-content">
+            <strong class="font-main">{{ item.travelCount || 0 }} trajet(s)</strong>
+            <span class="item-price">{{ ((item.travelCount || 0) * travelFee()) | number:'1.2-2' }}€</span>
+          </div>
+          <div class="item-action-zone flex-row">
+            <button (click)="updateTravel(-0.5)" [disabled]="(item.travelCount || 0) <= 0" class="step-btn">-</button>
+            <button (click)="updateTravel(0.5)" class="step-btn">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header"><h3>Matériel & Fournitures</h3></div>
+      <div class="glass-card">
+        <div class="input-row">
+          <input type="text" [(ngModel)]="itemName" placeholder="Désignation" class="flex-2">
+          <input type="number" [(ngModel)]="itemPrice" placeholder="€" class="flex-1">
+          <button (click)="addMaterial()" class="add-btn circle-btn" [disabled]="!itemPrice()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
+        <div class="list-container">
+          @for (mStr of item.materials; track mStr) {
+            @let m = parseJson(mStr);
+            <div class="list-item">
+              <div class="item-main-content">
+                <span class="text-truncate">{{ m.description }}</span>
+                <span class="item-price">{{ m.price | number:'1.2-2' }}€</span>
+              </div>
+              <div class="item-action-zone">
+                <button (click)="removeMaterial(mStr)" class="delete-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    
+    <div class="info-group">
+      <div class="group-header"><h3>Photos</h3></div>
+      <div class="glass-card">
+        <div class="photo-grid-header">
+          <input type="file" (change)="uploadPhoto($event)" accept="image/*" #photoInput style="display: none;">
+          <button (click)="photoInput.click()" class="upload-trigger-btn" [disabled]="uploading()">
+            @if (uploading()) { <span class="upload-loader"></span> } 
+            @else { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> <span>Ajouter une photo</span> }
+          </button>
+        </div>
+        <div class="photo-list">
+          @for (pStr of item.photos; track pStr) {
+            @let p = parseJson(pStr);
+            <div class="photo-item">
+              <img [src]="p.url" alt="Photo" (click)="openLightbox(p.url)">
+              <button (click)="removePhoto(pStr)" class="delete-photo-btn">×</button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header"><h3>Commandes</h3></div>
+      <div class="glass-card">
+        <div class="input-row">
+          <input type="text" [(ngModel)]="orderName" placeholder="Pièce à commander...">
+          <button (click)="addOrder()" class="add-btn circle-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
+        <div class="list-container">
+          @for (oStr of item.orders; track oStr) {
+            @let o = parseJson(oStr);
+            <div class="list-item">
+              <div class="item-main-content">
+                <span class="text-truncate">{{ o.name }}</span>
+              </div>
+              <div class="item-action-zone">
+                <button (click)="removeOrder(oStr)" class="delete-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+
+<nav class="status-bar">
+  <button (click)="goBack()" class="nav-item">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+      <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+    </svg>
+    <span>Missions</span>
+  </button>
+
+  <button class="nav-item" 
+          (click)="pauseAndRequestVisit()" 
+          [disabled]="isRunning()">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <line x1="19" y1="8" x2="19" y2="14"></line>
+      <line x1="22" y1="11" x2="16" y2="11"></line>
+    </svg>
+    <span>Revisite</span>
+  </button>
+
+  <button *ngIf="(intervention()?.orders?.length ?? 0) === 0" 
+          class="nav-item" 
+          (click)="finishIntervention()" 
+          [disabled]="isRunning()">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+      <polyline points="7 3 7 8 15 8"></polyline>
+    </svg>
+    <span>Terminer</span>
+  </button>
+</nav>
+
+  <div class="lightbox" *ngIf="selectedPhoto() as url" (click)="closeLightbox()">
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <img [src]="url" alt="Plein écran">
+      <button class="close-lightbox" (click)="closeLightbox()">×</button>
+    </div>
+  </div>
+
+</div>

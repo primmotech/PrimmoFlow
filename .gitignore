@@ -1,0 +1,28 @@
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+
+# IDEs and editors
+.idea/
+.project
+.vscode/
+.vs/
+.history/
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+
+# System files
+.DS_Store
+Thumbs.db

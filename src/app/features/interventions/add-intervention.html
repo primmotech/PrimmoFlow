@@ -1,0 +1,149 @@
+<div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+  
+  <header class="app-header">
+    <div class="spacer"></div>
+    <h1>{{ isEditMode() ? 'Modifier' : 'Nouvelle' }} Mission</h1>
+    <div class="spacer"></div>
+  </header>
+
+  <main class="container">
+    
+    <div class="info-group">
+      <div class="group-header"><h3>Localisation</h3></div>
+      <div class="glass-card">
+        <div class="input-row">
+          <input type="text" [(ngModel)]="data.adresse.numero" (ngModelChange)="onValueChange()" placeholder="N°" class="w-20">
+          <input type="text" [(ngModel)]="data.adresse.rue" (ngModelChange)="onValueChange()" placeholder="Rue" class="flex-1">
+        </div>
+        <input type="text" [(ngModel)]="data.adresse.ville" (ngModelChange)="onValueChange()" placeholder="Ville" class="w-60 mt-10">
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header">
+        <h3>Habitant(s)</h3>
+        <button *ngIf="data.habitants.length < 2" 
+                (click)="addHabitant()" 
+                [disabled]="!isHabitantComplete(data.habitants[data.habitants.length - 1])"
+                class="small-add-btn">
+          + Ajouter
+        </button>
+      </div>
+      
+      @for (h of data.habitants; track $index) {
+        <div class="glass-card mb-10">
+          <div class="input-row">
+            <input type="text" [(ngModel)]="h.prenom" (ngModelChange)="onValueChange()" placeholder="Prénom" class="flex-1">
+            <input type="text" [(ngModel)]="h.nom" (ngModelChange)="onValueChange()" placeholder="Nom" class="flex-1">
+          </div>
+          <div class="input-row mt-10">
+            <input type="tel" [(ngModel)]="h.tel" (ngModelChange)="onValueChange()" placeholder="Téléphone" class="w-60">
+            <div class="flex-1"></div>
+            <button *ngIf="data.habitants.length > 1" (click)="removeHabitant($index)" class="delete-btn-flat">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#e74c3c" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="info-group">
+      <div class="group-header"><h3>Propriétaire (Si différent)</h3></div>
+      <div class="glass-card">
+        <div class="input-row">
+          <input type="text" [(ngModel)]="data.proprietaire.prenom" (ngModelChange)="onValueChange()" placeholder="Prénom" class="flex-1">
+          <input type="text" [(ngModel)]="data.proprietaire.nom" (ngModelChange)="onValueChange()" placeholder="Nom" class="flex-1">
+        </div>
+        <input type="tel" [(ngModel)]="data.proprietaire.tel" (ngModelChange)="onValueChange()" placeholder="Téléphone" class="w-60 mt-10">
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header">
+        <h3>Description des travaux</h3>
+        <button (click)="addTask()" 
+                [disabled]="tasks().length > 0 && !tasks()[tasks().length - 1].text.trim()"
+                class="small-add-btn">
+          + Tâche
+        </button>
+      </div>
+      <div class="glass-card">
+        @for (task of tasks(); track task.id; let i = $index) {
+          <div class="list-item-row">
+            <input type="text" 
+                   [ngModel]="task.text" 
+                   (ngModelChange)="updateTask(i, $event)" 
+                   placeholder="Action..." 
+                   class="task-input">
+            
+            @if (tasks().length > 1) {
+              <button (click)="removeTask(i)" class="delete-btn-flat">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#e74c3c" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header"><h3>Remarques internes</h3></div>
+      <div class="glass-card">
+        <textarea [(ngModel)]="data.remarques" (ngModelChange)="onValueChange()" placeholder="Infos utiles..." rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="info-group">
+      <div class="group-header"><h3>Personne sur le terrain</h3></div>
+      <div class="glass-card bg-highlight">
+        <div class="select-wrapper">
+          <select [(ngModel)]="data.assigned" (ngModelChange)="onValueChange()" name="assigned" class="custom-select">
+            <option value="" disabled>Choisir un utilisateur...</option>
+            @for (tech of technicians(); track tech.email) {
+              <option [value]="tech.email">{{ tech.name }}</option>
+            }
+          </select>
+          <div class="select-arrow">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-item" (click)="goBack()">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      <span>Missions</span>
+    </button>
+
+    <button class="nav-item" 
+            [class.is-dirty]="hasChanges() && isFormValid()" 
+            [disabled]="loading() || !isFormValid()"
+            (click)="save()">
+      
+      @if (loading()) {
+        <div class="loader-small"></div>
+      } @else {
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+      }
+      <span>Enregistrer</span>
+    </button>
+  </nav>
+</div>

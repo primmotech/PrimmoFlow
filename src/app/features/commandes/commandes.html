@@ -1,0 +1,76 @@
+<div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+
+  <header class="app-header">
+    <div class="brand"><h1>A acheter</h1></div>
+    <div class="header-user">
+    
+    </div>
+  </header>
+
+  <main class="container">
+    @if (loading()) {
+      <div class="loader">Chargement...</div>
+    } @else {
+      @for (group of groupedOrders(); track group.interventionId) {
+        <section class="recent-activity">
+          <h3>{{ group.address }}</h3>
+          
+          <div class="intervention-list">
+            @for (order of group.orders; track order.id) {
+              <div class="intervention-card" 
+                   [class.waiting-card]="order.status !== 'COMMANDÉ'"
+                   [class.billed-card]="order.status === 'COMMANDÉ'">
+                
+                <div class="card-info">
+                  <span class="city">{{ order.name }}</span>
+                  <span class="street">Statut: {{ order.status }}</span>
+                </div>
+
+                <div class="card-status">
+                  @if (order.status !== 'COMMANDÉ') {
+                    <div class="order-actions-row">
+                      <input 
+                        type="number" 
+                        class="price-input" 
+                        placeholder="Prix €"
+                        [ngModel]="priceInputs.get(order.id)"
+                        (ngModelChange)="onPriceChange(order.id, $event)">
+                      
+                      <button class="histo-btn" (click)="updateOrderStatus(group.interventionId, order.id)">
+                        OK
+                      </button>
+                    </div>
+                  } @else {
+                    <span class="price-display">{{ order.price | number:'1.2-2' }}€</span>
+                    <span class="badge completed">Commandé</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      } @empty {
+        <div class="empty-state">
+          <p>Aucun matériel à commander.</p>
+        </div>
+      }
+    }
+  </main>
+
+  <nav class="bottom-nav">
+    <a routerLink="/dashboard" class="nav-item">
+       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Missions</span>
+    </a>
+
+   
+
+  </nav>
+</div>

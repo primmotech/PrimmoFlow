@@ -1,0 +1,75 @@
+<<<<<<< HEAD
+/* --- VARIABLES & DESIGN SYSTEM --- */
+:root {
+  --bg-color: #f3f4f6;
+  --card-bg: #ffffff;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --border-color: #d1d5db;
+  --accent-color: #3498db;
+  --success-color: #2ecc71;
+  --danger-color: #e74c3c;
+  --warning-color: #f1c40f;
+  --call-bg: #ecfdf5;
+}
+
+body.dark-theme, .dark-mode {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --border-color: #333333;
+  --accent-color: #5dade2;
+  --call-bg: rgba(46, 204, 113, 0.15);
+}
+
+/* --- RESET & BASE --- */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  margin: 0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  transition: background 0.3s;
+}
+
+.mobile-wrapper {
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+/* --- COMPOSANTS SHARED (Réutilisables partout) --- */
+
+// Navigation Basse
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0; height: 75px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex; justify-content: space-around; align-items: center;
+  z-index: 1000;
+  .nav-item {
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--text-secondary);
+    span { font-size: 0.7rem; font-weight: 700; }
+    &.active { color: var(--accent-color); }
+    svg { width: 24px; height: 24px; stroke-width: 2; }
+  }
+}
+
+// Boutons d'action rapides (FAB)
+.fab-btn {
+  position: fixed; right: 20px; bottom: 100px;
+  width: 60px; height: 60px; border-radius: 30px;
+  background: var(--accent-color); border: none;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+  color: white; display: flex; align-items: center; justify-content: center;
+}
+
+// Badges & Status
+.badge {
+  padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+  &.open { background: rgba(52, 152, 219, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+}
+=======
+/* You can add global styles to this file, and also import other style files */
+>>>>>>> 81e3f16 (initial commit)

@@ -1,0 +1,89 @@
+<div class="profile-wrapper">
+  <div class="app-header">
+    <div class="header-center">
+      <h1 class="page-title">Mon Profil</h1>
+    </div>
+  </div>
+
+  <main class="container" *ngIf="userData()">
+    <div class="form-container">
+      <div class="form-section">
+        <h2>Informations Personnelles</h2>
+        <div class="form-field">
+          <label>Email</label>
+          <input type="text" [value]="authService.userEmail()" disabled readonly class="readonly-input">
+        </div>
+
+        <div class="form-field">
+          <label for="lastname">Nom</label>
+          <input type="text" id="lastname" [(ngModel)]="userData().lastname" (ngModelChange)="onFieldChange()" name="lastname">
+        </div>
+        <div class="form-field">
+          <label for="phone">Téléphone</label>
+          <input type="tel" id="phone" [(ngModel)]="userData().phone" (ngModelChange)="onFieldChange()" name="phone">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Configuration</h2>
+        <div class="form-field">
+          <label for="travelCost">Prix du déplacement (€)</label>
+          <input type="number" id="travelCost" [(ngModel)]="userData().travelCost" (ngModelChange)="onFieldChange()" name="travelCost">
+        </div>
+        <div class="form-field">
+          <label for="hourlyRate">Taux horaire (€)</label>
+          <input type="number" id="hourlyRate" [(ngModel)]="userData().hourlyRate" (ngModelChange)="onFieldChange()" name="hourlyRate">
+        </div>
+        <div class="form-field">
+          <label for="gps">GPS par défaut</label>
+          <select id="gps" [(ngModel)]="userData().gps" (ngModelChange)="onFieldChange()" name="gps">
+            <option value="maps">Google Maps</option>
+            <option value="waze">Waze</option>
+            <option value="iphone">Apple Plans</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="rounding">Arrondi du temps de travail (minutes)</label>
+          <select id="rounding" [(ngModel)]="userData().rounding" (ngModelChange)="onFieldChange()" name="rounding">
+            <option *ngFor="let i of roundingOptions" [value]="i">{{ i }} min</option>
+          </select>
+        </div>
+
+<div class="form-field theme-toggle-row">
+  <label>
+    {{ userData().themePreference === 'dark' ? 'Mode Sombre' : 'Mode Clair' }}
+  </label>
+  
+  <div class="toggle-switch" 
+       [class.active]="userData().themePreference === 'dark'" 
+       (click)="userData().themePreference = (userData().themePreference === 'dark' ? 'light' : 'dark'); onFieldChange()">
+    <div class="switch-handle"></div>
+  </div>
+</div>
+      </div>
+    </div>
+  </main>
+
+  <div class="bottom-nav">
+    <button (click)="goBack()" class="nav-item">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Missions</span>
+    </button>
+
+    <button (click)="saveProfile()" class="nav-item" [class.dirty]="isDirty()" [disabled]="saving()">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+      </svg>
+      <span>{{ saving() ? '...' : 'Sauvegarder' }}</span>
+    </button>
+  </div>
+</div>

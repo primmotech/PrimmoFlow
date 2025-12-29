@@ -1,0 +1,119 @@
+<div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+  
+  <header class="app-header-compact">
+    <h1>Gestion des Rôles</h1>
+    <p>Configuration des accès par métier</p>
+  </header>
+
+  <main class="container">
+    
+    <section class="settings-group">
+      <h3>{{ editing() ? 'Modifier le rôle' : 'Créer un nouveau rôle' }}</h3>
+      
+      <div class="settings-card profile-form compact">
+        <div class="form-field">
+          <label>Nom du rôle</label>
+          <input 
+            type="text" 
+            [(ngModel)]="roleForm.name" 
+            placeholder="ex: Technicien"
+            [disabled]="editing()"
+            [class.readonly-input]="editing()">
+        </div>
+
+        <div class="permission-grid">
+          @for (group of permissionGroups; track group.key) {
+            <div class="perm-group-box">
+              
+              <div class="group-header">
+                <h4>{{ group.label }}</h4>
+                <div class="group-actions">
+                  <button type="button" (click)="toggleSection(group.key, true)">Tous</button>
+                  <button type="button" (click)="toggleSection(group.key, false)">Aucun</button>
+                </div>
+              </div>
+              
+              <div class="perm-items-list">
+                @for (p of group.perms; track p.id) {
+                  <div class="perm-item-row" (click)="roleForm.permissions[p.id] = !roleForm.permissions[p.id]">
+                    <span class="perm-label">{{ p.label }}</span>
+                    
+                    <div class="toggle-switch" [class.active]="roleForm.permissions[p.id]">
+                      <div class="switch-handle"></div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="card-actions">
+          @if (editing()) {
+            <button type="button" class="cancel-btn" (click)="cancelEdit()" style="margin-right: 10px; background: none; border: none; color: #888; font-size: 12px; font-weight: bold;">
+              ANNULER
+            </button>
+          }
+          <button type="button" class="save-button-inline dirty" (click)="saveRole()" [disabled]="!roleForm.name">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+            </svg>
+            <span>{{ editing() ? 'Mettre à jour' : 'Enregistrer' }}</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+<section class="settings-group">
+  <h3>Rôles existants</h3>
+  <div class="settings-card">
+    @if (roles().length === 0) {
+      <p style="text-align: center; padding: 20px; font-size: 12px; opacity: 0.5;">Chargement...</p>
+    }
+    
+    @for (role of roles(); track role.id) {
+      <div class="role-row" [class.protected]="role.id === 'Admin' || role.id === 'Administrateur'">
+        <div class="role-info">
+          <span class="r-name">{{ role.id }}</span>
+          <span class="r-count">{{ getPermCount(role) }} permissions actives</span>
+        </div>
+        
+        <div class="actions">
+          <button type="button" class="edit-btn" (click)="editRole(role)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+
+          <button type="button" class="delete-btn" (click)="deleteRole(role.id)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+  </main>
+
+ <nav class="bottom-nav">
+   <a routerLink="/dashboard" class="nav-item">
+       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Missions</span>
+    </a>
+        <a routerLink="/parameters" class="nav-item">
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18 6v8H6" />
+  <path d="M10 10l-4 4 4 4" />
+</svg>
+      <span>Retour</span>
+    </a>
+ 
+
+  </nav>
+</div>

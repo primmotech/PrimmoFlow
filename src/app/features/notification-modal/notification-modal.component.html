@@ -1,0 +1,14 @@
+<div class="modal-overlay">
+  <div class="modal-content">
+    <h2 class="modal-title">Confirmer l'envoi de la notification</h2>
+    <p class="modal-message">
+      Un email sera envoyé à
+      <strong class="email-address">{{ email }}</strong>
+      pour cette intervention.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="onCancel()">Annuler</button>
+      <button class="btn btn-send" (click)="onSend()">Envoyer</button>
+    </div>
+  </div>
+</div>
