@@ -81,10 +81,25 @@
 .card-actions {
   display: flex; align-items: center; gap: 10px;
   .icon-btn-edit { background: transparent; border: none; color: #7f8c8d; padding: 5px; }
-  .btn-tasks {
-    background: rgba(52, 152, 219, 0.1); border: 1px solid rgba(52, 152, 219, 0.2);
-    color: #3498db; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 0.75rem;
+.btn-tasks {
+  display: flex;       /* Aligne l'icône et le texte */
+  align-items: center; /* Centre verticalement */
+  gap: 4px;            /* Espace entre l'icône et "Tâches" */
+  
+  background: rgba(52, 152, 219, 0.1);
+  border: 1.5px solid rgba(52, 152, 219, 0.2);
+  color: #3498db;
+  padding: 6px 12px;   /* Un peu plus de padding pour le confort */
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  
+  &:active { 
+    background: #3498db; 
+    color: white; 
   }
+}
 }
 
 /* --- MODALE (STRUCTURE & FIXATION) --- */
