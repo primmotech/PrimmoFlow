@@ -27,6 +27,19 @@
         }
     </header>
 
+@if (targetIntervention()?.mission?.length) {
+  <section class="mission-tasks-list">
+    <ul class="tasks-container">
+      @for (task of targetIntervention().mission; track $index) {
+        <li class="task-row">
+          <div class="bullet"></div>
+          <div class="task-text">{{ task }}</div>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
     <main class="container">
         <section class="calendar-card">
             <div class="nav">

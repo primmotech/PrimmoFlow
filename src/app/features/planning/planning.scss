@@ -9,28 +9,30 @@
 }
 
 .capitalize { text-transform: capitalize; }
-.container { padding: 20px; }
+.container { padding: 10px 20px; }
 
-/* --- 2. HEADER & CARTE D'INTERVENTION --- */
+/* --- 2. HEADER (STICKY TOP 0) --- */
 .app-header-large {
   background: var(--card-bg);
   padding: 0px 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
-  .header-top { height: 10px; }
+  z-index: 110; // Plus haut que tout
+  min-height: 80px; // Hauteur fixe pour faciliter le calage de la suite
+  
+  .header-top { height: 5px; }
 }
 
 .intervention-summary-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
+  padding: 12px 0;
   width: 100%;
 
   .address-details {
@@ -40,15 +42,15 @@
 
     .city { 
       font-weight: 900; 
-      font-size: 1.4rem; 
+      font-size: 1.3rem; 
       line-height: 1.1;
       letter-spacing: -0.5px;
       color: var(--text-primary);
     }
     .street-line { 
-      font-size: 0.95rem; 
+      font-size: 0.9rem; 
       color: var(--text-secondary);
-      margin-top: 4px;
+      margin-top: 2px;
       opacity: 0.8;
     }
   }
@@ -56,68 +58,122 @@
   .contact-zone {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 
     .habitant-pill {
       background: var(--border-color);
-      padding: 8px 12px;
-      border-radius: 12px;
+      padding: 6px 10px;
+      border-radius: 10px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       display: flex;
       align-items: center;
       gap: 5px;
       cursor: pointer;
       color: var(--text-primary);
-      small { color: var(--accent-color); font-size: 1.1rem; }
+      small { color: var(--accent-color); font-size: 1rem; }
     }
 
     .btn-call {
       background: #2ecc71;
-      width: 42px; height: 42px;
-      border-radius: 12px;
+      width: 38px; height: 38px;
+      border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.2);
       border: none;
+    }
+  }
+}
+
+/* --- 2.1 LISTE DES TACHES (GRANDE TAILLE & DEUX COLONNES) --- */
+.mission-tasks-list {
+  background: var(--card-bg);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color);
+  
+  position: sticky;
+  top: 80px; 
+  z-index: 100; 
+  box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+
+  .tasks-container {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px 15px; 
+  }
+
+  .task-row {
+    display: flex !important;
+    align-items: center; 
+    gap: 10px;
+    min-width: 0;
+
+    .bullet {
+      width: 7px; 
+      height: 7px;
+      background: var(--accent-color, #3498db);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .task-text {
+      font-size: 0.95rem; 
+      font-weight: 800; 
+      line-height: 1.1;
+      color: var(--text-primary);
+      
+      // Majuscule automatique sur la première lettre uniquement
+      &::first-letter {
+        text-transform: uppercase;
+      }
+
+      /* Gestion propre du texte pour rester sur une ligne */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }
 
 /* --- 3. CALENDRIER --- */
 .calendar-card {
-  margin: 20px;
+  margin: 15px 0;
   background: var(--card-bg);
-  padding: 20px;
-  border-radius: 24px;
+  padding: 15px;
+  border-radius: 20px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 
   .nav {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-    h2 { font-size: 1.1rem; text-transform: capitalize; font-weight: 800; color: var(--text-primary); }
-    button { background: none; border: none; font-size: 1.5rem; color: var(--accent-color); padding: 0 15px; cursor: pointer; }
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+    h2 { font-size: 1rem; text-transform: capitalize; font-weight: 800; color: var(--text-primary); }
+    button { background: none; border: none; font-size: 1.3rem; color: var(--accent-color); padding: 0 10px; cursor: pointer; }
   }
 
   .grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px 5px;
-    .label { text-align: center; font-size: 0.7rem; font-weight: 800; opacity: 0.4; margin-bottom: 5px; }
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px 2px;
+    .label { text-align: center; font-size: 0.65rem; font-weight: 800; opacity: 0.4; }
   }
 
   .day-container {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
 
     .day {
-      width: 38px; height: 38px;
+      width: 36px; height: 36px;
       display: flex; align-items: center; justify-content: center;
-      border-radius: 12px;
+      border-radius: 10px;
       font-weight: 700;
       transition: 0.2s;
       cursor: pointer;
       color: var(--text-primary);
+      font-size: 0.9rem;
 
       &.past { opacity: 0.2; pointer-events: none; text-decoration: line-through; }
       &.today { color: var(--accent-color); border: 2px solid var(--accent-color); }
-      &.selected { background: var(--accent-color) !important; color: white !important; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+      &.selected { background: var(--accent-color) !important; color: white !important; }
       &.empty { visibility: hidden; }
     }
 
@@ -130,132 +186,109 @@
   }
 }
 
+/* --- 4. BOUTON ACTION --- */
 .planning-action {
-  margin: -10px 20px 20px;
+  margin: 10px 0 20px 0;
   .btn-plan {
     width: 100%;
-    padding: 18px;
-    border-radius: 20px;
+    padding: 16px;
+    border-radius: 16px;
     border: none;
     background: var(--accent-color);
     color: white;
     font-weight: 800;
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: 0.3s;
-    &:disabled { background: #bdc3c7; color: #7f8c8d; cursor: not-allowed; }
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    &:disabled { background: #bdc3c7; box-shadow: none; }
   }
 }
 
-/* --- 4. MISSIONS QUOTIDIENNES --- */
+/* --- 5. MISSIONS DU JOUR --- */
 .daily-missions {
-  margin: 0 20px 20px;
-
+  margin-top: 10px;
   .section-title {
-    font-size: 0.85rem; font-weight: 800; text-transform: uppercase;
-    opacity: 0.5; margin-bottom: 12px; letter-spacing: 1px; color: var(--text-secondary);
+    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+    opacity: 0.5; margin-bottom: 12px; letter-spacing: 0.5px;
   }
 
   .mission-item-mini {
     background: var(--card-bg);
-    padding: 14px;
-    border-radius: 20px;
+    padding: 12px;
+    border-radius: 16px;
     display: flex !important;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     border: 1px solid var(--border-color);
-    margin-bottom: 10px;
-    transition: all 0.2s ease;
-
-    &.clickable { cursor: pointer; &:active { transform: scale(0.97); background: var(--border-color); } }
+    margin-bottom: 8px;
 
     .time-pill {
       background: var(--accent-color);
       color: white;
-      padding: 8px 12px;
-      border-radius: 12px;
+      padding: 6px 10px;
+      border-radius: 10px;
       font-weight: 800;
-      font-size: 0.85rem;
-      min-width: 65px;
+      font-size: 0.75rem;
+      min-width: 55px;
       text-align: center;
     }
 
     .info {
-      display: flex !important; 
-      flex-direction: column !important;
-      flex: 1;
-      .city-main { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; line-height: 1.2; color: var(--text-primary); }
-      .address-sub { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; display: block !important; }
+      display: flex !important; flex-direction: column !important; flex: 1;
+      .city-main { font-weight: 800; font-size: 0.95rem; line-height: 1.1; }
+      .address-sub { font-size: 0.75rem; opacity: 0.6; }
     }
-
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; margin-left: auto; }
-    .edit-icon { opacity: 0.4; font-size: 0.8rem; font-style: italic; color: var(--text-secondary); }
-  }
-
-  .no-mission {
-    padding: 30px; text-align: center;
-    background: var(--card-bg);
-    border: 1px dashed var(--border-color);
-    border-radius: 20px;
-    opacity: 0.6;
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
   }
 }
 
-/* --- 5. NAVIGATION BASSE --- */
+/* --- 6. NAVIGATION BASSE --- */
 .bottom-nav {
   position: fixed;
-  bottom: 0; width: 100%; height: 75px;
+  bottom: 0; left: 0; width: 100%; height: 70px;
   background: var(--card-bg);
   border-top: 1px solid var(--border-color);
   display: flex; justify-content: center; align-items: center;
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 100;
+  z-index: 1000;
 
   .nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: var(--text-secondary); text-decoration: none; cursor: pointer;
+    color: var(--text-secondary); text-decoration: none;
     span { font-size: 0.7rem; font-weight: 600; }
-    &.active { color: var(--accent-color); }
   }
 }
 
-/* --- 6. MODALE TIME PICKER --- */
+/* --- 7. MODALE TIME PICKER --- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(8px); z-index: 1000;
+  backdrop-filter: blur(8px); z-index: 2000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 
 .time-modal {
   background: var(--card-bg);
-  width: 100%; max-width: 340px;
-  padding: 30px; border-radius: 35px;
-  border: 1px solid var(--border-color);
+  width: 100%; max-width: 320px;
+  padding: 25px; border-radius: 30px;
   display: flex; flex-direction: column; align-items: center;
-  animation: modalIn 0.3s ease-out;
 
   .time-display {
-    font-size: 3.5rem; font-weight: 900; margin-bottom: 25px; color: var(--text-primary);
-    span { opacity: 0.3; cursor: pointer; transition: 0.2s; &.active { opacity: 1; color: var(--accent-color); } }
+    font-size: 3rem; font-weight: 900; margin-bottom: 20px;
+    span { opacity: 0.3; &.active { opacity: 1; color: var(--accent-color); } }
   }
 
   .clock-circle-large {
-    background: var(--bg-color); border-radius: 50%; padding: 10px; margin-bottom: 30px;
-    svg {
-      .clock-label { fill: var(--text-primary); font-size: 14px; font-weight: 700; text-anchor: middle; }
-      .clock-label.small { font-size: 10px; opacity: 0.6; }
-    }
+    background: var(--bg-color); border-radius: 50%; padding: 5px; margin-bottom: 20px;
+    svg .clock-label { fill: var(--text-primary); font-size: 14px; font-weight: 700; text-anchor: middle; }
   }
 
   .modal-actions {
-    display: flex; gap: 15px; width: 100%; margin-top: 20px;
+    display: flex; gap: 10px; width: 100%;
     button { 
-        flex: 1; padding: 18px; border-radius: 18px; border: none; font-weight: 800; color: white; cursor: pointer;
-        &.btn-save-clock { background: var(--accent-color); }
-        &.btn-cancel-clock { background: #ff4757; }
+      flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; color: white;
+      &.btn-save-clock { background: var(--accent-color); }
+      &.btn-cancel-clock { background: #ff4757; }
     }
   }
 }
 
-/* --- 7. ANIMATIONS --- */
 @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }

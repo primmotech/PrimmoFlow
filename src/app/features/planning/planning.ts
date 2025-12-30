@@ -19,7 +19,7 @@ registerLocaleData(localeFr);
 })
 export class Planning implements OnInit {
   private router = inject(Router);
-  public auth = inject(AuthService); // Ton service centralisé Appwrite
+  public auth = inject(AuthService); 
   public theme = inject(ThemeService);
   private missionStore = inject(MissionStore); 
   
@@ -50,11 +50,15 @@ export class Planning implements OnInit {
   constructor() {
     const stateData = history.state?.data;
     if (stateData) {
-      // On s'assure que les données sont désérialisées (au cas où elles viennent d'Appwrite)
       const data = { ...stateData };
+      
+      // Désérialisation adresse et habitants
       const adresse = typeof data.adresse === 'string' ? JSON.parse(data.adresse) : (data.adresse || {});
       const habitants = typeof data.habitants === 'string' ? JSON.parse(data.habitants) : (data.habitants || []);
       
+      // LOGIQUE DE NETTOYAGE DES TÂCHES (votre correctif)
+      data.mission = this.processMissionTasks(data.mission);
+
       data.adresse = {
         ville: adresse.ville || '',
         rue: adresse.rue || '',
@@ -69,6 +73,36 @@ export class Planning implements OnInit {
     this.theme.initTheme();
   }
 
+  /**
+   * Transforme n'importe quel format de mission (string avec \n, objet, tableau)
+   * en un tableau de strings propre.
+   */
+  private processMissionTasks(missionData: any): string[] {
+    if (!missionData) return [];
+    
+    let finalTasks: string[] = [];
+    const dataArray = Array.isArray(missionData) ? missionData : [missionData];
+
+    dataArray.forEach(item => {
+      if (!item) return;
+      let textToSplit = '';
+
+      if (typeof item === 'object') {
+        textToSplit = item.description || item.label || JSON.stringify(item);
+      } else {
+        textToSplit = item.toString();
+      }
+
+      if (textToSplit.includes('\n')) {
+        finalTasks.push(...textToSplit.split('\n'));
+      } else {
+        finalTasks.push(textToSplit);
+      }
+    });
+
+    return finalTasks.map(t => t.trim()).filter(t => t.length > 0);
+  }
+
   getMissionsForDay(date: Date | null): any[] {
     const missions = this.allPlannedMissions();
     if (!date || !missions) return [];
@@ -76,7 +110,6 @@ export class Planning implements OnInit {
     const targetDateStr = date.toDateString();
     
     return missions.map((m: any) => {
-      // Désérialisation pour l'affichage si c'est du string
       const adr = typeof m.adresse === 'string' ? JSON.parse(m.adresse) : m.adresse;
       const habs = typeof m.habitants === 'string' ? JSON.parse(m.habitants) : m.habitants;
 
@@ -98,7 +131,14 @@ export class Planning implements OnInit {
 
   loadMissionToEdit(mission: any) {
     this.isSubmissionComplete.set(false);
-    this.targetIntervention.set(mission);
+    
+    // On nettoie aussi les missions chargées depuis la liste du jour
+    const cleanedMission = {
+      ...mission,
+      mission: this.processMissionTasks(mission.mission)
+    };
+    
+    this.targetIntervention.set(cleanedMission);
 
     const mDate = new Date(mission.plannedAt);
     this.selectedDate.set(mDate);
@@ -126,7 +166,6 @@ export class Planning implements OnInit {
       const finalDate = new Date(this.selectedDate());
       finalDate.setHours(this.selectedHour(), this.selectedMinute(), 0);
 
-      // Préparation payload Appwrite (On garde la cohérence JSON string si nécessaire)
       await this.auth.databases.updateDocument(
         this.DB_ID, 
         this.COL_INTERVENTIONS, 
@@ -147,7 +186,6 @@ export class Planning implements OnInit {
     }
   }
 
-  // --- LOGIQUE UI (Identique) ---
   updateClock(event: MouseEvent) {
     const svg = event.currentTarget as SVGSVGElement;
     const rect = svg.getBoundingClientRect();
@@ -179,24 +217,29 @@ export class Planning implements OnInit {
   }
 
   selectDate(date: Date | null) { if (date && !this.isPast(date)) this.selectedDate.set(date); }
+  
   isPast(date: Date | null): boolean {
     if (!date) return false;
     const today = new Date(); today.setHours(0, 0, 0, 0);
     return date < today;
   }
+  
   isSelected(date: Date | null) { return date?.toDateString() === this.selectedDate().toDateString(); }
   isToday(date: Date | null) { return date?.toDateString() === new Date().toDateString(); }
+  
   changeMonth(delta: number) {
     const next = new Date(this.viewDate());
     next.setMonth(next.getMonth() + delta);
     this.viewDate.set(next);
   }
+  
   switchHabitant() {
     const intervention = this.targetIntervention();
     if (intervention?.habitants) {
       this.selectedHabitantIndex.update(current => (current + 1) % intervention.habitants.length);
     }
   }
+  
   cancelTimeSelection() { this.showTimePicker.set(false); this.pickingMinutes.set(false); }
   confirmPlanning() { this.showTimePicker.set(true); }
   goBack() { this.router.navigate(['/dashboard']); }
