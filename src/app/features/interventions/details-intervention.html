@@ -1,24 +1,23 @@
 <div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
   
-<header class="app-header">
-  <div class="header-center" *ngIf="intervention() as item">
-    @let addr = parseJson(item.adresse);
-    
-    <h1 class="city-line">{{ addr?.ville || 'Ville inconnue' }}</h1>
-    <p class="address-line">
-      {{ addr?.numero }} {{ addr?.rue }}
-    </p>
-  </div>
+  <header class="app-header">
+    <div class="header-center" *ngIf="intervention() as item">
+      @let addr = parseJson(item.adresse);
+      <h1 class="city-line">{{ addr?.ville || 'Ville inconnue' }}</h1>
+      <p class="address-line">
+        {{ addr?.numero }} {{ addr?.rue }}
+      </p>
+    </div>
 
-  <div class="header-side header-right">
-    <button (click)="openGPS()" class="gps-trigger" aria-label="Lancer l'itinéraire">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-      </svg>
-    </button>
-    <span class="header-total">{{ calculateTotal() | number:'1.2-2' }}€</span>
-  </div>
-</header>
+    <div class="header-side header-right">
+      <button (click)="openGPS()" class="gps-trigger" aria-label="Lancer l'itinéraire">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+        </svg>
+      </button>
+      <span class="header-total">{{ calculateTotal() | number:'1.2-2' }}€</span>
+    </div>
+  </header>
 
   <main class="container" *ngIf="intervention() as item">
     
@@ -43,6 +42,24 @@
       </div>
     </div>
 
+    <div class="info-group sticky-tasks" *ngIf="missionTasks().length > 0">
+      <div class="glass-card tasks-card">
+        <div class="tasks-grid">
+          @for (task of missionTasks(); track $index) {
+            <label class="task-checkbox-item">
+              <div class="checkbox-wrapper">
+                <input type="checkbox" 
+                       [checked]="isTaskCompleted($index)"
+                       (change)="toggleMissionTask($index)">
+                <span class="checkmark"></span>
+              </div>
+              <span class="task-label">{{ task }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+
     <div class="info-group spacer-top">
       <div class="group-header">
         <h3>Main d'œuvre</h3>
@@ -51,7 +68,6 @@
 
       <div class="glass-card mb-10">
         <div class="manual-time-input">
-          <div class="input-label">Ajout manuel :</div>
           <div class="time-controls">
             <div class="time-field-wrapper">
               <input type="number" [(ngModel)]="manualHours" placeholder="00" min="0">
@@ -194,9 +210,9 @@
     </div>
   </main>
 
-<nav class="status-bar">
-  <button (click)="goBack()" class="nav-item">
-       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <nav class="status-bar">
+    <button (click)="goBack()" class="nav-item">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="8" y1="6" x2="21" y2="6"></line>
         <line x1="8" y1="12" x2="21" y2="12"></line>
         <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -205,33 +221,30 @@
         <line x1="3" y1="18" x2="3.01" y2="18"></line>
       </svg>
       <span>Accueil</span>
-  
-  </button>
+    </button>
 
-  <button class="nav-item" 
-          (click)="pauseAndRequestVisit()" 
-          [disabled]="isRunning()">
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <line x1="19" y1="8" x2="19" y2="14"></line>
-      <line x1="22" y1="11" x2="16" y2="11"></line>
-    </svg>
-    <span>Revisite</span>
-  </button>
+    <button class="nav-item" (click)="pauseAndRequestVisit()" [disabled]="isRunning()">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <line x1="19" y1="8" x2="19" y2="14"></line>
+        <line x1="22" y1="11" x2="16" y2="11"></line>
+      </svg>
+      <span>Revisite</span>
+    </button>
 
-  <button *ngIf="(intervention()?.orders?.length ?? 0) === 0" 
-          class="nav-item" 
-          (click)="finishIntervention()" 
-          [disabled]="isRunning()">
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-      <polyline points="7 3 7 8 15 8"></polyline>
-    </svg>
-    <span>Terminer</span>
-  </button>
-</nav>
+    <button *ngIf="(intervention()?.orders?.length ?? 0) === 0" 
+            class="nav-item" 
+            (click)="finishIntervention()" 
+            [disabled]="isRunning()">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+      </svg>
+      <span>Terminer</span>
+    </button>
+  </nav>
 
   <div class="lightbox" *ngIf="selectedPhoto() as url" (click)="closeLightbox()">
     <div class="lightbox-content" (click)="$event.stopPropagation()">

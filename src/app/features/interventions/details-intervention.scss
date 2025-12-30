@@ -6,7 +6,7 @@
   padding-bottom: 110px;
   font-family: 'Segoe UI', Roboto, sans-serif;
 
-  // Mode Clair forcé par ton système
+  // Mode Clair forcé
   &:not(.dark-mode) {
     --card-bg: #ffffff;
     --border-color: #d1d5db;
@@ -70,8 +70,14 @@
   padding: 15px;
 }
 
-/* --- TIMER --- */
-.sticky-timer { position: sticky; top: 90px; margin: 15px; z-index: 900; }
+/* --- TIMER (STICKY 1) --- */
+.sticky-timer { 
+  position: sticky; 
+  top: 85px; // Juste sous le header
+  margin: 15px; 
+  z-index: 910; 
+}
+
 .timer-card {
   padding: 15px 20px;
   border-radius: 20px;
@@ -96,6 +102,75 @@
   }
 }
 
+/* --- TÂCHES (STICKY 2 - COLLÉ SOUS LE TIMER) --- */
+.sticky-tasks {
+  position: sticky;
+  top: 175px; // Positionné après le header + timer
+  z-index: 905;
+  background: var(--bg-color); // Empêche la transparence au scroll
+  padding-top: 5px;
+  padding-bottom: 15px;
+}
+
+.tasks-card {
+  padding: 12px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 15px;
+}
+
+.task-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  min-width: 0;
+
+  .task-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    //white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  input:checked ~ .task-label {
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+
+  .checkbox-wrapper {
+    position: relative;
+    min-width: 20px;
+    height: 20px;
+    input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+    .checkmark {
+      position: absolute;
+      top: 0; left: 0;
+      height: 20px; width: 20px;
+      background: rgba(150, 150, 150, 0.1);
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    input:checked ~ .checkmark {
+      background-color: #2ecc71;
+      border-color: #2ecc71;
+      &:after {
+        content: ""; position: absolute;
+        left: 6px; top: 2px; width: 4px; height: 9px;
+        border: solid white; border-width: 0 2.5px 2.5px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+}
+
 /* --- LISTES & ITEMS --- */
 .list-container { margin-top: 10px; }
 .list-item {
@@ -103,7 +178,9 @@
   &:last-child { border: none; }
   .item-main-content {
     flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0;
-    .text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .text-truncate { overflow: hidden; text-overflow: ellipsis; 
+      //white-space: nowrap;
+       }
     .item-price { font-weight: 800; color: #2ecc71; margin-left: auto; padding-right: 10px; min-width: 65px; text-align: right; }
   }
 }
@@ -130,14 +207,10 @@
     background: rgba(150, 150, 150, 0.05); display: flex; align-items: center; justify-content: center; gap: 10px;
     color: var(--text-secondary); font-weight: 700; transition: all 0.2s;
     &:active { background: rgba(52, 152, 219, 0.1); border-color: #3498db; color: #3498db; }
-    &:disabled { opacity: 0.7; }
   }
 }
 
-.photo-list {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-}
-
+.photo-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .photo-item {
   position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden;
   border: 1px solid var(--border-color); background: var(--bg-color);
@@ -154,20 +227,11 @@
   position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
   .lightbox-content {
-    position: relative; width: 100%; max-width: 500px; display: flex; flex-direction: column;
+    position: relative; width: 100%; max-width: 500px;
     img { width: 100%; max-height: 80vh; border-radius: 8px; object-fit: contain; }
-    .close-lightbox {
-      align-self: flex-end; color: white; font-size: 40px; background: none; border: none; padding: 10px; line-height: 1;
-    }
+    .close-lightbox { align-self: flex-end; color: white; font-size: 40px; background: none; border: none; padding: 10px; }
   }
 }
-
-.upload-loader {
-  width: 18px; height: 18px; border: 2px solid #3498db; border-radius: 50%;
-  border-top-color: transparent; animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* --- NAVIGATION BASSE --- */
 .status-bar {
@@ -180,7 +244,6 @@
     display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px;
     span { font-size: 0.7rem; font-weight: 700; }
     &:active { color: #3498db; }
-    &[disabled] { opacity: 0.4; }
   }
 }
 
