@@ -22,6 +22,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   interventions = signal<any[]>([]);
   loading = signal(true);
   isOffline = signal(!navigator.onLine);
+  selectedIntervention = signal<any>(null); // Pour la modale
 
   // Souscriptions
   private unsubscribeRealtime: (() => void) | null = null;
@@ -30,8 +31,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Constantes Appwrite
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COL_INTERVENTIONS = 'interventions';
+    private readonly BUCKET_ID = '69502be400074c6f43f5';
 
-  // --- FILTRAGE RÉACTIF (COMPUTED) ---
+  // --- FILTRAGE RÉACTIF ---
   pendingInterventions = computed(() => 
     this.interventions().filter(i => i.status === 'OPEN' || i.status === 'WAITING')
   );
@@ -48,7 +50,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.themeService.initTheme();
     window.addEventListener('online', this.onlineHandler);
     window.addEventListener('offline', this.onlineHandler);
-    
     this.initDashboard();
   }
 
@@ -60,10 +61,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async initDashboard() {
     this.loading.set(true);
-    // On s'assure que la session et le profil sont chargés
     await this.authService.checkSession();
     const email = this.authService.userEmail();
-
     if (email) {
       await this.loadInterventions(email);
       this.subscribeToChanges();
@@ -74,65 +73,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 
 
- 
-
-  // --- ACTIONS ---
-  async markAsPaid(intervention: any, event: Event) {
-    event.stopPropagation();
-    if (confirm(`Confirmer le paiement pour ${intervention.habitants?.[0]?.nom || 'ce client'} ?`)) {
-      try {
-        await this.authService.databases.updateDocument(
-          this.DB_ID, 
-          this.COL_INTERVENTIONS, 
-          intervention.id, 
-          { 
-            status: 'PAID',
-            paidAt: new Date().toISOString()
-          }
-        );
-        // Suppression locale immédiate pour fluidité UI
-        this.interventions.update(prev => prev.filter(i => i.id !== intervention.id));
-      } catch (error) {
-        console.error("Erreur paiement:", error);
-      }
-    }
-  }
-
-  // --- NAVIGATION (GOTOOXXX) ---
-  goToAdd() { this.router.navigate(['/add-intervention']); }
-  goToEdit(id: string) { this.router.navigate(['/edit-intervention', id]); }
-  goToDetails(id: string) { if (id) this.router.navigate(['/intervention', id]); }
-  goToHistory(id: string) { if (id) this.router.navigate(['/history', id]); }
-  goToInvoice(id: string) { if (id) this.router.navigate(['/invoice', id]); }
-  goToProfile() { this.router.navigate(['/profile']); }
-  goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
-
-  goToPlanning(intervention: any, event: Event) {
-    event.stopPropagation();
-    const normalizedIntervention = {
-      ...intervention,
-      adresse: intervention.adresse || { ville: '', rue: '', numero: '' }
-    };
-    this.router.navigate(['/planning', intervention.id], { 
-      state: { data: normalizedIntervention } 
-    });
-  }
-
-  // --- STYLE HELPERS ---
-  getStatusClass(status: string): string {
-    const classes: { [key: string]: string } = {
-      'WAITING': 'waiting-card', 'OPEN': 'waiting-card',
-      'PAUSED': 'paused-card', 'STOPPED': 'stopped-card',
-      'STARTED': 'started-card', 'BILLED': 'billed-card',
-      'END': 'completed-card'
-    };
-    return classes[status] || '';
-  }
-  // ... (imports et début de classe identiques)
-
   async loadInterventions(userEmail: string) {
     const activeStatuses = ['OPEN', 'WAITING', 'PLANNED', 'STOPPED', 'PAUSED', 'STARTED', 'END', 'BILLED'];
-
     try {
       this.loading.set(true);
       let queries = [
@@ -141,13 +83,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         Query.limit(100)
       ];
 
-      // Filtrage selon les droits (Admin vs Leader vs Tech)
       if (!this.authService.hasPerm('miss_view_all')) {
         const profile = await this.authService.loadUserProfile(userEmail);
         const userTeamId = profile?.['teamId'];
-        const userRole = this.authService.userRole();
-
-        if (userRole === 'Responsable' && userTeamId) {
+        if (this.authService.userRole() === 'Responsable' && userTeamId) {
           const members = await this.authService.databases.listDocuments(this.DB_ID, 'user_profiles', [Query.equal('teamId', userTeamId)]);
           const memberEmails = members.documents.map(d => d['email']);
           queries.push(Query.or([Query.equal('assigned', memberEmails), Query.equal('createdBy', userEmail)]));
@@ -157,18 +96,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       const response = await this.authService.databases.listDocuments(this.DB_ID, this.COL_INTERVENTIONS, queries);
-
-      // --- LE FIX ICI : Mapping UNIQUE et complet ---
-      const sanitizedDocs = response.documents.map(d => ({
-        ...d,
-        id: d.$id,
-        adresse: typeof d['adresse'] === 'string' ? JSON.parse(d['adresse']) : d['adresse'],
-        habitants: typeof d['habitants'] === 'string' ? JSON.parse(d['habitants']) : d['habitants'],
-        mission: typeof d['mission'] === 'string' ? JSON.parse(d['mission']) : d['mission']
-      }));
-
+      const sanitizedDocs = response.documents.map(d => this.sanitizeIntervention(d));
       this.interventions.set(sanitizedDocs);
-
     } catch (error) {
       console.error("Erreur Appwrite Load:", error);
     } finally {
@@ -181,26 +110,129 @@ export class DashboardComponent implements OnInit, OnDestroy {
       `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`, 
       response => {
         const payload = response.payload as any;
-        const eventType = response.events[0];
-
-        if (eventType.includes('.update')) {
-          // --- FIX REALTIME : Parser aussi le payload entrant ---
-          const sanitizedPayload = {
-            ...payload,
-            id: payload.$id,
-            adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
-            habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants']
-          };
-
-          this.interventions.update(list => 
-            list.map(i => i.id === payload.$id ? sanitizedPayload : i)
-          );
-        } else if (eventType.includes('.create') || eventType.includes('.delete')) {
+        if (response.events[0].includes('.update')) {
+          const cleanData = this.sanitizeIntervention(payload);
+          this.interventions.update(list => list.map(i => i.id === payload.$id ? cleanData : i));
+        } else if (response.events[0].includes('.create') || response.events[0].includes('.delete')) {
           this.loadInterventions(this.authService.userEmail()!);
         }
       }
     );
   }
 
-// ... (Reste des fonctions goToXXX et markAsPaid identiques)
+
+
+  closeTasks() {
+    this.selectedIntervention.set(null);
+  }
+
+  // --- ACTIONS & NAVIGATION ---
+  async markAsPaid(intervention: any, event: Event) {
+    event.stopPropagation();
+    if (confirm(`Confirmer le paiement ?`)) {
+      try {
+        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, { 
+          status: 'PAID', paidAt: new Date().toISOString() 
+        });
+        this.interventions.update(prev => prev.filter(i => i.id !== intervention.id));
+      } catch (error) { console.error(error); }
+    }
+  }
+
+  goToEdit(id: string) { this.router.navigate(['/edit-intervention', id]); }
+  goToDetails(id: string) { if (id) this.router.navigate(['/intervention', id]); }
+  goToPlanning(intervention: any, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/planning', intervention.id], { state: { data: intervention } });
+  }
+  goToInvoice(id: string) { if (id) this.router.navigate(['/invoice', id]); }
+  goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
+
+  getStatusClass(status: string): string {
+    const classes: any = { 'WAITING': 'waiting-card', 'OPEN': 'waiting-card', 'PAUSED': 'paused-card', 'STARTED': 'started-card', 'BILLED': 'billed-card', 'END': 'completed-card' };
+    return classes[status] || '';
+  }
+  // --- MÉTHODES DE NAVIGATION MANQUANTES ---
+  goToAdd() { 
+    this.router.navigate(['/add-intervention']); 
+  }
+
+  goToProfile() { 
+    this.router.navigate(['/profile']); 
+  }
+
+  goToHistory(id: string) { 
+    if (id) this.router.navigate(['/history', id]); 
+  }
+  private sanitizeIntervention(payload: any) {
+  let missionData = payload['mission'];
+
+  if (typeof missionData === 'string') {
+    try {
+      missionData = JSON.parse(missionData);
+    } catch (e) {
+      // SI CE N'EST PAS DU JSON : 
+      // On découpe la chaîne par les sauts de ligne pour créer un vrai tableau
+      missionData = missionData ? missionData.split('\n').map((t: string) => t.trim()).filter((t: string) => t.length > 0) : [];
+    }
+  }
+
+  return {
+    ...payload,
+    id: payload.$id,
+    adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
+    habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
+    // On s'assure que mission est toujours un tableau propre
+    mission: Array.isArray(missionData) ? missionData : (missionData ? [missionData] : [])
+  };
+}
+openTasks(inter: any, event: Event) {
+  event.stopPropagation();
+  
+  const missionData = inter.mission;
+  let finalTasks: string[] = [];
+
+  // 1. On transforme tout en tableau pour simplifier le traitement
+  const dataArray = Array.isArray(missionData) ? missionData : [missionData];
+
+  dataArray.forEach(item => {
+    if (!item) return;
+
+    let textToSplit = '';
+
+    // CAS DE VOTRE IMAGE : C'est un objet { description: "..." }
+    if (typeof item === 'object') {
+      textToSplit = item.description || item.label || JSON.stringify(item);
+    } 
+    // CAS CLASSIQUE : C'est une string "tache1\ntache2"
+    else {
+      textToSplit = item.toString();
+    }
+
+    // 2. On découpe par le saut de ligne (\n)
+    if (textToSplit.includes('\n')) {
+      finalTasks.push(...textToSplit.split('\n'));
+    } else {
+      finalTasks.push(textToSplit);
+    }
+  });
+
+  // 3. Nettoyage final
+  const cleanedTasks = finalTasks
+    .map(t => t.trim())
+    .filter(t => t.length > 0);
+
+  this.selectedIntervention.set({
+    ...inter,
+    mission: cleanedTasks
+  });
+}
+
+
+
+
+getFileView(fileId: string) {
+  // .getFileView renvoie l'URL de l'image originale
+  return this.authService.storage.getFileView(this.BUCKET_ID, fileId);
+}
 }
