@@ -131,7 +131,7 @@
       }
 
       /* Gestion propre du texte pour rester sur une ligne */
-      white-space: nowrap;
+      //white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
