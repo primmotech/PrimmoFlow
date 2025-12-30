@@ -170,20 +170,49 @@
   .slider-hint { font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 8px; font-style: italic; }
 }
 
-/* --- NAVIGATION & FAB --- */
-.fab-btn {
-  position: fixed; right: 20px; bottom: 100px;
-  width: 60px; height: 60px; border-radius: 30px;
-  background: #3498db; border: none; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-}
-
+/* --- NAVIGATION BASSE --- */
 .bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
-  background: var(--card-bg); border-top: 1px solid var(--border-color);
-  display: flex; justify-content: space-around; align-items: center;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 75px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+
   .nav-item {
-    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: var(--text-secondary); span { font-size: 0.65rem; font-weight: 700; }
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+    
+    /* Empêche la découpe du tracé SVG */
+    svg { 
+      width: 24px; 
+      height: 24px; 
+      stroke-width: 2; 
+      fill: none;
+      overflow: visible; /* CRUCIAL : permet au tracé de dépasser légèrement sans être coupé */
+      display: block;
+    }
+
+    span { 
+      font-size: 0.7rem; 
+      font-weight: 700; 
+      text-transform: uppercase; /* Pour un look pro comme tes titres */
+      letter-spacing: 0.3px;
+    }
+
+    &.active { 
+      color: var(--accent-color, #3498db); 
+      
+      /* Optionnel : épaissir un peu l'icône active */
+      svg { stroke-width: 2.5; }
+    }
   }
 }
