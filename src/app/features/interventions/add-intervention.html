@@ -104,7 +104,32 @@
         }
       </div>
     </div>
+<div class="info-group">
+  <div class="group-header">
+    <h3>Photos (Max 5)</h3> </div>
+  <div class="glass-card">
+    <input type="file" 
+           (change)="onFileSelected($event)" 
+           accept="image/jpeg, image/png" 
+           multiple 
+           class="file-input">
 
+    <div class="photo-preview-grid">
+      @for (photo of photosToUpload; track $index) {
+        <div class="photo-thumbnail">
+          <img [src]="photo | safeUrl" alt="Photo à uploader">
+          <button (click)="removePhotoToUpload($index)" class="remove-photo-btn">X</button>
+        </div>
+      }
+      @for (photoId of existingPhotoIds; track photoId) {
+        <div class="photo-thumbnail">
+          <img [src]="getPhotoPreviewUrl(photoId)" alt="Photo existante">
+          <button (click)="removeExistingPhoto(photoId)" class="remove-photo-btn">X</button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
     <div class="info-group">
       <div class="group-header"><h3>Remarques internes</h3></div>
       <div class="glass-card">

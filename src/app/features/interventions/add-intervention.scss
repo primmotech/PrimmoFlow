@@ -255,3 +255,56 @@ input, textarea, .custom-select {
 
   svg { flex-shrink: 0; }
 }
+.file-input {
+  display: block; // Pour le rendre plus facile à styliser
+  margin-bottom: 15px;
+  // Stylisation personnalisée de l'input file par exemple:
+  // background: var(--input-bg);
+  // border: 1px solid var(--border-color);
+  // border-radius: 12px;
+  // padding: 10px;
+  // cursor: pointer;
+  // color: var(--text-primary);
+}
+
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); // Rendre responsive
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.photo-thumbnail {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; // Pour que l'image remplisse bien le cadre
+    display: block;
+  }
+}
+
+.remove-photo-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(231, 76, 60, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
