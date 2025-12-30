@@ -73,7 +73,7 @@
 /* --- TIMER (STICKY 1) --- */
 .sticky-timer { 
   position: sticky; 
-  top: 85px; // Juste sous le header
+  top: 85px; 
   margin: 15px; 
   z-index: 910; 
 }
@@ -102,12 +102,12 @@
   }
 }
 
-/* --- TÂCHES (STICKY 2 - COLLÉ SOUS LE TIMER) --- */
+/* --- TÂCHES (STICKY 2) --- */
 .sticky-tasks {
   position: sticky;
-  top: 175px; // Positionné après le header + timer
+  top: 175px;
   z-index: 905;
-  background: var(--bg-color); // Empêche la transparence au scroll
+  background: var(--bg-color);
   padding-top: 5px;
   padding-bottom: 15px;
 }
@@ -128,59 +128,39 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  min-width: 0;
-
-  .task-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    //white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  input:checked ~ .task-label {
-    text-decoration: line-through;
-    opacity: 0.5;
-  }
-
+  .task-label { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; }
+  input:checked ~ .task-label { text-decoration: line-through; opacity: 0.5; }
   .checkbox-wrapper {
-    position: relative;
-    min-width: 20px;
-    height: 20px;
-    input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+    position: relative; min-width: 20px; height: 20px;
+    input { position: absolute; opacity: 0; height: 0; width: 0; }
     .checkmark {
-      position: absolute;
-      top: 0; left: 0;
-      height: 20px; width: 20px;
-      background: rgba(150, 150, 150, 0.1);
-      border: 1.5px solid var(--border-color);
-      border-radius: 6px;
-      transition: all 0.2s ease;
+      position: absolute; top: 0; left: 0; height: 20px; width: 20px;
+      background: rgba(150, 150, 150, 0.1); border: 1.5px solid var(--border-color); border-radius: 6px;
     }
     input:checked ~ .checkmark {
-      background-color: #2ecc71;
-      border-color: #2ecc71;
-      &:after {
-        content: ""; position: absolute;
-        left: 6px; top: 2px; width: 4px; height: 9px;
-        border: solid white; border-width: 0 2.5px 2.5px 0;
-        transform: rotate(45deg);
-      }
+      background-color: #2ecc71; border-color: #2ecc71;
+      &:after { content: ""; position: absolute; left: 6px; top: 2px; width: 4px; height: 9px; border: solid white; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
     }
   }
 }
 
 /* --- LISTES & ITEMS --- */
 .list-container { margin-top: 10px; }
+
 .list-item {
-  display: flex; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color);
+  display: flex; 
+  align-items: center; // Centrage vertical global de la ligne
+  padding: 12px 0; 
+  border-bottom: 1px dashed var(--border-color);
   &:last-child { border: none; }
+
   .item-main-content {
-    flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0;
-    .text-truncate { overflow: hidden; text-overflow: ellipsis; 
-      //white-space: nowrap;
-       }
+    flex: 1; 
+    display: flex; 
+    align-items: center; // Centrage icônes / textes / prix
+    gap: 12px; 
+    min-width: 0;
+    .text-truncate { overflow: hidden; text-overflow: ellipsis; }
     .item-price { font-weight: 800; color: #2ecc71; margin-left: auto; padding-right: 10px; min-width: 65px; text-align: right; }
   }
 }
@@ -189,47 +169,123 @@
 .manual-time-input {
   background: rgba(150, 150, 150, 0.05);
   padding: 12px; border-radius: 12px; margin-bottom: 15px;
-  .time-controls { display: flex; justify-content: space-between; align-items: center; }
+  .time-controls { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; // Centrage vertical du bloc temps et du bouton +
+  }
 }
 
 .time-field-wrapper {
-  display: flex; align-items: center; background: rgba(150,150,150,0.1);
-  padding: 5px 12px; border-radius: 10px;
+  display: flex; 
+  align-items: center; 
+  background: rgba(150,150,150,0.1);
+  padding: 5px 12px; 
+  border-radius: 10px;
   input { width: 40px; border: none; background: transparent; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); text-align: center; }
   .separator { font-weight: 700; color: var(--text-secondary); margin: 0 4px; }
 }
 
-/* --- PHOTOS SECTION --- */
-.photo-grid-header {
-  margin-bottom: 15px;
-  .upload-trigger-btn {
-    width: 100%; padding: 14px; border-radius: 12px; border: 2px dashed var(--border-color);
-    background: rgba(150, 150, 150, 0.05); display: flex; align-items: center; justify-content: center; gap: 10px;
-    color: var(--text-secondary); font-weight: 700; transition: all 0.2s;
-    &:active { background: rgba(52, 152, 219, 0.1); border-color: #3498db; color: #3498db; }
+/* --- BOUTON ADD (TOUJOURS ROND) --- */
+.add-btn.circle-btn {
+  width: 38px !important; // Légèrement plus grand pour le confort tactile
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  margin: 0; 
+  background-color: #3498db; 
+  color: white;
+  border: none;
+  flex-shrink: 0;
+  transition: transform 0.1s;
+  
+  svg { width: 22px; height: 22px; stroke-width: 3px; }
+  &:active { transform: scale(0.9); }
+  &:disabled { opacity: 0.4; }
+}
+
+/* --- INPUTS GÉNÉRIQUES (Matériel/Commandes) --- */
+.input-row {
+  display: flex; 
+  gap: 10px; 
+  margin-bottom: 12px;
+  align-items: center; // Centrage vertical de l'input et du bouton +
+  
+  input { 
+    background: rgba(150,150,150,0.1); 
+    border-radius: 10px; 
+    padding: 12px; 
+    border: none; 
+    color: var(--text-primary); 
+    width: 100%;
+    margin: 0; 
   }
 }
 
+/* --- SECTION MAIN D'OEUVRE (CARTES LARGES) --- */
+.time-session-card {
+  display: flex;
+  align-items: center; // Centre tout verticalement (icône, texte, bouton delete)
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 14px;
+
+  .session-type-indicator {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.15);
+    padding: 8px;
+    border-radius: 10px;
+    display: flex;
+    svg { width: 22px; height: 22px; fill: none; stroke: currentColor; }
+  }
+
+  .session-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    .session-date { font-size: 0.8rem; opacity: 0.6; }
+    .session-duration { font-size: 1.1rem; font-weight: 700; }
+  }
+
+  .session-price { font-size: 1rem; font-weight: 800; color: #2ecc71; }
+
+  .large-delete-action {
+    background: rgba(231, 76, 60, 0.1);
+    border: none;
+    color: #e74c3c;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    svg { width: 18px; height: 18px; }
+    &:active { transform: scale(0.9); background: rgba(231, 76, 60, 0.2); }
+  }
+}
+
+/* --- PHOTOS & LIGHTBOX --- */
 .photo-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .photo-item {
   position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden;
-  border: 1px solid var(--border-color); background: var(--bg-color);
-  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  img { width: 100%; height: 100%; object-fit: cover; }
   .delete-photo-btn {
     position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
-    background: rgba(231, 76, 60, 0.9); color: white; border: none; border-radius: 50%;
-    font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center;
+    background: #e74c3c; color: white; border: none; border-radius: 50%;
   }
 }
 
-/* --- LIGHTBOX & UI UTILS --- */
 .lightbox {
   position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
-  display: flex; align-items: center; justify-content: center; padding: 20px;
+  display: flex; align-items: center; justify-content: center;
   .lightbox-content {
-    position: relative; width: 100%; max-width: 500px;
-    img { width: 100%; max-height: 80vh; border-radius: 8px; object-fit: contain; }
-    .close-lightbox { align-self: flex-end; color: white; font-size: 40px; background: none; border: none; padding: 10px; }
+    position: relative; width: 90%;
+    img { width: 100%; border-radius: 8px; }
+    .close-lightbox { position: absolute; top: -50px; right: 0; color: white; font-size: 40px; background: none; border: none; }
   }
 }
 
@@ -241,17 +297,161 @@
   padding-bottom: env(safe-area-inset-bottom);
   .nav-item {
     background: none; border: none; color: var(--text-secondary);
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
     span { font-size: 0.7rem; font-weight: 700; }
     &:active { color: #3498db; }
   }
 }
 
-/* --- INPUTS --- */
-.input-row {
-  display: flex; gap: 10px; margin-bottom: 12px;
-  input { background: rgba(150,150,150,0.1); border-radius: 10px; padding: 12px; border: none; color: var(--text-primary); width: 100%; }
+.step-btn { color: #ffffff;  width: 36px; height: 36px; border-radius: 10px; font-weight: 900; background: { color: #3498db; }; border: 1px solid var(--border-color); }
+/* Grille de photos */
+.photo-list { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 10px; 
 }
 
-.add-btn.circle-btn { width: 34px; height: 34px; border-radius: 50%; background: #3498db; color: white; border: none; display: flex; align-items: center; justify-content: center; }
-.step-btn { width: 36px; height: 36px; border-radius: 10px; font-weight: 900; }
+.photo-item {
+  position: relative; 
+  aspect-ratio: 1; 
+  border-radius: 12px; 
+  overflow: hidden;
+  background: rgba(150, 150, 150, 0.05);
+  
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+/* Le bouton pointillés */
+.upload-placeholder {
+  border: 2px dashed var(--border-color); /* Cadre pointillés */
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: #3498db;
+    transform: scale(0.95);
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    
+    svg { color: #3498db; }
+    span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+  }
+}
+
+/* État de chargement dans la grille */
+.upload-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+}
+
+/* Bouton de suppression sur les photos */
+.delete-photo-btn {
+  position: absolute; 
+  top: 4px; 
+  right: 4px; 
+  width: 20px; 
+  height: 20px;
+  background: #e74c3c; 
+  color: white; 
+  border: none; 
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.photo-card-padding {
+  padding: 12px !important;
+}
+
+.photo-grid {
+  display: grid;
+  /* Force 4 colonnes de largeur égale */
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 8px; /* Espacement réduit pour bien tenir à 4 sur petit écran */
+}
+
+.photo-item {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Force le carré parfait */
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(150, 150, 150, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Remplit le carré sans déformer */
+  }
+}
+
+/* Style du bouton "Ajouter" en pointillés */
+.upload-placeholder {
+  border: 2px dashed #3498db;
+  background: transparent;
+  cursor: pointer;
+  
+  .placeholder-content {
+    color: #3498db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:active {
+    background: rgba(52, 152, 219, 0.1);
+    transform: scale(0.92);
+  }
+}
+
+/* Badge de suppression */
+.delete-photo-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+  border: none;
+  border-radius: 4px; /* Un peu plus carré pour le look pro */
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+/* Loader miniature */
+.upload-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #3498db;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

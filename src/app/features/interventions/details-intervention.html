@@ -83,57 +83,52 @@
           </div>
         </div>
         
-        <div class="list-container">
-          @for (sStr of item.timeSessions; track sStr) {
-            @let s = parseJson(sStr);
-            <div class="list-item">
-              <div class="item-main-content">
-                <div class="session-type">
-                  @if (s.pauseDuration !== '00:00:00') {
-                    <svg viewBox="0 0 24 24" class="type-icon chrono" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                  } @else {
-                    <svg viewBox="0 0 24 24" class="type-icon manual" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  }
-                </div>
-                <div class="item-info">
-                  <div class="top-line">
-                    <span class="date-text">{{ s.date | date:'dd/MM' }}</span>
-                    <strong class="duration-text">{{ s.workDuration.substring(0,5) }}</strong>
-                  </div>
-                </div>
-                <span class="item-price">{{ s.price | number:'1.2-2' }}€</span>
-              </div>
-              <div class="item-action-zone">
-                <button (click)="removeSession(sStr)" class="delete-btn">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
+<div class="list-container large-list">
+  @for (sStr of item.timeSessions; track sStr) {
+    @let s = parseJson(sStr);
+    <div class="list-item time-session-card">
+      
+ 
 
-    <div class="info-group">
-      <div class="group-header"><h3>Déplacements</h3></div>
-      <div class="glass-card">
-        <div class="list-item">
-          <div class="item-main-content">
-            <strong class="font-main">{{ item.travelCount || 0 }} trajet(s)</strong>
-            <span class="item-price">{{ ((item.travelCount || 0) * travelFee()) | number:'1.2-2' }}€</span>
-          </div>
-          <div class="item-action-zone flex-row">
-            <button (click)="updateTravel(-0.5)" [disabled]="(item.travelCount || 0) <= 0" class="step-btn">-</button>
-            <button (click)="updateTravel(0.5)" class="step-btn">+</button>
-          </div>
-        </div>
+      <div class="session-info">
+        <span class="session-date">{{ s.date | date:'dd MMM' }}</span>
+        <span class="session-duration">{{ s.workDuration.substring(0,5) }}</span>
+      </div>
+
+      <div class="session-price">
+        {{ s.price | number:'1.2-2' }}€
+      </div>
+
+      <button (click)="removeSession(sStr)" class="large-delete-action">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+      
+    </div>
+  }
+</div>
       </div>
     </div>
+<div class="info-group">
+  <div class="group-header"><h3>Déplacements</h3></div>
+  <div class="glass-card">
+<div class="list-item travel-row">
+  <div class="item-main-content">
+    <strong class="font-main">{{ item.travelCount || 0 }} trajet(s)</strong>
+    
+    <button (click)="updateTravel(-0.5)" class="step-btn minus-btn">-</button>
+    
+    <span class="item-price">{{ ((item.travelCount || 0) * travelFee()) | number:'1.2-2' }}€</span>
+  </div>
+  
+  <div class="item-action-zone">
+    <button (click)="updateTravel(0.5)" class="step-btn">+</button>
+  </div>
+</div>
+  </div>
+</div>
 
     <div class="info-group">
       <div class="group-header"><h3>Matériel & Fournitures</h3></div>
@@ -162,27 +157,34 @@
       </div>
     </div>
     
-    <div class="info-group">
-      <div class="group-header"><h3>Photos</h3></div>
-      <div class="glass-card">
-        <div class="photo-grid-header">
-          <input type="file" (change)="uploadPhoto($event)" accept="image/*" #photoInput style="display: none;">
-          <button (click)="photoInput.click()" class="upload-trigger-btn" [disabled]="uploading()">
-            @if (uploading()) { <span class="upload-loader"></span> } 
-            @else { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> <span>Ajouter une photo</span> }
-          </button>
-        </div>
-        <div class="photo-list">
-          @for (pStr of item.photos; track pStr) {
-            @let p = parseJson(pStr);
-            <div class="photo-item">
-              <img [src]="p.url" alt="Photo" (click)="openLightbox(p.url)">
-              <button (click)="removePhoto(pStr)" class="delete-photo-btn">×</button>
-            </div>
-          }
+<div class="info-group">
+  <div class="group-header"><h3>Photos</h3></div>
+  <div class="glass-card photo-card-padding">
+    <div class="photo-grid">
+      <div class="photo-item upload-placeholder" (click)="photoInput.click()" *ngIf="!uploading()">
+        <input type="file" (change)="uploadPhoto($event)" accept="image/*" #photoInput style="display: none;">
+        <div class="placeholder-content">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
         </div>
       </div>
+
+      <div class="photo-item upload-loading" *ngIf="uploading()">
+        <span class="upload-loader"></span>
+      </div>
+
+      @for (pStr of item.photos; track pStr) {
+        @let p = parseJson(pStr);
+        <div class="photo-item">
+          <img [src]="p.url" alt="Photo" (click)="openLightbox(p.url)">
+          <button (click)="removePhoto(pStr)" class="delete-photo-btn" aria-label="Supprimer">×</button>
+        </div>
+      }
     </div>
+  </div>
+</div>
 
     <div class="info-group">
       <div class="group-header"><h3>Commandes</h3></div>
