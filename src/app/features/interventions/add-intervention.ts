@@ -193,4 +193,16 @@ export class AddInterventionComponent implements OnInit {
   }
 
   goBack() { this.router.navigate(['/dashboard']); }
+  // Méthode pour copier un habitant vers le propriétaire
+copyToProprietaire(index: number = 0) {
+  const habitant = this.data.habitants[index];
+  if (habitant) {
+    this.data.proprietaire = {
+      nom: habitant.nom,
+      prenom: habitant.prenom,
+      tel: habitant.tel
+    };
+    this.onValueChange();
+  }
+}
 }

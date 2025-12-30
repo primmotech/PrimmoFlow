@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/login/login';
 import { DashboardComponent } from './features/dashboard/dashboard';
@@ -15,8 +14,6 @@ import { Whitelist } from './features/whitelist/whitelist';
 import { CompletedInterventionsComponent } from './features/interventions/completed-interventions';
 import { Roles } from './features/roles/roles'; 
 import { permissionGuard } from './core/guards/permissions.guard';
-
-
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -37,7 +34,6 @@ export const routes: Routes = [
   { 
     path: 'parameters', 
     component: Parameters,
-    
   },
   
   // Routes Missions / Interventions
@@ -55,10 +51,5 @@ export const routes: Routes = [
   },
 
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: '**', redirectTo: 'login' } // Redirection de sécurité pour les URLs inconnues
+  { path: '**', redirectTo: 'login' } // Redirection de sécurité
 ];
-=======
-import { Routes } from '@angular/router';
-
-export const routes: Routes = [];
->>>>>>> 81e3f16 (initial commit)

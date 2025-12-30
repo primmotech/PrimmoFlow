@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* --- VARIABLES & DESIGN SYSTEM --- */
 :root {
   --bg-color: #f3f4f6;
@@ -37,9 +36,8 @@ body {
   padding-bottom: 90px;
 }
 
-/* --- COMPOSANTS SHARED (Réutilisables partout) --- */
+/* --- COMPOSANTS SHARED --- */
 
-// Navigation Basse
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0; height: 75px;
@@ -47,16 +45,21 @@ body {
   border-top: 1px solid var(--border-color);
   display: flex; justify-content: space-around; align-items: center;
   z-index: 1000;
-  .nav-item {
-    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: var(--text-secondary);
-    span { font-size: 0.7rem; font-weight: 700; }
-    &.active { color: var(--accent-color); }
-    svg { width: 24px; height: 24px; stroke-width: 2; }
-  }
 }
 
-// Boutons d'action rapides (FAB)
+.bottom-nav .nav-item {
+  text-decoration: none; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.bottom-nav .nav-item span { font-size: 0.7rem; font-weight: 700; }
+.bottom-nav .nav-item.active { color: var(--accent-color); }
+.bottom-nav .nav-item svg { width: 24px; height: 24px; stroke-width: 2; }
+
 .fab-btn {
   position: fixed; right: 20px; bottom: 100px;
   width: 60px; height: 60px; border-radius: 30px;
@@ -65,11 +68,23 @@ body {
   color: white; display: flex; align-items: center; justify-content: center;
 }
 
-// Badges & Status
 .badge {
   padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
-  &.open { background: rgba(52, 152, 219, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
 }
-=======
-/* You can add global styles to this file, and also import other style files */
->>>>>>> 81e3f16 (initial commit)
+
+.badge.open { 
+  background: rgba(52, 152, 219, 0.1); 
+  color: var(--accent-color); 
+  border: 1px solid var(--accent-color); 
+}
+/* Supprime les flèches pour Chrome, Safari, Edge et Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Supprime les flèches pour Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}

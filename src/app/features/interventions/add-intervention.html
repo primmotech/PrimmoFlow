@@ -19,36 +19,49 @@
       </div>
     </div>
 
-    <div class="info-group">
-      <div class="group-header">
-        <h3>Habitant(s)</h3>
-        <button *ngIf="data.habitants.length < 2" 
-                (click)="addHabitant()" 
-                [disabled]="!isHabitantComplete(data.habitants[data.habitants.length - 1])"
-                class="small-add-btn">
-          + Ajouter
+<div class="info-group">
+  <div class="group-header">
+    <h3>Habitant(s)</h3>
+    <button *ngIf="data.habitants.length < 2" 
+            (click)="addHabitant()" 
+            [disabled]="!isHabitantComplete(data.habitants[data.habitants.length - 1])"
+            class="small-add-btn">
+      + Ajouter
+    </button>
+  </div>
+  
+  @for (h of data.habitants; track $index) {
+    <div class="glass-card mb-10">
+      <div class="input-row">
+        <input type="text" [(ngModel)]="h.prenom" (ngModelChange)="onValueChange()" placeholder="Prénom" class="flex-1">
+        <input type="text" [(ngModel)]="h.nom" (ngModelChange)="onValueChange()" placeholder="Nom" class="flex-1">
+      </div>
+      <div class="input-row mt-10">
+        <input type="tel" [(ngModel)]="h.tel" (ngModelChange)="onValueChange()" placeholder="Téléphone" class="w-60">
+        
+        <button *ngIf="isHabitantComplete(h)" 
+                (click)="copyToProprietaire($index)" 
+                class="copy-btn" 
+                title="Copier vers Propriétaire">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+          <span>Proprio</span>
+        </button>
+
+        <div class="flex-1"></div>
+        
+        <button *ngIf="data.habitants.length > 1" (click)="removeHabitant($index)" class="delete-btn-flat">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#e74c3c" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
         </button>
       </div>
-      
-      @for (h of data.habitants; track $index) {
-        <div class="glass-card mb-10">
-          <div class="input-row">
-            <input type="text" [(ngModel)]="h.prenom" (ngModelChange)="onValueChange()" placeholder="Prénom" class="flex-1">
-            <input type="text" [(ngModel)]="h.nom" (ngModelChange)="onValueChange()" placeholder="Nom" class="flex-1">
-          </div>
-          <div class="input-row mt-10">
-            <input type="tel" [(ngModel)]="h.tel" (ngModelChange)="onValueChange()" placeholder="Téléphone" class="w-60">
-            <div class="flex-1"></div>
-            <button *ngIf="data.habitants.length > 1" (click)="removeHabitant($index)" class="delete-btn-flat">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#e74c3c" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      }
     </div>
+  }
+</div>
 
     <div class="info-group">
       <div class="group-header"><h3>Propriétaire (Si différent)</h3></div>

@@ -97,12 +97,6 @@ export class Whitelist implements OnInit, OnDestroy {
   }
  
 
-  /**
-   * Suppression complète d'un utilisateur
-   * Note : La suppression de l'Auth nécessite une Appwrite Function pour être 100% automatisée.
-   * standard_a91ce1af77eb2a192dbea14f6b06e6ccdc7d439777fb82aabb8799717d812275e8bd3a7bcf521361b106adfc631d39ffd53c4e9dbe1ef18f89fe063f0df616d7b457b3f4edef4a02c0080ba1163fd24d007a263696035cf03a6f7c1ea6b59f37b24598b3c1c8ce20d55dacf28d9b34c089c7fba76340503f079939b99ed94994
-   *databases.694eba69001c97d55121.collections.authorized_users.documents.*.delete
-   */
   async deleteEmail(email: string) {
     if (email === this.auth.userEmail()) return alert("Vous ne pouvez pas vous supprimer vous-même.");
     
@@ -136,57 +130,49 @@ export class Whitelist implements OnInit, OnDestroy {
   /**
    * Ajout d'un utilisateur avec initialisation du flag hasAccount
    */
-  async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
-    const email = emailInput.value.trim().toLowerCase();
-    const nickName = nameInput.value.trim();
-    const id = this.auth.formatId(email);
+async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
+  const email = emailInput.value.trim().toLowerCase();
+  const nickName = nameInput.value.trim();
+  const id = this.auth.formatId(email);
 
-    if (!email.includes('@')) return alert("Email invalide");
+  if (!email.includes('@')) return alert("Email invalide");
 
+  try {
+    this.loading.set(true);
+    
+    // 1. Ajout Whitelist UNIQUEMENT (Droit d'entrée)
+    await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
+      email, 
+      addedAt: new Date().toISOString(),
+      hasAccount: false // Indique que le compte Auth n'est pas encore créé
+    });
+
+    // 2. Pré-création du Profil (Données métier)
     try {
-      this.loading.set(true);
-      const tempPass = "ChangeMe!" + Math.random().toString(36).slice(-8);
-      
-      // 1. Création Compte Auth (Si inexistant)
-      try { 
-        await this.auth.account.create(id, email, tempPass); 
-      } catch (e: any) { 
-        if (e.code !== 409) throw e; 
-      }
-
-      // 2. Ajout Whitelist avec le flag hasAccount à false
-      await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
+      await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
         email, 
-        addedAt: new Date().toISOString(),
-        hasAccount: false // L'utilisateur devra se loguer pour passer à true
+        nickName: nickName || email.split('@')[0], 
+        role: 'Technicien', 
+        themePreference: 'dark', 
+        updatedAt: new Date().toISOString()
       });
-
-      // 3. Création/Update Profil
-      try {
-        await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
-          email, 
-          nickName: nickName || email.split('@')[0], 
-          role: 'Technicien', 
-          themePreference: 'dark', 
-          updatedAt: new Date().toISOString()
+    } catch (e: any) {
+      if (e.code === 409) {
+        await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { 
+          nickName: nickName || email.split('@')[0] 
         });
-      } catch (e: any) {
-        if (e.code === 409) {
-          await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { 
-            nickName: nickName || email.split('@')[0] 
-          });
-        }
       }
-
-      alert(`Utilisateur autorisé !\nIdentifiants temporaires :\nEmail: ${email}\nMDP: ${tempPass}`);
-      emailInput.value = ''; nameInput.value = '';
-      await this.loadAuthorizedUsers();
-    } catch (error: any) { 
-      alert("Erreur lors de l'ajout : " + error.message); 
-    } finally { 
-      this.loading.set(false); 
     }
-  }
 
-  // ... (reste des méthodes : loadRoles, loadAuthorizedUsers, etc.)
+    alert(`Utilisateur ${email} autorisé ! Il peut maintenant créer son compte sur la page de login.`);
+    emailInput.value = ''; nameInput.value = '';
+    await this.loadAuthorizedUsers();
+  } catch (error: any) { 
+    alert("Erreur lors de l'autorisation : " + error.message); 
+  } finally { 
+    this.loading.set(false); 
+  }
+}
+
+
 } 
