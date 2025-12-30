@@ -55,34 +55,31 @@
     }
   }
 
-  .contact-zone {
+.contact-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .btn-call-retro {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    color: var(--accent-color); // Utilise ta couleur bleue (ou #2ecc71 si tu veux du vert uniquement sur l'icône)
+    text-decoration: none;
+    padding: 4px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 
-    .habitant-pill {
-      background: var(--border-color);
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      color: var(--text-primary);
-      small { color: var(--accent-color); font-size: 1rem; }
+    svg {
+      width: 28px; // Taille optimale pour voir les détails du tracé
+      height: 28px;
     }
 
-    .btn-call {
-      background: #2ecc71;
-      width: 38px; height: 38px;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.2);
-      border: none;
+    &:active {
+      transform: scale(0.85); // Effet de pression au clic
+      opacity: 0.7;
     }
   }
+}
 }
 
 /* --- 2.1 LISTE DES TACHES (GRANDE TAILLE & DEUX COLONNES) --- */
