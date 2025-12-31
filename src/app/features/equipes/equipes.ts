@@ -79,60 +79,60 @@ export class Equipes implements OnInit {
 
 // ... imports et setup identiques ...
 
-  async createTeam() {
-    if (!this.newTeam.name || !this.newTeam.leader) return;
-    this.loading.set(true); // Feedback visuel pendant la création
+async createTeam() {
+  if (!this.newTeam.name || !this.newTeam.leader) return;
+  this.loading.set(true);
 
-    try {
-      // 1. Créer l'équipe
-      const teamDoc = await this.auth.databases.createDocument(
-        this.DB_ID, 
-        this.COL_TEAMS, 
-        ID.unique(), 
-        {
-          name: this.newTeam.name,
-          leader: this.newTeam.leader,
-          members: this.newTeam.members,
-          $createdAt: new Date().toISOString()
-        }
-      );
+  try {
+    // 1. Créer l'équipe
+    const teamDoc = await this.auth.databases.createDocument(
+      this.DB_ID, 
+      this.COL_TEAMS, 
+      ID.unique(), 
+      {
+        name: this.newTeam.name,
+        leader: this.newTeam.leader,
+        members: this.newTeam.members,
+        $createdAt: new Date().toISOString()
+      }
+    );
 
-      // 2. Préparer les emails uniques
-      const allEmails = [...new Set([...this.newTeam.members, this.newTeam.leader])];
+    // 2. Préparer les emails uniques
+    const allEmails = [...new Set([...this.newTeam.members, this.newTeam.leader])];
 
-      // 3. Exécuter les mises à jour de profils en parallèle (plus rapide)
-      await Promise.all(allEmails.map(async (email) => {
-        const docId = this.auth.formatId(email);
-        const isLeader = email === this.newTeam.leader;
-        
-        const profileData = {
-          teamId: teamDoc.$id,
-          role: isLeader ? 'Responsable' : 'Technicien'
-        };
+    // 3. Mises à jour des profils
+    await Promise.all(allEmails.map(async (email) => {
+      const docId = this.auth.formatId(email);
+      const isLeader = email === this.newTeam.leader;
+  
+      const profileData: any = { teamId: teamDoc.$id };
 
-        try {
-          await this.auth.databases.updateDocument(this.DB_ID, this.COL_PROFILES, docId, profileData);
-        } catch (e) {
-          // Fallback création si le profil n'existe pas (ton code original est bon)
-          await this.auth.databases.createDocument(this.DB_ID, this.COL_PROFILES, docId, {
-            ...profileData,
-            email: email,
-            nickName: email.split('@')[0],
-            themePreference: 'dark'
-          });
-        }
-      }));
 
-      this.showModal.set(false);
-      this.newTeam = { name: '', leader: '', members: [] };
-      await this.loadTeams(); 
-    } catch (error) {
-      console.error('Erreur création équipe:', error);
-      alert("Erreur lors de la création.");
-    } finally {
-      this.loading.set(false);
-    }
+      try {
+        // Appwrite ne mettra à jour QUE les champs présents dans profileData
+        await this.auth.databases.updateDocument(this.DB_ID, this.COL_PROFILES, docId, profileData);
+      } catch (e) {
+        // Fallback : Si le profil n'existe pas, on le crée avec un rôle par défaut
+        await this.auth.databases.createDocument(this.DB_ID, this.COL_PROFILES, docId, {
+          ...profileData,
+          role: profileData.role || 'Utilisateur', // Uniquement si création à zéro
+          email: email,
+          nickName: email.split('@')[0],
+          themePreference: 'dark'
+        });
+      }
+    }));
+
+    this.showModal.set(false);
+    this.newTeam = { name: '', leader: '', members: [] };
+    await this.loadTeams(); 
+  } catch (error) {
+    console.error('Erreur création équipe:', error);
+    alert("Erreur lors de la création.");
+  } finally {
+    this.loading.set(false);
   }
+}
 
   async deleteTeam(team: any) {
     if (!confirm(`Supprimer l'équipe ${team.name} ?`)) return;
@@ -144,8 +144,7 @@ export class Equipes implements OnInit {
           const docId = this.auth.formatId(email);
           await this.auth.databases.updateDocument(this.DB_ID, this.COL_PROFILES, docId, { 
             teamId: '', // Appwrite n'aime pas null si l'attribut est requis, on met une chaîne vide
-            role: 'Technicien' 
-          });
+           });
         } catch (e) { }
       }
 
