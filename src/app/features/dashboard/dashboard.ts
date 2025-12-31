@@ -248,4 +248,14 @@ getFileView(fileId: string) {
   // .getFileView renvoie l'URL de l'image originale
   return this.authService.storage.getFileView(this.BUCKET_ID, fileId);
 }
+handleCompletedClick(inter: any) {
+  if (inter.status === 'BILLED') {
+    // Si la facture est émise, le clic sur la carte lance l'encaissement
+    // On passe un objet vide avec stopPropagation pour éviter les erreurs
+    this.markAsPaid(inter, { stopPropagation: () => {} } as Event);
+  } else {
+    // Dans les autres cas (statut 'END'), on va vers la facture
+    this.goToInvoice(inter.id);
+  }
+}
 }

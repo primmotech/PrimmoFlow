@@ -84,7 +84,7 @@
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
-            {{ inter.status === 'STARTED' ? 'En cours' : 'Prévu' }}
+            Cal.
           </button>
         </div>
       </div>
@@ -92,33 +92,26 @@
   </div>
 </section>
 
-    <section class="recent-activity">
-      <h3>Terminées ({{ completedInterventions().length }})</h3>
-      <div class="intervention-list">
-        @for (inter of completedInterventions(); track inter.id) {
-          <div class="intervention-card" [class.billed-card]="inter.status === 'BILLED'" (click)="goToInvoice(inter.id)">
-            <div class="card-info">
-              <span class="city">{{ inter.adresse?.ville }}</span>
-              <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
-              @if (inter.status === 'BILLED') {
-                <div class="price-hint">{{ inter.totalFinal || 0 }}€</div>
-              }
-            </div>
-            <div class="card-actions">
-               <button class="icon-btn-edit" (click)="$event.stopPropagation(); goToEdit(inter.id)">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-              </button>
-              @if (inter.status === 'BILLED') {
-                <button class="paid-btn" (click)="$event.stopPropagation(); markAsPaid(inter, $event)">Reçue</button>
-              }
-            </div>
-          </div>
-        }
+ <section class="recent-activity">
+  <h3>Terminées ({{ completedInterventions().length }})</h3>
+  <div class="intervention-list">
+    @for (inter of completedInterventions(); track inter.id) {
+      <div class="intervention-card" 
+           [class.billed-card]="inter.status === 'BILLED'" 
+           (click)="handleCompletedClick(inter)"> <div class="card-info">
+          <span class="city">{{ inter.adresse?.ville }}</span>
+          <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
+          
+          @if (inter.status === 'BILLED') {
+            <div class="price-hint">{{ inter.totalFinal || 0 }}€</div>
+          }
+        </div>
+
+
       </div>
-    </section>
+    }
+  </div>
+</section>
 
     <button class="fab-btn" (click)="goToAdd()">
       <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="white" stroke-width="3">

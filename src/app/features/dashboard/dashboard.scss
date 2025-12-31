@@ -62,13 +62,13 @@
   &.started-card { border-left: 6px solid #2ecc71 !important; }
   &.paused-card  { border-left: 6px solid #f1c40f !important; }
   &.stopped-card { border-left: 6px solid #e74c3c !important; }
-  &.billed-card  { border-left: 6px solid #2ecc71 !important; }
+  &.billed-card  { border-left: 6px solid #d8132e !important; }
 
   .card-info {
     display: flex; flex-direction: column; gap: 2px;
     .city { font-weight: 800; font-size: 1rem; text-transform: uppercase; }
     .street { font-size: 0.85rem; color: var(--text-secondary); }
-    .price-hint { color: #2ecc71; font-weight: 800; margin-top: 4px; }
+    .price-hint { color: #e60b0b; font-weight: 800; margin-top: 4px; }
     .habitant-row { 
       display: flex; align-items: center; gap: 10px; margin-top: 5px;
       .habitant { font-size: 0.85rem; }
