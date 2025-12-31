@@ -164,27 +164,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
   goToHistory(id: string) { 
     if (id) this.router.navigate(['/history', id]); 
   }
-  private sanitizeIntervention(payload: any) {
+private sanitizeIntervention(payload: any) {
   let missionData = payload['mission'];
 
   if (typeof missionData === 'string') {
     try {
       missionData = JSON.parse(missionData);
     } catch (e) {
-      // SI CE N'EST PAS DU JSON : 
-      // On découpe la chaîne par les sauts de ligne pour créer un vrai tableau
       missionData = missionData ? missionData.split('\n').map((t: string) => t.trim()).filter((t: string) => t.length > 0) : [];
     }
   }
+
+  // Traitement des photos pour s'assurer que c'est un tableau
+  let photosData = payload['photos'] || [];
 
   return {
     ...payload,
     id: payload.$id,
     adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
     habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
-    // On s'assure que mission est toujours un tableau propre
-    mission: Array.isArray(missionData) ? missionData : (missionData ? [missionData] : [])
+    mission: Array.isArray(missionData) ? missionData : (missionData ? [missionData] : []),
+    // On garde photos tel quel pour le parser dans le HTML ou on le parse ici
+    photos: Array.isArray(photosData) ? photosData : []
   };
+}
+// Ajoutez cette méthode dans votre classe DashboardComponent
+parseJson(jsonString: any) {
+  if (!jsonString) return { url: '' };
+  if (typeof jsonString === 'object') return jsonString; // Déjà un objet
+  try {
+    return JSON.parse(jsonString);
+  } catch (e) {
+    // Si ce n'est pas du JSON, on suppose que c'est un ID de fichier
+    return { url: this.getFileView(jsonString) };
+  }
 }
 openTasks(inter: any, event: Event) {
   event.stopPropagation();

@@ -176,22 +176,23 @@
           }
         </div>
 
-        @if (selectedIntervention()?.photos?.length > 0) {
-          <hr class="modal-divider">
-          
-          <div class="photos-section">
-            <h5>Photos d'intervention</h5>
-            
-            <div class="photo-slider">
-              @for (photoId of selectedIntervention().photos; track photoId) {
-                <div class="photo-slide">
-                  <img [src]="getFileView(photoId)" alt="Photo intervention" loading="lazy">
-                </div>
-              }
-            </div>
-            <p class="slider-hint">Glissez pour voir les photos ↔</p>
-          </div>
-        }
+@if (selectedIntervention()?.photos?.length > 0) {
+  <hr class="modal-divider">
+  
+  <div class="photos-section">
+    <h5>Photos d'intervention</h5>
+    
+    <div class="photo-slider">
+      @for (pStr of selectedIntervention().photos; track pStr) {
+        @let photo = parseJson(pStr); 
+        <div class="photo-slide">
+          <img [src]="photo.url" alt="Photo intervention" loading="lazy">
+        </div>
+      }
+    </div>
+    <p class="slider-hint">Glissez pour voir les photos ↔</p>
+  </div>
+}
 
       </div>
     </div>
