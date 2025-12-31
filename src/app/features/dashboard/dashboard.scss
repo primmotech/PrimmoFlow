@@ -216,3 +216,52 @@
     }
   }
 }
+.planned-date {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #666;
+  margin: 4px 0;
+  font-weight: 500;
+
+  // Correction ici : On vérifie si .dark-mode est sur un parent (le wrapper)
+  .dark-mode & {
+    color: #bbb;
+  }
+
+  svg {
+    opacity: 0.7;
+    flex-shrink: 0; // Empêche l'icône de s'écraser si le texte est long
+  }
+}
+.habitant-row {
+  display: flex;
+  justify-content: space-between; // Aligne les enfants aux deux extrémités
+  align-items: center;           // Aligne verticalement au centre
+  margin-top: 8px;
+  width: 100%;
+}
+
+.habitant-info {
+  display: flex;
+  align-items: center;
+  gap: 8px; // Espace entre le nom et le bouton "Appeler"
+}
+
+.planned-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;      // Espace entre l'icône horloge et le texte
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap; // Empêche la date de passer à la ligne
+
+  .dark-mode & {
+    color: #bbb;
+  }
+
+  svg {
+    opacity: 0.7;
+  }
+}

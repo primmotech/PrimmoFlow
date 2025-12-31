@@ -47,29 +47,50 @@
         }
       </div>
     </section>
+<section class="recent-activity">
+  <h3>Planifiées ({{ plannedInterventions().length }})</h3>
+  <div class="intervention-list">
+    @for (inter of plannedInterventions(); track inter.id) {
+      <div class="intervention-card" [ngClass]="getStatusClass(inter.status)" (click)="goToDetails(inter.id)">
+        <div class="card-info">
+          <span class="city">{{ inter.adresse?.ville }}</span>
+          <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
+          
+     
 
-    <section class="recent-activity">
-      <h3>Planifiées ({{ plannedInterventions().length }})</h3>
-      <div class="intervention-list">
-        @for (inter of plannedInterventions(); track inter.id) {
-          <div class="intervention-card" [ngClass]="getStatusClass(inter.status)" (click)="goToDetails(inter.id)">
-            <div class="card-info">
-              <span class="city">{{ inter.adresse?.ville }}</span>
-              <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
-              <div class="habitant-row">
-                <span class="habitant">👤 {{ inter.habitants?.[0]?.nom }}</span>
-                <a [href]="'tel:' + inter.habitants?.[0]?.tel" (click)="$event.stopPropagation()" class="call-action">Appeler</a>
-              </div>
-            </div>
-            <div class="card-status">
-              <span class="badge" [class]="'status-' + inter.status.toLowerCase()">
-                {{ inter.status === 'STARTED' ? 'En cours' : 'Prévu' }}
-              </span>
-            </div>
-          </div>
-        }
+<div class="habitant-row">
+  <div class="habitant-info">
+    <span class="habitant">👤 {{ inter.habitants?.[0]?.nom || 'Non assigné' }}</span>
+    <a [href]="'tel:' + inter.habitants?.[0]?.tel" (click)="$event.stopPropagation()" class="call-action">Appeler</a>
+  </div>
+
+  @if (inter.plannedAt) {
+    <div class="planned-date">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>{{ inter.plannedAt | date:'dd/MM HH:mm' }}</span>
+    </div>
+  }
+</div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-tasks" (click)="goToPlanning(inter, $event)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px; vertical-align: middle;">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            {{ inter.status === 'STARTED' ? 'En cours' : 'Prévu' }}
+          </button>
+        </div>
       </div>
-    </section>
+    }
+  </div>
+</section>
 
     <section class="recent-activity">
       <h3>Terminées ({{ completedInterventions().length }})</h3>
