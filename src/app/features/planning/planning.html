@@ -13,22 +13,27 @@
         </div>
 
         <div class="contact-zone">
-          <div class="habitant-pill" (click)="switchHabitant()">
-            <span>{{ targetIntervention().habitants[selectedHabitantIndex()]?.nom || 'Client' }}</span>
-            @if (targetIntervention().habitants?.length > 1) { <small>⇄</small> }
-          </div>
-          
-          <a [href]="'tel:' + targetIntervention().habitants[selectedHabitantIndex()]?.telephone" class="btn-call-retro">
+  @let currentHab = targetIntervention()?.habitants[selectedHabitantIndex()];
+  
+  <div class="habitant-pill" (click)="switchHabitant()">
+    <span>{{ currentHab?.nom }} {{ currentHab?.prenom }}</span>
+    @if (targetIntervention()?.habitants?.length > 1) { <small>⇄</small> }
+  </div>
+  
+  @if (currentHab?.tel) {
+    <a [href]="'tel:' + currentHab.tel" class="btn-call-retro">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18.5 9c1.5 0 2.5-1 2.5-2.5S20 4 18.5 4c-1.5 0-3.5 1-6.5 1s-5-1-6.5-1C4 4 3 5 3 6.5S4 9 5.5 9" />
               <path d="M7 7.5c1.5 0 3 .5 5 .5s3.5-.5 5-.5" />
               <path d="M5 12h14l2 8H3l2-8z" />
               <circle cx="12" cy="16" r="2.5" />
             </svg>
-          </a>
-        </div>
+    </a>
+  }
+</div>
       </div>
     }
+
   </header>
 
 @if (targetIntervention()?.mission?.length) {
