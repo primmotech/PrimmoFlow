@@ -1,586 +1,77 @@
-/* --- VARIABLES & BASE --- */
 .mobile-wrapper {
-  min-height: 100vh;
-  background: var(--bg-color);
-  color: var(--text-primary);
-  padding-bottom: 110px;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-
-  // Harmonisation thèmes
-&.dark-mode {
-    --bg-color: #121212;         // Noir profond pour le fond
-    --card-bg: #1e1e1e;          // Gris anthracite pour les cartes
-    --border-color: #2c2c2c;     // Bordures très subtiles
-    --text-primary: #e1e1e1;     // Blanc cassé pour éviter la fatigue visuelle
-    --text-secondary: #888888;   // Gris moyen pour les labels
-    
-    // Effet de surbrillance sur les éléments interactifs en dark mode
-    .glass-card, .timer-card, .app-header {
-      border-color: rgba(255, 255, 255, 0.05) !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .manual-time-input, .time-field-wrapper, input {
-      background: rgba(255, 255, 255, 0.03) !important;
-    }
-
-    .sticky-tasks {
-      background: var(--bg-color); // Évite que le fond des tâches soit blanc en défilant
-    }
+  min-height: 100vh; background: var(--bg-color); color: var(--text-primary); padding-bottom: 110px; font-family: 'Segoe UI', Roboto, sans-serif;
+  &.dark-mode {
+    --bg-color: #121212; --card-bg: #1e1e1e; --border-color: #2c2c2c; --text-primary: #e1e1e1; --text-secondary: #888888;
+    .glass-card, .timer-card, .app-header { border-color: rgba(255, 255, 255, 0.05) !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+    .manual-time-input, .time-field-wrapper, input, .input-flat { background: rgba(255, 255, 255, 0.03) !important; color: white !important; }
+    .sticky-tasks { background: var(--bg-color); }
   }
-
   &:not(.dark-mode) {
-    --bg-color: #f3f4f6;
-    --card-bg: #ffffff;
-    --border-color: #d1d5db;
-    --text-secondary: #6b7280;
-
-    .app-header, .timer-card, .glass-card, .step-btn, .time-field-wrapper, .gps-trigger {
-      border: 1.5px solid var(--border-color) !important;
-      background: #fff !important;
-    }
+    --bg-color: #f3f4f6; --card-bg: #ffffff; --border-color: #d1d5db; --text-secondary: #6b7280;
+    .app-header, .timer-card, .glass-card, .step-btn, .time-field-wrapper, .gps-trigger { border: 1.5px solid var(--border-color) !important; background: #fff !important; }
   }
 }
 
-/* --- HEADER --- */
 .app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  min-height: 75px;
-
-  .header-center {
-    flex: 1;
-    .city-line { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; margin: 0; line-height: 1.2; }
-    .address-line { font-size: 0.8rem; color: var(--text-secondary); margin: 2px 0 0 0; }
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    .header-total { color: #2ecc71; font-weight: 900; font-size: 1.25rem; }
-  }
+  display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 1000; min-height: 75px;
+  .header-center { flex: 1; .city-line { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; margin: 0; line-height: 1.2; } .address-line { font-size: 0.8rem; color: var(--text-secondary); margin: 2px 0 0 0; } }
+  .header-right { display: flex; align-items: center; gap: 12px; .header-total { color: #2ecc71; font-weight: 900; font-size: 1.25rem; } }
 }
 
-.gps-trigger {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center; color: #3498db;
-  transition: all 0.2s ease;
-  svg { transform: rotate(-15deg); }
-  &:active { transform: scale(0.9); background: rgba(52, 152, 219, 0.1) !important; }
-}
+.gps-trigger { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #3498db; transition: all 0.2s ease; svg { transform: rotate(-15deg); } &:active { transform: scale(0.9); background: rgba(52, 152, 219, 0.1) !important; } }
 
-/* --- COMPOSANTS COLLANTS (STICKY) --- */
-.sticky-timer { 
-  position: sticky; 
-  top: 85px; // Juste après le header
-  margin: 15px; 
-  z-index: 910; 
-}
+.sticky-timer { position: sticky; top: 85px; margin: 15px; z-index: 910; }
+.sticky-tasks { position: sticky; top: 175px; z-index: 905; background: var(--bg-color); padding: 5px 15px 15px; }
 
-.sticky-tasks {
-  position: sticky;
-  top: 175px; // Après le header + timer
-  z-index: 905;
-  background: var(--bg-color);
-  padding: 5px 15px 15px;
-}
-
-/* --- CARTES & STRUCTURES --- */
 .info-group {
-  padding: 0 15px;
-  margin-bottom: 25px;
-  &.spacer-top { margin-top: 15px; }
-  
-  .group-header { 
-    display: flex; justify-content: space-between; align-items: center; 
-    margin-bottom: 10px;
-    h3 { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin: 0; }
-    .sub-total { font-size: 0.85rem; font-weight: 800; color: #3498db; }
-  }
+  padding: 0 15px; margin-bottom: 25px; &.spacer-top { margin-top: 15px; }
+  .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; h3 { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin: 0; } .sub-total { font-size: 0.85rem; font-weight: 800; color: #3498db; } }
 }
 
-.glass-card {
-  background: var(--card-bg);
-  border: 1.5px solid var(--border-color);
-  border-radius: 18px;
-  padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
+.glass-card { background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 18px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-/* --- TIMER CARD --- */
 .timer-card {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 15px 20px;
-  border-radius: 20px;
-  background: var(--card-bg);
-  border: 1.5px solid var(--border-color);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-
+  display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-radius: 20px; background: var(--card-bg); border: 1.5px solid var(--border-color); box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   .clock { font-size: 2.2rem; font-weight: 900; font-family: monospace; }
-  &.active { 
-    border-color: #3498db !important; 
-    .clock { color: #3498db; } 
-  }
+  &.active { border-color: #3498db !important; .clock { color: #3498db; } }
 }
 
-.timer-actions {
-  display: flex; gap: 10px;
-  .btn-timer {
-    width: 46px; height: 46px; border-radius: 12px; border: none; color: white;
-    display: flex; align-items: center; justify-content: center;
-    &.play { background: #2ecc71; }
-    &.pause { background: #f1c40f; }
-    &.stop { background: #e74c3c; &:disabled { opacity: 0.3; } }
-  }
-}
+.timer-actions { display: flex; gap: 10px; .btn-timer { width: 46px; height: 46px; border-radius: 12px; border: none; color: white; display: flex; align-items: center; justify-content: center; &.play { background: #2ecc71; } &.pause { background: #f1c40f; } &.stop { background: #e74c3c; &:disabled { opacity: 0.3; } } } }
 
-/* --- GRILLE DE TÂCHES --- */
-.tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px 15px;
-}
-
+.tasks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 15px; }
 .task-checkbox-item {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
-  
-  .task-label { 
-    font-size: 0.8rem; font-weight: 600; color: var(--text-primary); 
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    transition: all 0.2s ease;
-  }
-
-  &.is-done {
-    .task-label { text-decoration: line-through; opacity: 0.5; }
-  }
-
-  .checkbox-wrapper {
-    position: relative; width: 20px; height: 20px; flex-shrink: 0;
-    input { position: absolute; opacity: 0; cursor: pointer; }
-    .checkmark {
-      position: absolute; top: 0; left: 0; height: 20px; width: 20px;
-      background: rgba(150, 150, 150, 0.1); border: 1.5px solid var(--border-color); border-radius: 6px;
-    }
-    input:checked ~ .checkmark {
-      background-color: #2ecc71; border-color: #2ecc71;
-      &:after { 
-        content: ""; position: absolute; left: 6px; top: 2px; width: 4px; height: 9px; 
-        border: solid white; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); 
-      }
-    }
-  }
+  .task-label { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &.is-done .task-label { text-decoration: line-through; opacity: 0.5; }
+  .checkbox-wrapper { position: relative; width: 20px; height: 20px; flex-shrink: 0; input { position: absolute; opacity: 0; } .checkmark { position: absolute; top: 0; left: 0; height: 20px; width: 20px; background: rgba(150, 150, 150, 0.1); border: 1.5px solid var(--border-color); border-radius: 6px; } input:checked ~ .checkmark { background-color: #2ecc71; border-color: #2ecc71; &:after { content: ""; position: absolute; left: 6px; top: 2px; width: 4px; height: 9px; border: solid white; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); } } }
 }
 
-/* --- FORMULAIRES & INPUTS --- */
-.input-row, 
-.time-controls {
-  display: flex; 
-  gap: 10px; 
-  align-items: center; 
-  margin-bottom: 12px;
-  width: 100%; // S'assure que le conteneur prend toute la largeur
-  justify-content: space-between; // Pousse le bouton à l'extrémité droite
-  
-  // On s'assure que le wrapper des inputs ne grandit pas trop pour laisser l'espace au milieu
-  .time-field-wrapper {
-    display: flex;
-    align-items: center;
-    // ... reste de ton code existant
-  }
+.input-row, .time-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; width: 100%; justify-content: space-between; .add-btn.circle-btn { margin-left: auto; } }
+.time-field-wrapper { display: flex; align-items: center; background: rgba(150,150,150,0.1); padding: 5px 12px; border-radius: 10px; input { width: 40px; border: none; background: transparent; font-size: 1.4rem; font-weight: 800; text-align: center; } .separator { font-weight: 700; color: var(--text-secondary); margin: 0 4px; } }
+.add-btn.circle-btn { width: 38px; height: 38px; min-width: 38px; border-radius: 50%; background: #3498db; color: white; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; svg { width: 20px; height: 20px; stroke-width: 3px; } &:active { transform: scale(0.9); } &:disabled { opacity: 0.4; } }
 
-  .add-btn.circle-btn {
-    // Le bouton sera automatiquement poussé à droite grâce au space-between
-    margin-left: auto; // Sécurité supplémentaire
-  }
-}
-
-.time-field-wrapper {
-  display: flex; align-items: center; background: rgba(150,150,150,0.1);
-  padding: 5px 12px; border-radius: 10px;
-  input { width: 40px; border: none; background: transparent; font-size: 1.4rem; font-weight: 800; text-align: center; }
-  .separator { font-weight: 700; color: var(--text-secondary); margin: 0 4px; }
-}
-
-.add-btn.circle-btn {
-  width: 38px; height: 38px; min-width: 38px; border-radius: 50%;
-  background: #3498db; color: white; border: none;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: transform 0.1s;
-  svg { width: 20px; height: 20px; stroke-width: 3px; }
-  &:active { transform: scale(0.9); }
-  &:disabled { opacity: 0.4; }
-}
-
-/* --- LISTES D'ITEMS (Matériel, Sessions, etc.) --- */
 .list-item {
-  display: flex; align-items: center; padding: 12px 0;
-  border-bottom: 1px dashed var(--border-color);
-  &:last-child { border: none; }
-
-  .item-main-content {
-    flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0;
-    .text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .item-price { font-weight: 800; color: #2ecc71; margin-left: auto; padding-right: 10px; text-align: right; }
-  }
+  display: flex; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color); &:last-child { border: none; }
+  .item-main-content { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; .text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .item-price { font-weight: 800; color: #2ecc71; margin-left: auto; padding-right: 10px; text-align: right; } }
 }
 
-.time-session-card {
-  @extend .glass-card;
-  display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
-  background: rgba(150, 150, 150, 0.05);
+.time-session-card { @extend .glass-card; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; background: rgba(150, 150, 150, 0.05); .session-info { flex: 1; display: flex; flex-direction: column; .session-date { font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; } .session-duration { font-size: 1.1rem; font-weight: 700; } } .session-price { font-weight: 800; color: #2ecc71; } }
 
-  .session-info {
-    flex: 1; display: flex; flex-direction: column;
-    .session-date { font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; }
-    .session-duration { font-size: 1.1rem; font-weight: 700; }
-  }
-  .session-price { font-weight: 800; color: #2ecc71; }
-}
-
-/* --- PHOTOS GRID --- */
 .photo-grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-  
-  .photo-item {
-    position: relative; aspect-ratio: 1; border-radius: 10px;
-    overflow: hidden; background: rgba(150, 150, 150, 0.08);
-    
-    img { width: 100%; height: 100%; object-fit: cover; }
-    
-    &.upload-placeholder {
-      border: 2px dashed #3498db; display: flex; align-items: center; justify-content: center;
-      color: #3498db;
-      &:active { background: rgba(52, 152, 219, 0.1); transform: scale(0.95); }
-    }
-
-    .delete-photo-btn {
-      position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
-      background: rgba(231, 76, 60, 0.9); color: white; border: none;
-      border-radius: 6px; font-weight: bold; display: flex; align-items: center; justify-content: center;
-    }
-  }
+  .photo-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: rgba(150, 150, 150, 0.08); img { width: 100%; height: 100%; object-fit: cover; } &.upload-placeholder { border: 2px dashed #3498db; display: flex; align-items: center; justify-content: center; color: #3498db; &:active { background: rgba(52, 152, 219, 0.1); transform: scale(0.95); } } .delete-photo-btn { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; background: rgba(231, 76, 60, 0.9); color: white; border: none; border-radius: 6px; font-weight: bold; display: flex; align-items: center; justify-content: center; } }
 }
 
-/* --- ACTIONS & NAVIGATION --- */
-.status-bar {
-  position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
-  background: var(--card-bg); border-top: 1px solid var(--border-color);
-  display: flex; justify-content: space-around; align-items: center;
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 1001;
+.status-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 1001; .nav-item { background: none; border: none; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; gap: 4px; span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; } &:active { color: #3498db; } &:disabled { opacity: 0.3; } } }
 
-  .nav-item {
-    background: none; border: none; color: var(--text-secondary);
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
-    &:active { color: #3498db; }
-    &:disabled { opacity: 0.3; }
-  }
-}
+.step-btn { width: 38px; height: 38px; border-radius: 10px; font-weight: 900; background: #3498db; color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; &:active { transform: scale(0.9); } }
+.delete-btn { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: none; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; &:active { transform: scale(0.9); background: rgba(231, 76, 60, 0.2); } }
 
-.step-btn {
-  width: 36px; height: 36px; border-radius: 10px; font-weight: 900;
-  background: #3498db; color: white; border: none;
-  display: flex; align-items: center; justify-content: center;
-}
+.travel-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; .font-main { font-size: 1rem; font-weight: 700; } .travel-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; .item-price { font-weight: 800; color: #2ecc71; font-size: 1.1rem; min-width: 60px; text-align: center; } } }
 
-.delete-btn, .large-delete-action {
-  background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: none;
-  width: 36px; height: 36px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  &:active { transform: scale(0.9); background: rgba(231, 76, 60, 0.2); }
-}
+.input-control-group { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(150, 150, 150, 0.05); padding: 8px; border-radius: 14px; margin-bottom: 15px; .input-wrapper { display: flex; flex: 1; gap: 8px; align-items: center; } }
+.input-flat { background: rgba(255, 255, 255, 0.05) !important; border: 1px solid var(--border-color) !important; border-radius: 10px !important; padding: 10px 12px !important; color: var(--text-primary) !important; font-size: 0.9rem; width: 100%; &::placeholder { color: var(--text-secondary); opacity: 0.5; } &:focus { outline: none; border-color: #3498db !important; background: rgba(255, 255, 255, 0.08) !important; } }
+.price-input-container { display: flex; align-items: center; gap: 4px; border-left: 1px solid rgba(255, 255, 255, 0.1); padding-left: 8px; input { width: 50px; background: transparent !important; border: none !important; text-align: right; font-weight: bold; color: #2ecc71; } }
 
-/* --- LIGHTBOX --- */
-.lightbox {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
-  display: flex; align-items: center; justify-content: center;
-  .lightbox-content {
-    position: relative; width: 90%;
-    img { width: 100%; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-    .close-lightbox { position: absolute; top: -50px; right: 0; color: white; font-size: 40px; background: none; border: none; }
-  }
-}
-
-.upload-loader {
-  width: 20px; height: 20px; border: 3px solid #3498db; border-bottom-color: transparent;
-  border-radius: 50%; animation: rotation 1s linear infinite;
-}
-
-@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.travel-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; // Pousse le texte à gauche et les actions à droite
-  padding: 15px 0;
-
-  .font-main {
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .travel-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px; // C'est ici que tu règles l'écart fixe (qq soit la taille du prix)
-    margin-left: auto; // Force le bloc à coller à droite si besoin
-
-    .item-price {
-      font-weight: 800;
-      color: #2ecc71; // Vert comme sur ton image
-      font-size: 1.1rem;
-      min-width: 60px; // Optionnel : évite les micro-sauts de mise en page
-      text-align: center;
-    }
-  }
-}
-
-// Mise à jour de ton bouton existant pour qu'il soit bien carré/arrondi
-.step-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px; // Coins arrondis selon ton image
-  background: #3498db;
-  color: white;
-  border: none;
-  font-weight: 900;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.1s;
-
-  &:active {
-    transform: scale(0.9);
-  }
-}
-.input-control-group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: rgba(150, 150, 150, 0.05); // Fond léger pour le groupe
-  padding: 8px;
-  border-radius: 14px;
-  margin-bottom: 15px;
-
-  .input-wrapper {
-    display: flex;
-    flex: 1;
-    gap: 8px;
-    align-items: center;
-  }
-}
-
-.input-flat {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 10px !important;
-  padding: 10px 12px !important;
-  color: var(--text-primary) !important;
-  font-size: 0.9rem;
-  width: 100%;
-
-  &::placeholder {
-    color: var(--text-secondary);
-    opacity: 0.5;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #3498db !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-  }
-}
-
-.price-input-container {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  width: 90px; // Largeur fixe pour le champ prix
-  
-  .price-field {
-    text-align: center;
-    font-weight: 700;
-  }
-  
-  .currency-label {
-    font-weight: 800;
-    color: var(--text-secondary);
-  }
-}
-
-// Le bouton + à droite
-.circle-btn {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  background: #3498db !important;
-  border-radius: 50% !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    stroke: white;
-  }
-}
-.list-container {
-  margin-top: 10px;
-  
-  .material-added-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .item-main-content {
-      flex: 1;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-right: 15px;
-      
-      .text-truncate {
-        color: var(--text-primary);
-        font-size: 0.95rem;
-      }
-
-      .item-price {
-        font-weight: 800;
-        color: #2ecc71; // Vert
-      }
-    }
-
-    .delete-btn {
-      background: rgba(231, 76, 60, 0.1);
-      color: #e74c3c;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
-}
-.material-row {
-  .item-main-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
-
-  .font-main {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 600;
-  }
-
-  .item-right-zone {
-    display: flex;
-    align-items: center;
-    gap: 12px; // Écart constant entre le prix et le bouton poubelle
-    margin-left: 15px;
-
-    .item-price {
-      font-weight: 800;
-      color: #2ecc71; // Vert
-      white-space: nowrap;
-    }
-  }
-}
-
-// Style des champs de saisie (Désignation + Prix)
-.input-control-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  
-  .input-wrapper {
-    display: flex;
-    flex: 1;
-    gap: 8px;
-    background: rgba(150, 150, 150, 0.08);
-    padding: 6px 10px;
-    border-radius: 12px;
-  }
-}
-
-.price-input-container {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  padding-left: 8px;
-  
-  input {
-    width: 50px;
-    background: transparent !important;
-    border: none !important;
-    text-align: right;
-    font-weight: bold;
-    color: #2ecc71;
-  }
-}
-.order-row {
-  .item-main-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 8px 0;
-  }
-
-  .font-main {
-    flex: 1;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-  }
-
-  .item-right-zone {
-    margin-left: 15px;
-    display: flex;
-    align-items: center;
-  }
-}
-
-// Réutilisation de la classe de suppression pour la cohérence
-.delete-btn {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-  border: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  &:active {
-    transform: scale(0.9);
-    background: rgba(231, 76, 60, 0.2);
-  }
-}
+.material-added-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); &:last-child { border-bottom: none; } .item-main-content { flex: 1; display: flex; justify-content: space-between; align-items: center; padding-right: 15px; .text-truncate { color: var(--text-primary); font-size: 0.95rem; } .item-price { font-weight: 800; color: #2ecc71; } } }
+.material-row, .order-row { .item-main-content { display: flex; justify-content: space-between; align-items: center; width: 100%; } .font-main { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; } .item-right-zone { display: flex; align-items: center; gap: 12px; margin-left: 15px; .item-price { font-weight: 800; color: #2ecc71; white-space: nowrap; } } }
