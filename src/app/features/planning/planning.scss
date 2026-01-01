@@ -6,24 +6,30 @@
   padding-bottom: 90px;
   font-family: 'Inter', system-ui, sans-serif;
   transition: all 0.3s ease;
+
+  &.dark-mode {
+    --card-bg: #1e1e1e;
+    --bg-color: #121212;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --border-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .capitalize { text-transform: capitalize; }
 .container { padding: 10px 20px; }
 
-/* --- 2. HEADER (STICKY TOP 0) --- */
+/* --- 2. HEADER --- */
 .app-header-large {
   background: var(--card-bg);
-  padding: 0px 20px;
+  padding: 0 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   position: sticky;
   top: 0;
-  z-index: 110; // Plus haut que tout
-  min-height: 80px; // Hauteur fixe pour faciliter le calage de la suite
+  z-index: 110;
+  min-height: 80px;
   
   .header-top { height: 5px; }
 }
@@ -55,43 +61,42 @@
     }
   }
 
-.contact-zone {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  .btn-call-retro {
+  .contact-zone {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--accent-color); // Utilise ta couleur bleue (ou #2ecc71 si tu veux du vert uniquement sur l'icône)
-    text-decoration: none;
-    padding: 4px;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    gap: 12px;
 
-    svg {
-      width: 28px; // Taille optimale pour voir les détails du tracé
-      height: 28px;
+    .habitant-pill {
+      background: var(--bg-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
     }
 
-    &:active {
-      transform: scale(0.85); // Effet de pression au clic
-      opacity: 0.7;
+    .btn-call-retro {
+      display: flex;
+      color: var(--accent-color, #3498db);
+      padding: 4px;
+      transition: transform 0.2s ease;
+
+      svg { width: 28px; height: 28px; }
+      &:active { transform: scale(0.85); }
     }
   }
 }
-}
 
-/* --- 2.1 LISTE DES TACHES (GRANDE TAILLE & DEUX COLONNES) --- */
+/* --- 2.1 LISTE DES TACHES (STREAK SOUS HEADER) --- */
 .mission-tasks-list {
   background: var(--card-bg);
   padding: 12px 20px;
   border-bottom: 1px solid var(--border-color);
-  
   position: sticky;
   top: 80px; 
-  z-index: 100; 
-  box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+  z-index: 105; 
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 
   .tasks-container {
     list-style: none;
@@ -99,38 +104,31 @@
     margin: 0;
     display: grid !important;
     grid-template-columns: 1fr 1fr; 
-    gap: 10px 15px; 
+    gap: 8px 15px; 
   }
 
   .task-row {
     display: flex !important;
     align-items: center; 
-    gap: 10px;
-    min-width: 0;
+    gap: 8px;
 
     .bullet {
-      width: 7px; 
-      height: 7px;
+      width: 6px; 
+      height: 6px;
       background: var(--accent-color, #3498db);
       border-radius: 50%;
       flex-shrink: 0;
     }
 
     .task-text {
-      font-size: 0.95rem; 
-      font-weight: 800; 
-      line-height: 1.1;
+      font-size: 0.85rem; 
+      font-weight: 700; 
       color: var(--text-primary);
-      
-      // Majuscule automatique sur la première lettre uniquement
-      &::first-letter {
-        text-transform: uppercase;
-      }
-
-      /* Gestion propre du texte pour rester sur une ligne */
-      //white-space: nowrap;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      
+      &::first-letter { text-transform: uppercase; }
     }
   }
 }
@@ -142,41 +140,38 @@
   padding: 15px;
   border-radius: 20px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 
   .nav {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
-    h2 { font-size: 1rem; text-transform: capitalize; font-weight: 800; color: var(--text-primary); }
-    button { background: none; border: none; font-size: 1.3rem; color: var(--accent-color); padding: 0 10px; cursor: pointer; }
+    h2 { font-size: 1rem; font-weight: 800; }
+    button { background: none; border: none; font-size: 1.5rem; color: var(--accent-color); cursor: pointer; }
   }
 
   .grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px 2px;
-    .label { text-align: center; font-size: 0.65rem; font-weight: 800; opacity: 0.4; }
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px 2px;
+    .label { text-align: center; font-size: 0.7rem; font-weight: 800; opacity: 0.4; }
   }
 
   .day-container {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    display: flex; flex-direction: column; align-items: center;
 
     .day {
       width: 36px; height: 36px;
       display: flex; align-items: center; justify-content: center;
       border-radius: 10px;
       font-weight: 700;
-      transition: 0.2s;
-      cursor: pointer;
-      color: var(--text-primary);
       font-size: 0.9rem;
+      color: var(--text-primary);
 
-      &.past { opacity: 0.2; pointer-events: none; text-decoration: line-through; }
+      &.past { opacity: 0.2; pointer-events: none; }
       &.today { color: var(--accent-color); border: 2px solid var(--accent-color); }
       &.selected { background: var(--accent-color) !important; color: white !important; }
       &.empty { visibility: hidden; }
     }
 
     .dots-container {
-      display: flex; gap: 2px; height: 4px; justify-content: center;
-      .red-dot, .green-dot { width: 5px; height: 5px; border-radius: 50%; }
+      display: flex; gap: 2px; height: 5px; margin-top: 2px;
+      .red-dot, .green-dot { width: 4px; height: 4px; border-radius: 50%; }
       .red-dot { background: #ff4757; }
       .green-dot { background: #2ecc71; }
     }
@@ -185,7 +180,7 @@
 
 /* --- 4. BOUTON ACTION --- */
 .planning-action {
-  margin: 10px 0 20px 0;
+  margin: 15px 0;
   .btn-plan {
     width: 100%;
     padding: 16px;
@@ -194,26 +189,22 @@
     background: var(--accent-color);
     color: white;
     font-weight: 800;
-    font-size: 0.95rem;
-    cursor: pointer;
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-    &:disabled { background: #bdc3c7; box-shadow: none; }
+    &:disabled { background: #bdc3c7; }
   }
 }
 
 /* --- 5. MISSIONS DU JOUR --- */
 .daily-missions {
-  margin-top: 10px;
   .section-title {
-    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
-    opacity: 0.5; margin-bottom: 12px; letter-spacing: 0.5px;
+    font-size: 0.75rem; font-weight: 800; opacity: 0.5; margin-bottom: 12px;
   }
 
   .mission-item-mini {
     background: var(--card-bg);
     padding: 12px;
     border-radius: 16px;
-    display: flex !important;
+    display: flex;
     align-items: center;
     gap: 12px;
     border: 1px solid var(--border-color);
@@ -222,20 +213,19 @@
     .time-pill {
       background: var(--accent-color);
       color: white;
-      padding: 6px 10px;
-      border-radius: 10px;
+      padding: 6px 8px;
+      border-radius: 8px;
       font-weight: 800;
-      font-size: 0.75rem;
-      min-width: 55px;
+      font-size: 0.7rem;
+      min-width: 50px;
       text-align: center;
     }
 
     .info {
-      display: flex !important; flex-direction: column !important; flex: 1;
-      .city-main { font-weight: 800; font-size: 0.95rem; line-height: 1.1; }
-      .address-sub { font-size: 0.75rem; opacity: 0.6; }
+      flex: 1;
+      .city-main { display: block; font-weight: 800; font-size: 0.9rem; }
+      .address-sub { display: block; font-size: 0.7rem; opacity: 0.6; }
     }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
   }
 }
 
@@ -249,9 +239,9 @@
   z-index: 1000;
 
   .nav-item {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    display: flex; flex-direction: column; align-items: center;
     color: var(--text-secondary); text-decoration: none;
-    span { font-size: 0.7rem; font-weight: 600; }
+    span { font-size: 0.7rem; font-weight: 600; margin-top: 4px; }
   }
 }
 
@@ -259,31 +249,32 @@
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.8);
   backdrop-filter: blur(8px); z-index: 2000;
-  display: flex; align-items: center; justify-content: center; padding: 20px;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .time-modal {
   background: var(--card-bg);
-  width: 100%; max-width: 320px;
+  width: 90%; max-width: 340px;
   padding: 25px; border-radius: 30px;
-  display: flex; flex-direction: column; align-items: center;
+  animation: modalIn 0.3s ease-out;
 
   .time-display {
-    font-size: 3rem; font-weight: 900; margin-bottom: 20px;
+    text-align: center; font-size: 3rem; font-weight: 900; margin-bottom: 20px;
     span { opacity: 0.3; &.active { opacity: 1; color: var(--accent-color); } }
   }
 
   .clock-circle-large {
-    background: var(--bg-color); border-radius: 50%; padding: 5px; margin-bottom: 20px;
+    background: var(--bg-color); border-radius: 50%; padding: 10px; margin-bottom: 20px;
     svg .clock-label { fill: var(--text-primary); font-size: 14px; font-weight: 700; text-anchor: middle; }
+    svg .clock-label.small { font-size: 11px; opacity: 0.6; }
   }
 
   .modal-actions {
-    display: flex; gap: 10px; width: 100%;
+    display: flex; gap: 10px;
     button { 
-      flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; color: white;
-      &.btn-save-clock { background: var(--accent-color); }
-      &.btn-cancel-clock { background: #ff4757; }
+      flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800;
+      &.btn-save-clock { background: var(--accent-color); color: white; }
+      &.btn-cancel-clock { background: #ff4757; color: white; }
     }
   }
 }

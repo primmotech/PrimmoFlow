@@ -2,7 +2,6 @@ import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { Router } from '@angular/router';
-// Remplacement Firestore par Appwrite
 import { ID } from 'appwrite'; 
 import { ThemeService } from '../../core/services/theme';
 import { MissionStore } from '../../core/services/missions';
@@ -53,18 +52,12 @@ export class Planning implements OnInit {
       const data = { ...stateData };
       
       // Désérialisation adresse et habitants
-      const adresse = typeof data.adresse === 'string' ? JSON.parse(data.adresse) : (data.adresse || {});
-      const habitants = typeof data.habitants === 'string' ? JSON.parse(data.habitants) : (data.habitants || []);
+      data.adresse = this.safeParse(data.adresse, { ville: '', rue: '', numero: '' });
+      data.habitants = this.safeParse(data.habitants, []);
       
-      // LOGIQUE DE NETTOYAGE DES TÂCHES (votre correctif)
+      // Nettoyage des tâches (uniquement basé sur le texte)
       data.mission = this.processMissionTasks(data.mission);
 
-      data.adresse = {
-        ville: adresse.ville || '',
-        rue: adresse.rue || '',
-        numero: adresse.numero || ''
-      };
-      data.habitants = habitants;
       this.targetIntervention.set(data);
     }
   }
@@ -73,35 +66,18 @@ export class Planning implements OnInit {
     this.theme.initTheme();
   }
 
-  /**
-   * Transforme n'importe quel format de mission (string avec \n, objet, tableau)
-   * en un tableau de strings propre.
-   */
-  private processMissionTasks(missionData: any): string[] {
-    if (!missionData) return [];
-    
-    let finalTasks: string[] = [];
-    const dataArray = Array.isArray(missionData) ? missionData : [missionData];
-
-    dataArray.forEach(item => {
-      if (!item) return;
-      let textToSplit = '';
-
-      if (typeof item === 'object') {
-        textToSplit = item.description || item.label || JSON.stringify(item);
-      } else {
-        textToSplit = item.toString();
-      }
-
-      if (textToSplit.includes('\n')) {
-        finalTasks.push(...textToSplit.split('\n'));
-      } else {
-        finalTasks.push(textToSplit);
-      }
-    });
-
-    return finalTasks.map(t => t.trim()).filter(t => t.length > 0);
+  private safeParse(data: any, fallback: any) {
+    if (typeof data === 'string') {
+      try { return JSON.parse(data); } catch { return fallback; }
+    }
+    return data || fallback;
   }
+
+  /**
+   * Transforme le contenu de 'mission' en un tableau de strings propre.
+   * Supprime toute référence aux objets complexes (description/label).
+   */
+ 
 
   getMissionsForDay(date: Date | null): any[] {
     const missions = this.allPlannedMissions();
@@ -110,8 +86,8 @@ export class Planning implements OnInit {
     const targetDateStr = date.toDateString();
     
     return missions.map((m: any) => {
-      const adr = typeof m.adresse === 'string' ? JSON.parse(m.adresse) : m.adresse;
-      const habs = typeof m.habitants === 'string' ? JSON.parse(m.habitants) : m.habitants;
+      const adr = this.safeParse(m.adresse, {});
+      const habs = this.safeParse(m.habitants, []);
 
       return {
         ...m,
@@ -132,9 +108,10 @@ export class Planning implements OnInit {
   loadMissionToEdit(mission: any) {
     this.isSubmissionComplete.set(false);
     
-    // On nettoie aussi les missions chargées depuis la liste du jour
     const cleanedMission = {
       ...mission,
+      adresse: this.safeParse(mission.adresse, {}),
+      habitants: this.safeParse(mission.habitants, []),
       mission: this.processMissionTasks(mission.mission)
     };
     
@@ -256,4 +233,27 @@ export class Planning implements OnInit {
     for (let i = 1; i <= days; i++) calendar.push(new Date(year, month, i));
     return calendar;
   });
+  private processMissionTasks(missionData: any): any[] {
+    if (!missionData) return [];
+    
+    // Si c'est déjà un tableau (venant du Dashboard)
+    if (Array.isArray(missionData)) {
+      return missionData.map(item => {
+        // Si c'est un objet {label: ...}, on le garde tel quel
+        if (typeof item === 'object' && item !== null) return item;
+        // Si c'est une string, on la transforme en objet pour l'uniformité
+        return { label: String(item).trim(), done: false };
+      }).filter(item => item.label.length > 0);
+    }
+
+    // Si c'est une string brute (venant directement d'Appwrite sans passage par Dashboard)
+    if (typeof missionData === 'string') {
+      return missionData
+        .split(/\n|,|;/)
+        .map(t => ({ label: t.trim(), done: false }))
+        .filter(t => t.label.length > 0);
+    }
+
+    return [];
+  }
 }

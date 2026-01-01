@@ -42,18 +42,18 @@
       </div>
     </div>
 
-    <div class="info-group sticky-tasks" *ngIf="missionTasks().length > 0">
+<div class="info-group sticky-tasks" *ngIf="missionTasks().length > 0">
       <div class="glass-card tasks-card">
         <div class="tasks-grid">
           @for (task of missionTasks(); track $index) {
-            <label class="task-checkbox-item">
+            <label class="task-checkbox-item" [class.is-done]="task.done">
               <div class="checkbox-wrapper">
                 <input type="checkbox" 
-                       [checked]="isTaskCompleted($index)"
+                       [checked]="task.done"
                        (change)="toggleMissionTask($index)">
                 <span class="checkmark"></span>
               </div>
-              <span class="task-label">{{ task }}</span>
+              <span class="task-label">{{ task.label }}</span>
             </label>
           }
         </div>
@@ -115,47 +115,61 @@
   <div class="group-header"><h3>Déplacements</h3></div>
   <div class="glass-card">
 <div class="list-item travel-row">
-  <div class="item-main-content">
-    <strong class="font-main">{{ item.travelCount || 0 }} trajet(s)</strong>
-    
-    <button (click)="updateTravel(-0.5)" class="step-btn minus-btn">-</button>
-    
-    <span class="item-price">{{ ((item.travelCount || 0) * travelFee()) | number:'1.2-2' }}€</span>
-  </div>
+  <strong class="font-main">{{ item.travelCount || 0 }} trajet(s)</strong>
   
-  <div class="item-action-zone">
+  <div class="travel-actions">
+    <button (click)="updateTravel(-0.5)" class="step-btn">-</button>
+    <span class="item-price">{{ ((item.travelCount || 0) * travelFee()) | number:'1.2-2' }}€</span>
     <button (click)="updateTravel(0.5)" class="step-btn">+</button>
   </div>
 </div>
   </div>
 </div>
-
-    <div class="info-group">
-      <div class="group-header"><h3>Matériel & Fournitures</h3></div>
-      <div class="glass-card">
-        <div class="input-row">
-          <input type="text" [(ngModel)]="itemName" placeholder="Désignation" class="flex-2">
-          <input type="number" [(ngModel)]="itemPrice" placeholder="€" class="flex-1">
-          <button (click)="addMaterial()" class="add-btn circle-btn" [disabled]="!itemPrice()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-        </div>
-        <div class="list-container">
-          @for (mStr of item.materials; track mStr) {
-            @let m = parseJson(mStr);
-            <div class="list-item">
-              <div class="item-main-content">
-                <span class="text-truncate">{{ m.description }}</span>
-                <span class="item-price">{{ m.price | number:'1.2-2' }}€</span>
-              </div>
-              <div class="item-action-zone">
-                <button (click)="removeMaterial(mStr)" class="delete-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-              </div>
-            </div>
-          }
+<div class="info-group">
+  <div class="group-header">
+    <h3>Matériel & Fournitures</h3>
+  </div>
+  <div class="glass-card">
+    <div class="input-control-group">
+      <div class="input-wrapper">
+        <input type="text" [(ngModel)]="itemName" placeholder="Désignation" class="input-flat flex-2">
+        <div class="price-input-container">
+          <input type="number" [ngModel]="itemPrice()" (ngModelChange)="itemPrice.set($event)" placeholder="0" class="input-flat price-field">
+          <span class="currency-label">€</span>
         </div>
       </div>
+      <button (click)="addMaterial()" class="add-btn circle-btn" [disabled]="!itemPrice()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="list-container">
+      @for (mStr of item.materials; track mStr) {
+        @let m = parseJson(mStr);
+        <div class="list-item material-row">
+          <div class="item-main-content">
+            <span class="text-truncate font-main">{{ m.description }}</span>
+            
+            <div class="item-right-zone">
+              <span class="item-price">{{ m.price | number:'1.2-2' }}€</span>
+              <button (click)="removeMaterial(mStr)" class="delete-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+
     
 <div class="info-group">
   <div class="group-header"><h3>Photos</h3></div>
@@ -185,31 +199,48 @@
     </div>
   </div>
 </div>
-
-    <div class="info-group">
-      <div class="group-header"><h3>Commandes</h3></div>
-      <div class="glass-card">
-        <div class="input-row">
-          <input type="text" [(ngModel)]="orderName" placeholder="Pièce à commander...">
-          <button (click)="addOrder()" class="add-btn circle-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-        </div>
-        <div class="list-container">
-          @for (oStr of item.orders; track oStr) {
-            @let o = parseJson(oStr);
-            <div class="list-item">
-              <div class="item-main-content">
-                <span class="text-truncate">{{ o.name }}</span>
-              </div>
-              <div class="item-action-zone">
-                <button (click)="removeOrder(oStr)" class="delete-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-              </div>
-            </div>
-          }
-        </div>
+<div class="info-group">
+  <div class="group-header"><h3>Commandes</h3></div>
+  <div class="glass-card">
+    
+    <div class="input-control-group">
+      <div class="input-wrapper">
+        <input type="text" 
+               [ngModel]="orderName()" 
+               (ngModelChange)="orderName.set($event)" 
+               placeholder="Pièce à commander..." 
+               class="input-flat">
       </div>
+      <button (click)="addOrder()" class="add-btn circle-btn" [disabled]="!orderName()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="list-container">
+      @for (oStr of item.orders; track oStr) {
+        @let o = parseJson(oStr);
+        <div class="list-item order-row">
+          <div class="item-main-content">
+            <span class="text-truncate font-main">{{ o.name }}</span>
+            
+            <div class="item-right-zone">
+              <button (click)="removeOrder(oStr)" class="delete-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
   </main>
 
   <nav class="status-bar">

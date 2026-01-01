@@ -177,14 +177,22 @@
         
         <div class="tasks-section">
           @if (selectedIntervention()?.mission?.length > 0) {
-            <ul class="task-list">
-              @for (task of selectedIntervention().mission; track $index) {
-                <li class="task-item">
-                  <div class="bullet"></div>
-                  <div class="task-text">{{ task }}</div>
-                </li>
-              }
-            </ul>
+ <ul class="task-list">
+  @for (task of selectedIntervention().mission; track $index) {
+    <li class="task-item" [class.is-done]="task.done">
+      <div class="task-status-icon">
+        @if (task.done) {
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        } @else {
+          <div class="bullet"></div>
+        }
+      </div>
+      <div class="task-text">{{ task.label }}</div>
+    </li>
+  }
+</ul>
           } @else {
             <p class="no-tasks">Aucune mission détaillée.</p>
           }

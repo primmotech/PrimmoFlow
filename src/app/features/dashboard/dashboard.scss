@@ -12,6 +12,7 @@
     --call-bg: rgba(46, 204, 113, 0.15);
     --text-primary: #ffffff;
     --text-secondary: #aaaaaa;
+    --accent-color: #3498db;
   }
 
   &:not(.dark-mode) {
@@ -21,6 +22,7 @@
     --call-bg: #ecfdf5;
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
+    --accent-color: #3498db;
   }
 }
 
@@ -69,10 +71,33 @@
     .city { font-weight: 800; font-size: 1rem; text-transform: uppercase; }
     .street { font-size: 0.85rem; color: var(--text-secondary); }
     .price-hint { color: #e60b0b; font-weight: 800; margin-top: 4px; }
+    
     .habitant-row { 
-      display: flex; align-items: center; gap: 10px; margin-top: 5px;
-      .habitant { font-size: 0.85rem; }
-      .call-action { color: #2ecc71; font-weight: bold; text-decoration: none; font-size: 0.8rem; }
+      display: flex; 
+      justify-content: space-between;
+      align-items: center; 
+      margin-top: 8px;
+      width: 100%;
+
+      .habitant-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .habitant { font-size: 0.85rem; }
+        .call-action { color: #2ecc71; font-weight: bold; text-decoration: none; font-size: 0.8rem; }
+      }
+
+      .planned-date {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        color: #666;
+        font-weight: 500;
+        white-space: nowrap;
+        .dark-mode & { color: #bbb; }
+        svg { opacity: 0.7; }
+      }
     }
   }
 }
@@ -81,28 +106,28 @@
 .card-actions {
   display: flex; align-items: center; gap: 10px;
   .icon-btn-edit { background: transparent; border: none; color: #7f8c8d; padding: 5px; }
-.btn-tasks {
-  display: flex;       /* Aligne l'icône et le texte */
-  align-items: center; /* Centre verticalement */
-  gap: 4px;            /* Espace entre l'icône et "Tâches" */
   
-  background: rgba(52, 152, 219, 0.1);
-  border: 1.5px solid rgba(52, 152, 219, 0.2);
-  color: #3498db;
-  padding: 6px 12px;   /* Un peu plus de padding pour le confort */
-  border-radius: 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  
-  &:active { 
-    background: #3498db; 
-    color: white; 
+  .btn-tasks {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(52, 152, 219, 0.1);
+    border: 1.5px solid rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    
+    &:active { 
+      background: #3498db; 
+      color: white; 
+    }
   }
 }
-}
 
-/* --- MODALE (STRUCTURE & FIXATION) --- */
+/* --- MODALE --- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px); z-index: 2000;
@@ -122,7 +147,7 @@
 
   .modal-body {
     padding: 20px; max-height: 75vh; overflow-y: auto; overflow-x: hidden;
-    display: block !important; /* Empêche tout alignement horizontal global */
+    display: block !important;
   }
 }
 
@@ -135,16 +160,35 @@
 
     .task-item {
       display: flex !important; align-items: flex-start;
+      transition: opacity 0.2s ease;
+
+      &.is-done {
+        .task-text {
+          color: var(--text-secondary);
+          text-decoration: line-through;
+          opacity: 0.6;
+        }
+      }
+
+      .task-status-icon {
+        width: 24px;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: flex-start;
+        padding-top: 2px;
+      }
+
       .bullet {
         width: 8px; height: 8px; background: #3498db; border-radius: 50%;
-        margin-top: 6px; margin-right: 12px; flex-shrink: 0;
+        margin-top: 6px; flex-shrink: 0;
       }
+      
       .task-text { font-size: 0.95rem; line-height: 1.4; color: var(--text-primary); flex: 1; }
     }
   }
 }
 
-/* --- SLIDER PHOTOS (ISOLEMENT TOTAL) --- */
+/* --- SLIDER PHOTOS --- */
 .modal-divider { border: 0; border-top: 1px solid var(--border-color); margin: 20px 0; }
 
 .photos-section {
@@ -191,77 +235,52 @@
     color: var(--text-secondary);
     transition: color 0.2s ease;
     
-    /* Empêche la découpe du tracé SVG */
     svg { 
       width: 24px; 
       height: 24px; 
       stroke-width: 2; 
       fill: none;
-      overflow: visible; /* CRUCIAL : permet au tracé de dépasser légèrement sans être coupé */
+      overflow: visible;
       display: block;
     }
 
     span { 
       font-size: 0.7rem; 
       font-weight: 700; 
-      text-transform: uppercase; /* Pour un look pro comme tes titres */
+      text-transform: uppercase; 
       letter-spacing: 0.3px;
     }
 
     &.active { 
-      color: var(--accent-color, #3498db); 
-      
-      /* Optionnel : épaissir un peu l'icône active */
+      color: var(--accent-color); 
       svg { stroke-width: 2.5; }
     }
   }
 }
-.planned-date {
+
+/* --- FAB (BOUTON AJOUT) --- */
+.fab-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 95px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #3498db;
+  border: none;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
   display: flex;
   align-items: center;
-  font-size: 0.85rem;
-  color: #666;
-  margin: 4px 0;
-  font-weight: 500;
-
-  // Correction ici : On vérifie si .dark-mode est sur un parent (le wrapper)
-  .dark-mode & {
-    color: #bbb;
-  }
-
-  svg {
-    opacity: 0.7;
-    flex-shrink: 0; // Empêche l'icône de s'écraser si le texte est long
-  }
-}
-.habitant-row {
-  display: flex;
-  justify-content: space-between; // Aligne les enfants aux deux extrémités
-  align-items: center;           // Aligne verticalement au centre
-  margin-top: 8px;
-  width: 100%;
+  justify-content: center;
+  z-index: 900;
+  &:active { transform: scale(0.95); }
 }
 
-.habitant-info {
-  display: flex;
-  align-items: center;
-  gap: 8px; // Espace entre le nom et le bouton "Appeler"
-}
-
-.planned-date {
-  display: flex;
-  align-items: center;
-  gap: 4px;      // Espace entre l'icône horloge et le texte
+.offline-indicator {
+  background: #e74c3c;
+  color: white;
+  text-align: center;
+  padding: 5px;
   font-size: 0.8rem;
-  color: #666;
-  font-weight: 500;
-  white-space: nowrap; // Empêche la date de passer à la ligne
-
-  .dark-mode & {
-    color: #bbb;
-  }
-
-  svg {
-    opacity: 0.7;
-  }
+  font-weight: bold;
 }
