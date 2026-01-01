@@ -23,7 +23,23 @@
           </div>
         </div>
       </section>
-
+@if (completedTasks().length > 0) {
+  <section class="tasks-section">
+    <h3 class="section-title">Travaux effectués</h3>
+    <div class="tasks-container">
+      @for (task of completedTasks(); track $index) {
+        <div class="task-row">
+          <div class="check-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <span class="task-label">{{ task.label }}</span>
+        </div>
+      }
+    </div>
+  </section>
+}
       <section class="recent-activity">
         <h3>Main d'œuvre</h3>
         <div class="intervention-card list-card">

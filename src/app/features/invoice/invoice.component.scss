@@ -274,3 +274,105 @@
   font-weight: 700;
   opacity: 0.6;
 }
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0; // Un peu plus serré que les prix
+
+  .task-check {
+    flex-shrink: 0;
+  }
+
+  .label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+}
+
+// Pour différencier visuellement les sections de données pures des tâches
+.list-card .sub-line {
+  border-bottom: 1px solid var(--border-color);
+  &:last-child { border-bottom: none; }
+}
+.task-confirmed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  &:last-child { border-bottom: none; }
+
+  .check-circle {
+    width: 22px;
+    height: 22px;
+    background: #2ecc71;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+.tasks-section {
+  margin-top: 25px;
+
+  .section-title {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-left: 5px;
+  }
+
+  .tasks-container {
+    background: var(--card-bg); // Utilise tes variables de thème
+    border-radius: 16px;
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+    .task-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .check-icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: rgba(46, 204, 113, 0.15); // Vert transparent
+        border-radius: 50%;
+        color: #2ecc71; // Vert vif
+
+        svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+
+      .task-label {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        flex: 1; // Force l'alignement à gauche
+      }
+    }
+  }
+}

@@ -38,27 +38,7 @@ export class InvoiceComponent implements OnInit {
     });
   }
 
- async fetchIntervention(id: string) {
-  try {
-    const doc = await this.authService.databases.getDocument(this.DB_ID, this.COL_INTERVENTIONS, id);
-    
-    // Parsing des données JSON
-    const parsed = {
-      ...doc,
-      id: doc.$id,
-      habitants: this.parseSafe(doc['habitants']),
-      adresse: this.parseSafe(doc['adresse']),
-      timeSessions: this.parseArraySafe(doc['timeSessions']),
-      materials: this.parseArraySafe(doc['materials']) // <--- Modifié ici
-    };
-    
-    this.intervention.set(parsed);
-    this.loading.set(false);
-  } catch (error) {
-    console.error('Erreur Appwrite:', error);
-    this.loading.set(false);
-  }
-}
+
   // --- CALCULS (Adaptés aux signaux) ---
   totalTime = computed(() => {
     const sessions = this.intervention()?.timeSessions || [];
@@ -155,4 +135,71 @@ async updateItemPrice(arrayName: 'timeSessions' | 'materials', itemId: string, n
   }
 
   goBack() { this.router.navigate(['/dashboard']); }
+
+
+
+// Ta logique inspirée du Planning pour uniformiser les données
+private processMissionTasks(missionData: any): any[] {
+  if (!missionData) return [];
+  
+  // Cas 1 : C'est un tableau (déjà parsé ou String JSON)
+  if (Array.isArray(missionData)) {
+    return missionData.map(item => {
+      // Si c'est une string JSON dans le tableau, on la parse
+      const obj = typeof item === 'string' ? this.parseSafe(item) : item;
+      if (typeof obj === 'object' && obj !== null) return obj;
+      return { label: String(item).trim(), done: false };
+    }).filter(item => item.label.length > 0);
+  }
+
+  // Cas 2 : C'est une string brute (ex: "Peinture, Sol")
+  if (typeof missionData === 'string') {
+    // On essaie de voir si c'est un JSON global
+    try {
+      const p = JSON.parse(missionData);
+      if (Array.isArray(p)) return this.processMissionTasks(p);
+    } catch {
+      // Sinon split classique
+      return missionData
+        .split(/\n|,|;/)
+        .map(t => ({ label: t.trim(), done: false }))
+        .filter(t => t.label.length > 0);
+    }
+  }
+  return [];
+}
+
+async fetchIntervention(id: string) {
+  try {
+    const doc = await this.authService.databases.getDocument(this.DB_ID, this.COL_INTERVENTIONS, id);
+    
+    // On parse le champ 'mission' qui est une chaîne JSON représentant un OBJET
+    const missionObj = this.parseSafe(doc['mission']); 
+    
+    // On extrait le tableau 'tasks' qui est à l'intérieur de cet objet
+    const taskList = (missionObj && missionObj.tasks) ? missionObj.tasks : [];
+
+    this.intervention.set({
+      ...doc,
+      id: doc.$id,
+      habitants: this.parseSafe(doc['habitants']),
+      adresse: this.parseSafe(doc['adresse']),
+      timeSessions: this.parseArraySafe(doc['timeSessions']),
+      materials: this.parseArraySafe(doc['materials']),
+      tasks: taskList // Ici, on a maintenant le tableau : [{"label":"333...", "done":true}, ...]
+    });
+    
+    this.loading.set(false);
+  } catch (error) {
+    console.error('Erreur Appwrite:', error);
+    this.loading.set(false);
+  }
+}
+
+completedTasks = computed(() => {
+  const allTasks = this.intervention()?.tasks || [];
+  // Filtre ultra-large : on prend tout ce qui n'est pas "false"
+  return allTasks.filter((t: any) => t.done === true || t.done === 'true');
+});
+
 }
