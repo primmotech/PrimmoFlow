@@ -10,8 +10,11 @@ export class NotificationService {
   private readonly NOTIFICATOR_ID = '6957b41400311755ce31';
   private readonly APP_URL = 'https://primmo-flow.vercel.app';
 
-  // Template BIENVENUE
+  /**
+   * Envoie l'email de bienvenue (Ajout Whitelist)
+   */
   async sendWelcomeEmail(to: string, nickName: string) {
+    const subject = "Accès autorisé - primmoFlow";
     const html = `
       <div style="font-family: sans-serif; background-color: #f9fafb; padding: 20px; color: #1f2937;">
         <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -29,11 +32,14 @@ export class NotificationService {
           </div>
         </div>
       </div>`;
-    return this.sendEmail(to, "Accès autorisé - primmoFlow", html);
+    return this.executeMail(to, subject, html);
   }
 
-  // Template RÉVOCATION
+  /**
+   * Envoie l'email de révocation (Suppression Whitelist)
+   */
   async sendRevocationEmail(to: string, nickName: string) {
+    const subject = "Révocation d'accès - primmoFlow";
     const html = `
       <div style="font-family: sans-serif; background-color: #fef2f2; padding: 20px; color: #1f2937;">
         <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #fee2e2;">
@@ -48,11 +54,13 @@ export class NotificationService {
           </div>
         </div>
       </div>`;
-    return this.sendEmail(to, "Fin d'accès - primmoFlow", html);
+    return this.executeMail(to, subject, html);
   }
 
-  // Méthode générique privée (ton code de base)
-  private async sendEmail(to: string, subject: string, message: string) {
+  /**
+   * Exécute l'appel à la fonction Appwrite
+   */
+  private async executeMail(to: string, subject: string, message: string) {
     try {
       const payload = { email: to, subject: subject, message: message };
       return await this.functions.createExecution(this.NOTIFICATOR_ID, JSON.stringify(payload));
