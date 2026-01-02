@@ -99,70 +99,75 @@ export class CommandesComponent implements OnInit {
     this.priceInputs.set(orderId, price);
   }
 
-  async updateOrderStatus(interventionId: string, orderId: string) {
-    const price = this.priceInputs.get(orderId);
-    if (price === undefined || price === null) {
-      alert("Veuillez entrer un prix d'achat.");
+async updateOrderStatus(interventionId: string, orderId: string) {
+  const price = this.priceInputs.get(orderId);
+  if (price === undefined || price === null) {
+    alert("Veuillez entrer un prix d'achat.");
+    return;
+  }
+
+  try {
+    const doc = await this.authService.databases.getDocument(
+      this.DB_ID,
+      this.COL_INTERVENTIONS,
+      interventionId
+    );
+
+    // Cast explicite des données venant d'Appwrite pour éviter le type 'never' ou 'any'
+    const currentOrders = (doc['orders'] as string[]) || [];
+    const currentMaterials = (doc['materials'] as string[]) || []; 
+
+    // On initialise avec le type Order ou null
+    let orderToTransfer: Order | null = null;
+
+    // 1. Mise à jour des commandes avec .map()
+    const updatedOrders = currentOrders.map(orderStr => {
+      const parsed = JSON.parse(orderStr) as Order;
+      if (parsed.id === orderId) {
+        parsed.status = 'COMMANDÉ';
+        parsed.price = price;
+        orderToTransfer = parsed; // L'objet est capturé ici
+        return JSON.stringify(parsed);
+      }
+      return orderStr;
+    });
+
+    // 2. Vérification de sécurité avec Type Guard
+    if (!orderToTransfer) {
+      alert("Commande introuvable.");
       return;
     }
 
-    try {
-      // 1. Récupérer le document
-      const doc = await this.authService.databases.getDocument(
-        this.DB_ID,
-        this.COL_INTERVENTIONS,
-        interventionId
-      );
+    // Création d'une constante locale typée pour rassurer TS
+    const targetOrder: Order = orderToTransfer;
 
-      const currentOrders: string[] = doc['orders'] || [];
-      const currentMateriels: string[] = doc['materiels'] || [];
+    // 3. Préparation du matériel
+    const newMateriel = JSON.stringify({
+      id: targetOrder.id,
+      description: `(CMD) ${targetOrder.name}`,
+      price: price,
+      dateAdded: new Date().toISOString()
+    });
 
-      // 2. Trouver l'objet à transférer et filtrer le tableau
-      let orderToTransfer: Order | null = null;
-      const updatedOrders: string[] = [];
-
-      for (const orderStr of currentOrders) {
-        const parsed = JSON.parse(orderStr) as Order;
-        if (parsed.id === orderId) {
-          orderToTransfer = parsed;
-        } else {
-          updatedOrders.push(orderStr);
-        }
+    // 4. Update Appwrite
+    await this.authService.databases.updateDocument(
+      this.DB_ID,
+      this.COL_INTERVENTIONS,
+      interventionId,
+      { 
+        orders: updatedOrders,
+        materials: [...currentMaterials, newMateriel] 
       }
+    );
 
-      if (!orderToTransfer) {
-        alert("Commande introuvable.");
-        return;
-      }
-
-      // 3. Préparer le matériel (Cast explicite pour éviter l'erreur 'never')
-      const transfer = orderToTransfer as Order;
-      const newMateriel = JSON.stringify({
-        id: transfer.id,
-        description: transfer.name,
-        price: price,
-        dateAdded: new Date().toISOString()
-      });
-
-      // 4. Update Appwrite
-      await this.authService.databases.updateDocument(
-        this.DB_ID,
-        this.COL_INTERVENTIONS,
-        interventionId,
-        { 
-          orders: updatedOrders,
-          materials: [...currentMateriels, newMateriel]
-        }
-      );
-
-      this.priceInputs.delete(orderId);
-      this.fetchOrders(); 
-      
-    } catch (error) {
-      console.error("Erreur transfert matériel:", error);
-      alert("La mise à jour a échoué.");
-    }
+    this.priceInputs.delete(orderId);
+    this.fetchOrders(); 
+    
+  } catch (error) {
+    console.error("Erreur transfert matériel:", error);
+    alert("La mise à jour a échoué.");
   }
+}
 
   goBack() {
     this.router.navigate(['/dashboard']);

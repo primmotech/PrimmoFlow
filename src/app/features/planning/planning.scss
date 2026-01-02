@@ -88,7 +88,7 @@
   }
 }
 
-/* --- 2.1 LISTE DES TACHES (STREAK SOUS HEADER) --- */
+/* --- 2.1 LISTE DES TACHES --- */
 .mission-tasks-list {
   background: var(--card-bg);
   padding: 12px 20px;
@@ -254,9 +254,14 @@
 
 .time-modal {
   background: var(--card-bg);
-  width: 90%; max-width: 340px;
-  padding: 25px; border-radius: 30px;
+  width: 90%; 
+  max-width: 320px; // Un peu plus serré pour éviter les débordements
+  padding: 25px; 
+  border-radius: 30px;
   animation: modalIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   .time-display {
     text-align: center; font-size: 3rem; font-weight: 900; margin-bottom: 20px;
@@ -264,13 +269,40 @@
   }
 
   .clock-circle-large {
-    background: var(--bg-color); border-radius: 50%; padding: 10px; margin-bottom: 20px;
-    svg .clock-label { fill: var(--text-primary); font-size: 14px; font-weight: 700; text-anchor: middle; }
-    svg .clock-label.small { font-size: 11px; opacity: 0.6; }
+    background: var(--bg-color); 
+    border-radius: 50%; 
+    padding: 0; 
+    margin: 0 auto 25px auto;
+    width: 280px;  // Doit être identique à la largeur du SVG
+    height: 280px; // Doit être identique à la hauteur du SVG
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+
+    // Correction spécifique pour supprimer le décalage noir
+    svg {
+      width: 280px;
+      height: 280px;
+      display: block;
+      margin: 0;
+      padding: 0;
+      overflow: visible; // Permet de voir l'aiguille si elle dépasse d'un pixel
+
+      .clock-label { 
+        fill: var(--text-primary); 
+        font-size: 14px; 
+        font-weight: 700; 
+        text-anchor: middle;
+        pointer-events: none;
+      }
+      .clock-label.small { font-size: 11px; opacity: 0.6; }
+    }
   }
 
   .modal-actions {
-    display: flex; gap: 10px;
+    display: flex; gap: 10px; width: 100%;
     button { 
       flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800;
       &.btn-save-clock { background: var(--accent-color); color: white; }

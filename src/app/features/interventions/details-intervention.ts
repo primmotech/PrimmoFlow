@@ -19,7 +19,7 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   public themeService = inject(ThemeService);
   public authService = inject(AuthService);
-
+  protected readonly JSON = JSON;
   // Configuration Appwrite
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COLL_INTERVENTIONS = 'interventions';
@@ -65,22 +65,8 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
     return parsedMission?.tasks || [];
   });
 
-  displayedOrders = computed(() => {
-    const orders = (this.intervention()?.orders || []).map((o: any) => this.parseJson(o));
-    return orders.filter((o: any) => o.status !== 'COMMANDÉ');
-  });
 
-  displayedMaterials = computed(() => {
-    const materials = (this.intervention()?.materials || [])
-      .map((m: any) => ({ ...this.parseJson(m), isFromOrder: false }));
-    
-    const orderedItems = (this.intervention()?.orders || [])
-      .map((o: any) => this.parseJson(o))
-      .filter((o: any) => o.status === 'COMMANDÉ')
-      .map((o: any) => ({ id: o.id, description: o.name, price: o.price || 0, isFromOrder: true }));
-    
-    return [...materials, ...orderedItems];
-  });
+
 
   ngOnInit() {
     this.themeService.initTheme();
@@ -301,30 +287,7 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
     this.updateIntervention({ travelCount: newCount, travelCost: newCount * this.travelFee() });
   }
 
-  getBreakdown() {
-    const inter = this.intervention();
-    if (!inter) return { mat: 0, time: 0, travel: 0 };
-    
-    const roundingSec = this.rounding() * 60;
-    const liveWorkSec = roundingSec > 0 ? Math.ceil(this.workSeconds / roundingSec) * roundingSec : this.workSeconds;
-    
-    const sessions = (inter.timeSessions || []).map((s: any) => this.parseJson(s));
-    const totalSessionsPrice = sessions.reduce((acc: number, s: any) => acc + (s.price || 0), 0);
-    const livePrice = (liveWorkSec / 3600) * this.hourlyRate();
-    
-    const totalMat = this.displayedMaterials().reduce((acc: number, m: any) => acc + (Number(m.price) || 0), 0);
 
-    return { 
-      mat: totalMat, 
-      time: totalSessionsPrice + livePrice, 
-      travel: (inter.travelCount || 0) * this.travelFee() 
-    };
-  }
-
-  calculateTotal() {
-    const b = this.getBreakdown();
-    return b.mat + b.time + b.travel;
-  }
 
   async pauseAndRequestVisit() {
     if (this.isRunning() || !window.confirm("Placer cette mission en attente ?")) return;
@@ -376,4 +339,57 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
   openLightbox(url: string) { this.selectedPhoto.set(url); }
   closeLightbox() { this.selectedPhoto.set(null); }
   goBack() { this.router.navigate(['/dashboard']); }
+  // À placer sous vos autres computed
+canAddMaterial = computed(() => {
+  // .trim() évite que le bouton s'active si l'utilisateur tape juste des espaces
+  const nameValid = this.itemName().trim().length > 0;
+  // On vérifie que le prix n'est pas nul
+  const priceValid = this.itemPrice() !== null;
+  return nameValid && priceValid;
+});
+
+// 1. Uniquement les commandes qui ne sont pas encore passées en matériel
+  displayedOrders = computed(() => {
+    const orders = (this.intervention()?.orders || []).map((o: any) => this.parseJson(o));
+    return orders.filter((o: any) => o.status !== 'COMMANDÉ');
+  });
+
+  // 2. Uniquement les matériaux RÉELS (y compris ceux transférés depuis une commande)
+  displayedMaterials = computed(() => {
+    return (this.intervention()?.materials || []).map((m: any) => this.parseJson(m));
+  });
+
+  // 3. CALCUL DU TOTAL (Timer + Sessions + Matériel + Trajets)
+  getBreakdown() {
+    const inter = this.intervention();
+    if (!inter) return { mat: 0, time: 0, travel: 0 };
+    
+    // --- PARTIE TEMPS ---
+    // A. Sessions déjà enregistrées
+    const sessions = (inter.timeSessions || []).map((s: any) => this.parseJson(s));
+    const totalSessionsPrice = sessions.reduce((acc: number, s: any) => acc + (Number(s.price) || 0), 0);
+
+    // B. Temps du timer en cours (si il tourne)
+    const roundingSec = this.rounding() * 60;
+    const liveWorkSec = roundingSec > 0 ? Math.ceil(this.workSeconds / roundingSec) * roundingSec : this.workSeconds;
+    const livePrice = (liveWorkSec / 3600) * this.hourlyRate();
+    
+    // --- PARTIE MATÉRIEL ---
+    const totalMat = this.displayedMaterials().reduce((acc: number, m: any) => acc + (Number(m.price) || 0), 0);
+
+    // --- PARTIE DÉPLACEMENT ---
+    const totalTravel = (inter.travelCount || 0) * this.travelFee();
+
+    return { 
+      mat: totalMat, 
+      time: totalSessionsPrice + livePrice, // Somme du passé et du timer actuel
+      travel: totalTravel 
+    };
+  }
+
+  // Assure-toi que calculateTotal utilise bien le breakdown mis à jour
+  calculateTotal() {
+    const b = this.getBreakdown();
+    return b.mat + b.time + b.travel;
+  }
 }
