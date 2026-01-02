@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ThemeService } from '../../core/services/theme';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-whitelist',
@@ -15,6 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class Whitelist implements OnInit, OnDestroy {
   public themeService = inject(ThemeService);
   public auth = inject(AuthService);
+  private notificationService = inject(NotificationService);
 
   authorizedUsers = signal<any[]>([]);
   roles = signal<any[]>([]);
@@ -97,42 +99,9 @@ export class Whitelist implements OnInit, OnDestroy {
   }
  
 
-  async deleteEmail(email: string) {
-    if (email === this.auth.userEmail()) return alert("Vous ne pouvez pas vous supprimer vous-même.");
-    
-    if (confirm(`⚠️ Supprimer définitivement ${email} ?\nCela révoquera l'accès et effacera le profil.`)) {
-      try {
-        this.loading.set(true);
-        const id = this.auth.formatId(email);
-
-        // 1. Supprimer de la Whitelist (Bloque l'accès immédiat)
-        await this.auth.databases.deleteDocument(this.dbId, this.colWhitelist, id);
-
-        // 2. Supprimer le Profil (Efface les données personnelles)
-        try {
-          await this.auth.databases.deleteDocument(this.dbId, this.colProfiles, id);
-        } catch (e) {
-          console.warn("Profil déjà inexistant ou erreur de suppression.");
-        }
-
-        // 3. Information importante
-        alert(`Accès révoqué pour ${email}. \nNote: Pensez à supprimer manuellement le compte dans la console Appwrite (onglet Auth) pour effacer définitivement les identifiants.`);
-        
-        await this.loadAuthorizedUsers();
-      } catch (e: any) {
-        alert("Erreur lors de la suppression : " + e.message);
-      } finally {
-        this.loading.set(false);
-      }
-    }
-  }
-
-  /**
-   * Ajout d'un utilisateur avec initialisation du flag hasAccount
-   */
 async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
   const email = emailInput.value.trim().toLowerCase();
-  const nickName = nameInput.value.trim();
+  const nickName = nameInput.value.trim() || email.split('@')[0];
   const id = this.auth.formatId(email);
 
   if (!email.includes('@')) return alert("Email invalide");
@@ -140,39 +109,60 @@ async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
   try {
     this.loading.set(true);
     
-    // 1. Ajout Whitelist UNIQUEMENT (Droit d'entrée)
+    // 1. Enregistrement BDD
     await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
-      email, 
-      addedAt: new Date().toISOString(),
-      hasAccount: false // Indique que le compte Auth n'est pas encore créé
+      email, addedAt: new Date().toISOString(), hasAccount: false 
+    });
+    
+    await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
+      email, nickName, role: 'Technicien', themePreference: 'dark', updatedAt: new Date().toISOString()
     });
 
-    // 2. Pré-création du Profil (Données métier)
+    // 2. Envoi Email stylé via le service
     try {
-      await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
-        email, 
-        nickName: nickName || email.split('@')[0], 
-        role: 'Technicien', 
-        themePreference: 'dark', 
-        updatedAt: new Date().toISOString()
-      });
-    } catch (e: any) {
-      if (e.code === 409) {
-        await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { 
-          nickName: nickName || email.split('@')[0] 
-        });
-      }
+      await this.notificationService.sendWelcomeEmail(email, nickName);
+    } catch (mailError) {
+      console.warn("Utilisateur ajouté, mais échec mail:", mailError);
     }
 
-    alert(`Utilisateur ${email} autorisé ! Il peut maintenant créer son compte sur la page de login.`);
+    alert(`Utilisateur ${email} autorisé !`);
     emailInput.value = ''; nameInput.value = '';
     await this.loadAuthorizedUsers();
+
   } catch (error: any) { 
-    alert("Erreur lors de l'autorisation : " + error.message); 
+    alert("Erreur : " + error.message); 
   } finally { 
     this.loading.set(false); 
   }
 }
 
+async deleteEmail(user: any) {
+  const email = user.email;
+  if (email === this.auth.userEmail()) return alert("Vous ne pouvez pas vous supprimer vous-même.");
+  
+  if (confirm(`⚠️ Supprimer définitivement ${email} ?`)) {
+    try {
+      this.loading.set(true);
+      const id = this.auth.formatId(email);
 
+      await this.auth.databases.deleteDocument(this.dbId, this.colWhitelist, id);
+      try { await this.auth.databases.deleteDocument(this.dbId, this.colProfiles, id); } catch(e){}
+
+      // Envoi Email de révocation via le service
+      try {
+        await this.notificationService.sendRevocationEmail(email, user.nickName || email);
+      } catch (mailError) {
+        console.warn("Accès supprimé, mais échec notification mail.");
+      }
+
+      alert(`Accès révoqué pour ${email}.`);
+      await this.loadAuthorizedUsers();
+
+    } catch (e: any) {
+      alert("Erreur suppression : " + e.message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+}
 } 
