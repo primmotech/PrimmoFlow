@@ -33,6 +33,61 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly COL_INTERVENTIONS = 'interventions';
     private readonly BUCKET_ID = '69502be400074c6f43f5';
 
+
+  // Gestion du Long Press
+  private longPressTimeout: any;
+  public isLongPressing = false;
+
+  // --- LOGIQUE LONG PRESS ---
+
+  // Déclenché au mousedown ou touchstart
+  onPressStart(inter: any) {
+    this.isLongPressing = false;
+    // On lance un chrono de 800ms
+    this.longPressTimeout = setTimeout(() => {
+      this.isLongPressing = true;
+      this.confirmDeletion(inter);
+    }, 800);
+  }
+
+  // Déclenché au mouseup, touchend ou si on bouge le doigt (scroll)
+  onPressEnd() {
+    if (this.longPressTimeout) {
+      clearTimeout(this.longPressTimeout);
+    }
+  }
+
+  private async confirmDeletion(inter: any) {
+    const city = inter.adresse?.ville || 'cette intervention';
+    if (confirm(`⚠️ SUPPRESSION DÉFINITIVE\n\nSouhaitez-vous vraiment supprimer l'intervention à ${city} ?`)) {
+      try {
+        await this.authService.databases.deleteDocument(
+          this.DB_ID,
+          this.COL_INTERVENTIONS,
+          inter.id
+        );
+        // Le Realtime (subscribeToChanges) s'occupera de mettre à jour la liste automatiquement
+      } catch (error) {
+        console.error("Erreur suppression:", error);
+        alert("Impossible de supprimer l'intervention.");
+      }
+    }
+  }
+
+  // Modifie ta fonction de clic existante pour bloquer la navigation si c'est un appui long
+  handleCardClick(inter: any, type: 'details' | 'invoice') {
+    if (this.isLongPressing) return; // Ne fait rien si on vient de déclencher la suppression
+
+    if (type === 'details') {
+      this.goToDetails(inter.id);
+    } else {
+      this.handleCompletedClick(inter);
+    }
+  }
+
+ 
+
+
   // --- FILTRAGE RÉACTIF ---
   pendingInterventions = computed(() => 
     this.interventions().filter(i => i.status === 'OPEN' || i.status === 'WAITING')
