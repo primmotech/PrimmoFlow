@@ -131,8 +131,8 @@
   <div class="billed-contacts-aside">
     <div class="contact-line">
 
-      <span class="val">{{ inter.proprietaire?.nom || 'N/C' }}</span>
       <span class="val">{{ inter.proprietaire?.prenom || 'N/C' }}</span>
+      <span class="val">{{ inter.proprietaire?.nom || 'N/C' }}</span>
             <span class="val"> : </span>
       <a [href]="'tel:' + inter.proprietaire?.tel" (click)="$event.stopPropagation()" class="t">
         {{ inter.proprietaire?.tel || 'N/C' }}
@@ -141,8 +141,8 @@
     
     <div class="contact-line">
  
-      <span class="val">{{ inter.habitants?.[0]?.nom || 'N/C' }}</span>
       <span class="val">{{ inter.habitants?.[0]?.prenom || 'N/C' }}</span>
+      <span class="val">{{ inter.habitants?.[0]?.nom || 'N/C' }}</span>
            <span class="val"> : </span>
       <a [href]="'tel:' + inter.habitants?.[0]?.tel" (click)="$event.stopPropagation()" class="t">
         {{ inter.habitants?.[0]?.tel || 'N/C' }}

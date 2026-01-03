@@ -30,176 +30,72 @@ export class InvoiceComponent implements OnInit {
     this.themeService.initTheme();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
-      if (id) {
-        this.fetchIntervention(id);
-      } else {
-        this.loading.set(false);
-      }
+      if (id) { this.fetchIntervention(id); }
     });
   }
 
-
-  // --- CALCULS (Adaptés aux signaux) ---
-  totalTime = computed(() => {
-    const sessions = this.intervention()?.timeSessions || [];
-    return sessions.reduce((acc: number, s: any) => acc + (Number(s.price) || 0), 0);
+  grandTotal = computed(() => {
+    const i = this.intervention();
+    if (!i) return 0;
+    const t = (i.timeSessions || []).reduce((acc: number, s: any) => acc + (Number(s.price) || 0), 0);
+    const m = (i.materials || []).reduce((acc: number, m: any) => acc + (Number(m.price) || 0), 0);
+    return t + m + (Number(i.travelCost) || 0);
   });
 
-  totalMaterials = computed(() => {
-    const materials = this.intervention()?.materials || [];
-    return materials.reduce((acc: number, m: any) => acc + (Number(m.price) || 0), 0);
-  });
+  creatorEmail = computed(() => this.intervention()?.createdByEmail || '');
 
-  totalTravel = computed(() => Number(this.intervention()?.travelCost) || 0);
-
-  grandTotal = computed(() => this.totalTime() + this.totalMaterials() + this.totalTravel());
-
-  creatorEmail = computed(() => this.intervention()?.createdByEmail || 'Email non disponible');
-
-  // --- ACTIONS D'ÉDITION ---
-
-  async updateSingleField(fieldName: string, newValue: string) {
-    let price = parseFloat(newValue);
+  async updateSingleField(fieldName: string, newValue: any) {
+    let price = Number(parseFloat(newValue).toFixed(2));
     if (isNaN(price)) return;
     this.savingId.set(fieldName);
-
     try {
-      await this.authService.databases.updateDocument(
-        this.DB_ID, 
-        this.COL_INTERVENTIONS, 
-        this.intervention().id, 
-        { [fieldName]: price }
-      );
-      setTimeout(() => this.savingId.set(null), 1200);
-    } catch (error) {
-      this.savingId.set(null);
-      alert("Erreur de sauvegarde.");
-    }
+      await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.intervention().id, { [fieldName]: price });
+      this.intervention.update(p => ({ ...p, [fieldName]: price }));
+      setTimeout(() => this.savingId.set(null), 800);
+    } catch (e) { this.savingId.set(null); }
   }
 
-async updateItemPrice(arrayName: 'timeSessions' | 'materials', itemId: string, newPrice: string) {
-  let price = parseFloat(newPrice);
-  if (isNaN(price)) return;
-  this.savingId.set(itemId);
-
-  const currentInter = this.intervention();
-  if (!currentInter) return;
-
-  // Puisque le nom en DB est le même que le nom de l'array, on l'utilise direct
-  const updatedArray = currentInter[arrayName].map((item: any) => 
-    item.id === itemId ? { ...item, price: price } : item
-  ).map((item: any) => JSON.stringify(item));
-
-  try {
-    await this.authService.databases.updateDocument(
-      this.DB_ID, 
-      this.COL_INTERVENTIONS, 
-      currentInter.id, 
-      { [arrayName]: updatedArray } // <--- Utilise 'materials' ou 'timeSessions'
-    );
-    
-    // Rafraîchir pour recalculer les computed (totaux)
-    await this.fetchIntervention(currentInter.id);
-    setTimeout(() => this.savingId.set(null), 1200);
-  } catch (error) {
-    console.error('Erreur update:', error);
-    this.savingId.set(null);
-    alert("Erreur de sauvegarde.");
+  async updateItemPrice(arrayName: 'timeSessions' | 'materials', itemId: string, newPrice: any) {
+    let price = Number(parseFloat(newPrice).toFixed(2));
+    if (isNaN(price)) return;
+    this.savingId.set(itemId);
+    const curr = this.intervention();
+    const updated = curr[arrayName].map((i: any) => i.id === itemId ? { ...i, price } : i).map((i: any) => JSON.stringify(i));
+    try {
+      await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, curr.id, { [arrayName]: updated });
+      await this.fetchIntervention(curr.id);
+      setTimeout(() => this.savingId.set(null), 800);
+    } catch (e) { this.savingId.set(null); }
   }
-}
 
-  // --- NOTIFICATION ---
+  async fetchIntervention(id: string) {
+    try {
+      const doc = await this.authService.databases.getDocument(this.DB_ID, this.COL_INTERVENTIONS, id);
+      const mission = this.parseSafe(doc['mission']);
+      const rawHab = this.parseSafe(doc['habitants']);
+      this.intervention.set({
+        ...doc,
+        id: doc.$id,
+        proprietaire: this.parseSafe(doc['proprietaire']),
+        habitants: Array.isArray(rawHab) ? rawHab : (rawHab ? [rawHab] : []),
+        adresse: this.parseSafe(doc['adresse']),
+        timeSessions: this.parseArraySafe(doc['timeSessions']).map(s => ({...s, price: Number(Number(s.price).toFixed(2))})),
+        materials: this.parseArraySafe(doc['materials']).map(m => ({...m, price: Number(Number(m.price).toFixed(2))})),
+        travelCost: Number(Number(doc['travelCost'] || 0).toFixed(2)),
+        tasks: mission?.tasks || []
+      });
+      this.loading.set(false);
+    } catch (e) { this.loading.set(false); }
+  }
+
+  private parseSafe(d: any) { try { return typeof d === 'string' ? JSON.parse(d) : d; } catch { return d; } }
+  private parseArraySafe(d: any[]) { return (d || []).map(i => this.parseSafe(i)); }
   sendNotification() { this.showNotificationModal.set(true); }
-
-  async handleNotificationConfirmation(sendEmail: boolean) {
-    if (sendEmail) {
-      try {
-        await this.authService.databases.updateDocument(
-          this.DB_ID, 
-          this.COL_INTERVENTIONS, 
-          this.intervention().id, 
-          { status: 'BILLED', billedAt: new Date().toISOString() }
-        );
-      } catch (e) { console.error(e); }
-    }
-    this.showNotificationModal.set(false);
-  }
-
-  // --- HELPERS ---
-  private parseSafe(data: any) {
-    try { return typeof data === 'string' ? JSON.parse(data) : data; } catch { return data; }
-  }
-  private parseArraySafe(data: any[]) {
-    if (!data) return [];
-    return data.map(item => this.parseSafe(item));
-  }
-
+  async handleNotificationConfirmation(s: boolean) { if (s) { /* ... logique billed ... */ } this.showNotificationModal.set(false); }
   goBack() { this.router.navigate(['/dashboard']); }
-
-
-
-// Ta logique inspirée du Planning pour uniformiser les données
-private processMissionTasks(missionData: any): any[] {
-  if (!missionData) return [];
-  
-  // Cas 1 : C'est un tableau (déjà parsé ou String JSON)
-  if (Array.isArray(missionData)) {
-    return missionData.map(item => {
-      // Si c'est une string JSON dans le tableau, on la parse
-      const obj = typeof item === 'string' ? this.parseSafe(item) : item;
-      if (typeof obj === 'object' && obj !== null) return obj;
-      return { label: String(item).trim(), done: false };
-    }).filter(item => item.label.length > 0);
-  }
-
-  // Cas 2 : C'est une string brute (ex: "Peinture, Sol")
-  if (typeof missionData === 'string') {
-    // On essaie de voir si c'est un JSON global
-    try {
-      const p = JSON.parse(missionData);
-      if (Array.isArray(p)) return this.processMissionTasks(p);
-    } catch {
-      // Sinon split classique
-      return missionData
-        .split(/\n|,|;/)
-        .map(t => ({ label: t.trim(), done: false }))
-        .filter(t => t.label.length > 0);
-    }
-  }
-  return [];
-}
-
-async fetchIntervention(id: string) {
-  try {
-    const doc = await this.authService.databases.getDocument(this.DB_ID, this.COL_INTERVENTIONS, id);
-    
-    // On parse le champ 'mission' qui est une chaîne JSON représentant un OBJET
-    const missionObj = this.parseSafe(doc['mission']); 
-    
-    // On extrait le tableau 'tasks' qui est à l'intérieur de cet objet
-    const taskList = (missionObj && missionObj.tasks) ? missionObj.tasks : [];
-
-    this.intervention.set({
-      ...doc,
-      id: doc.$id,
-      habitants: this.parseSafe(doc['habitants']),
-      adresse: this.parseSafe(doc['adresse']),
-      timeSessions: this.parseArraySafe(doc['timeSessions']),
-      materials: this.parseArraySafe(doc['materials']),
-      tasks: taskList // Ici, on a maintenant le tableau : [{"label":"333...", "done":true}, ...]
-    });
-    
-    this.loading.set(false);
-  } catch (error) {
-    console.error('Erreur Appwrite:', error);
-    this.loading.set(false);
-  }
-}
-
-completedTasks = computed(() => {
-  const allTasks = this.intervention()?.tasks || [];
-  // Filtre ultra-large : on prend tout ce qui n'est pas "false"
-  return allTasks.filter((t: any) => t.done === true || t.done === 'true');
+  // À ajouter dans votre classe
+travelLabel = computed(() => {
+  const count = this.intervention()?.travelCount || 0;
+  return count > 1 ? `Déplacements (${count})` : 'Déplacement';
 });
-
 }

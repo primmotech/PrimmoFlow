@@ -1,158 +1,113 @@
 <div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
-  <header class="app-header">
-    <div class="brand"><h1>Rapport Final</h1></div>
-    <div class="header-user"><span class="username">Édition</span></div>
+  <header class="address-header">
+    <h1 class="city-title">{{ intervention()?.adresse?.ville }}</h1>
+    <span class="street-detail">{{ intervention()?.adresse?.numero }} {{ intervention()?.adresse?.rue }}</span>
   </header>
 
   <main class="container">
-    @if (loading()) {
-      <div class="loader">Chargement du rapport...</div>
-    } @else if (intervention()) {
+    @if (!loading() && intervention()) {
       
-      <section class="recent-activity">
-        <h3>Client & Adresse</h3>
-        <div class="intervention-card info-card">
-          <div class="card-info">
-            <span class="city">{{ intervention()?.habitants?.[0]?.nom || intervention()?.habitants?.nom || 'Client' }}</span>
-            <span class="street">
-              {{ intervention()?.adresse?.numero }} {{ intervention()?.adresse?.rue }}, {{ intervention()?.adresse?.ville }}
-            </span>
-          </div>
-          <div class="card-status">
-            <span class="date-badge">{{ intervention()?.completedAt | date:'dd/MM/yy' }}</span>
-          </div>
+      <section class="section">
+        <h3 class="title">Contacts</h3>
+        <div class="generic-card">
+          @if (intervention()?.proprietaire; as p) {
+            <div class="row contact">
+              <span class="icon">👤</span>
+              <div class="content">
+                <span class="label">{{ p.prenom }} {{ p.nom }}</span>
+                <span class="status">PROPRIÉTAIRE</span>
+              </div>
+              <a [href]="'tel:'+p.tel" class="tel-link">Appeler</a>
+            </div>
+          }
+          @for (h of intervention()?.habitants; track $index) {
+            <div class="row contact">
+              <span class="icon">🏠</span>
+              <div class="content">
+                <span class="label">{{ h.prenom }} {{ h.nom }}</span>
+                <span class="status">HABITANT</span>
+              </div>
+              <a [href]="'tel:'+h.tel" class="tel-link">Appeler</a>
+            </div>
+          }
         </div>
       </section>
-@if (completedTasks().length > 0) {
-  <section class="tasks-section">
-    <h3 class="section-title">Travaux effectués</h3>
-    <div class="tasks-container">
-      @for (task of completedTasks(); track $index) {
-        <div class="task-row">
-          <div class="check-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          <span class="task-label">{{ task.label }}</span>
-        </div>
-      }
-    </div>
-  </section>
-}
-      <section class="recent-activity">
-        <h3>Main d'œuvre</h3>
-        <div class="intervention-card list-card">
-          <div class="card-info">
-            @for (session of intervention()?.timeSessions; track session.id) {
-              <div class="sub-line">
-                <span class="label">{{ session.date | date:'dd/MM' }} ({{ session.workDuration }})</span>
-                <div class="edit-group">
-                  <input type="number" class="price-edit" 
-                         [class.saved]="savingId() === session.id.toString()"
-                         [value]="session.price" 
-                         (change)="updateItemPrice('timeSessions', session.id, $any($event.target).value)">
-                  <div class="save-status">
-                    @if (savingId() === session.id.toString()) {
-                      <svg class="check-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    }
-                  </div>
-                </div>
-              </div>
-            } @empty { <p class="empty-text">Aucune prestation enregistrée</p> }
-          </div>
+
+<section class="section">
+  <h3 class="title">Détail des Travaux</h3>
+  <div class="generic-card">
+    @for (task of intervention()?.tasks; track $index) {
+      <div class="row task" [class.done]="task.done">
+        <span class="icon">{{ task.done ? '✓' : '○' }}</span>
+        
+        <div class="content">
+          <span class="label">{{ task.label }}</span>
         </div>
 
-        <h3>Matériel & Fournitures</h3>
-        <div class="intervention-card list-card">
-          <div class="card-info">
-            @for (item of intervention()?.materials; track item.id) {
-              <div class="sub-line">
-                <span class="label">{{ item.description }}</span>
-                <div class="edit-group">
-                  <input type="number" class="price-edit" 
-                         [class.saved]="savingId() === item.id.toString()"
-                         [value]="item.price" 
-                         (change)="updateItemPrice('materials', item.id, $any($event.target).value)">
-                  <div class="save-status">
-                    @if (savingId() === item.id.toString()) {
-                      <svg class="check-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    }
-                  </div>
-                </div>
-              </div>
-            } @empty { <p class="empty-text">Aucun matériel utilisé</p> }
-          </div>
-        </div>
+        <span class="status-badge">{{ task.done ? 'EFFECTUÉ' : 'NON RÉALISÉ' }}</span>
+      </div>
+    }
+  </div>
+</section>
 
-        <h3>Déplacements</h3>
-        <div class="intervention-card list-card">
-          <div class="card-info">
-            <div class="sub-line">
-              <span class="label">Forfait trajets ({{ intervention()?.travelCount || 0 }} x)</span>
-              <div class="edit-group">
-                <input type="number" class="price-edit" 
-                       [class.saved]="savingId() === 'travelCost'"
-                       [value]="intervention()?.travelCost" 
-                       (change)="updateSingleField('travelCost', $any($event.target).value)">
-                <div class="save-status">
-                  @if (savingId() === 'travelCost') {
-                    <svg class="check-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  }
-                </div>
+      <section class="section">
+        <h3 class="title">Main d'œuvre & Frais</h3>
+        <div class="generic-card">
+          @for (s of intervention()?.timeSessions; track s.id) {
+            <div class="row price">
+              <div class="content">
+                <span class="label">{{ s.date | date:'dd/MM' }} ({{ s.workDuration }})</span>
               </div>
+              <div class="input-box" [class.saving]="savingId() === s.id.toString()">
+                <input type="number" step="0.01" [value]="s.price" (change)="updateItemPrice('timeSessions', s.id, $any($event.target).value)">
+                <span class="eur">€</span>
+              </div>
+            </div>
+          }
+          
+          <div class="row price">
+            <div class="content">
+              <span class="label">{{ travelLabel() }}</span>
+            </div>
+            <div class="input-box" [class.saving]="savingId() === 'travelCost'">
+              <input type="number" step="0.01" [value]="intervention()?.travelCost" (change)="updateSingleField('travelCost', $any($event.target).value)">
+              <span class="eur">€</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="recent-activity">
-        <div class="intervention-card total-card">
-          <div class="card-info">
-            <span class="total-label">TOTAL À FACTURER</span>
-            <span class="total-amount">{{ grandTotal() | number:'1.2-2' }}€</span>
-          </div>
+      <section class="section">
+        <h3 class="title">Matériel & Fournitures</h3>
+        <div class="generic-card">
+          @for (m of intervention()?.materials; track m.id) {
+            <div class="row price">
+              <div class="content">
+                <span class="label">{{ m.description }}</span>
+              </div>
+              <div class="input-box" [class.saving]="savingId() === m.id.toString()">
+                <input type="number" step="0.01" [value]="m.price" 
+                       (change)="updateItemPrice('materials', m.id, $any($event.target).value)">
+                <span class="eur">€</span>
+              </div>
+            </div>
+          } @empty {
+            <div class="row empty">
+              <span class="status">AUCUN MATÉRIEL FACTURÉ</span>
+            </div>
+          }
         </div>
       </section>
 
-    } @else {
-      <div class="loader">Aucune donnée trouvée pour cette intervention.</div>
+      <div class="footer-action">
+        <button class="btn-total" (click)="sendNotification()">
+          <span class="btn-txt">FINALISER</span>
+          <span class="btn-val">{{ grandTotal() | number:'1.2-2' }}€</span>
+        </button>
+      </div>
+
+    } @else if (loading()) {
+      <div class="loader-container">Chargement des données...</div>
     }
   </main>
-
-  <nav class="bottom-nav">
-    <button class="nav-item" (click)="goBack()">
-       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"></line>
-        <line x1="8" y1="12" x2="21" y2="12"></line>
-        <line x1="8" y1="18" x2="21" y2="18"></line>
-        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-      </svg>
- 
-      <span>Accueil</span>
-    </button>
-  
-    <button class="nav-item action-active" (click)="sendNotification()">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-      </svg>
-      <span>Notifier</span>
-    </button>
-  </nav>
-
-  @if (showNotificationModal()) {
-    <app-notification-modal 
-      [email]="creatorEmail()" 
-      (confirm)="handleNotificationConfirmation($event)">
-    </app-notification-modal>
-  }
 </div>
