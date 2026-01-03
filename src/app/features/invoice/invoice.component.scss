@@ -266,3 +266,45 @@
     }
   }
 }
+.total-button-action {
+  width: 100%;
+  margin: 30px 0;
+  padding: 24px 20px;
+  background: #3498db; // Bleu par défaut
+  border-radius: 16px;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease; // Transition douce pour le changement de couleur
+
+  /* --- ÉTAT QUAND FACTURÉ (VERT) --- */
+  &.is-billed {
+    background: #2ecc71 !important; // Ton vert habituel
+    cursor: default;
+    opacity: 1 !important; // On garde l'éclat, pas de transparence
+    
+    .action-label {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  /* Le reste des styles reste identique */
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+    background: #2980b9;
+  }
+
+  .left-side .action-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+  }
+
+  .right-side .total-amount {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ffffff;
+  }
+}

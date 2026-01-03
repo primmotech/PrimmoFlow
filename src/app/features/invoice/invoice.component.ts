@@ -105,29 +105,36 @@ assignedName = computed(() => this.intervention()?.assigned || 'le technicien');
 // N'oublie pas d'injecter le service dans le constructor ou via inject()
 private notificationService = inject(NotificationService);
 
+
 async handleNotificationConfirmation(confirmed: boolean) {
   if (confirmed) {
     const intervention = this.intervention();
-    const email = intervention?.createdByEmail; // L'email du créateur (destinataire)
-    const technician = this.assignedName(); // Le nom récupéré via ton signal
+    const email = intervention?.createdBy;
+    const technician = this.assignedName();
     const total = this.grandTotal();
     const city = intervention?.adresse?.ville || 'Intervention';
 
     try {
-      // 1. On envoie l'email
-      await this.notificationService.sendPaymentNotification(email, technician, total, city);
+      // 1. Envoi de l'email
+      await this.notificationService.sendPaymentNotification(technician, email, total, city);
       
-      // 2. On peut marquer l'intervention comme "Facturée" en DB si tu as un champ prévu
+      // 2. Mise à jour en base de données
       await this.authService.databases.updateDocument(
         this.DB_ID, 
         this.COL_INTERVENTIONS, 
         intervention.id, 
-        { status: "BILLED"} // Exemple de flag
+        { status: "BILLED" }
       );
+
+      // 3. MISE À JOUR DU SIGNAL (Pour le direct update)
+      this.intervention.update(curr => ({
+        ...curr,
+        status: "BILLED"
+      }));
       
-      console.log("Notification envoyée avec succès !");
+      console.log("Notification envoyée et interface mise à jour !");
     } catch (error) {
-      console.error("Erreur lors de l'envoi :", error);
+      console.error("Erreur :", error);
     }
   }
   this.showNotificationModal.set(false);

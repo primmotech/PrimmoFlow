@@ -78,10 +78,10 @@ async sendPaymentNotification(to: string, technicianName: string, amount: number
     <div style="font-family: sans-serif; background-color: #111; padding: 20px; color: #fff;">
       <div style="max-width: 600px; margin: 0 auto; background: #1a1a1a; border-radius: 16px; overflow: hidden; border: 1px solid #333;">
         <div style="background: #3498db; padding: 30px; text-align: center; color: white;">
-          <span style="font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Paiement Encaissé</span>
+          <span style="font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Paiement Disponible chez ${technicianName}</span>
         </div>
         <div style="padding: 30px; line-height: 1.6;">
-          <h2 style="color: #3498db; margin-top: 0;">Bonjour ${technicianName},</h2>
+          <h2 style="color: #3498db; margin-top: 0;">Bonjour ${to},</h2>
           <p>Le paiement pour l'intervention à <strong>${city}</strong> a été validé.</p>
           
           <div style="background: #222; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; border: 1px solid #333;">
@@ -89,13 +89,14 @@ async sendPaymentNotification(to: string, technicianName: string, amount: number
             <span style="font-size: 32px; font-weight: 900; color: #ffffff;">${amount.toFixed(2)}€</span>
           </div>
 
-          <p style="font-size: 14px; color: #888;">L'intervention est désormais marquée comme réglée dans le système.</p>
+          
         </div>
         <div style="background: #111; padding: 15px; text-align: center;">
            <p style="font-size: 11px; color: #555; margin: 0;">Ceci est une notification automatique de PrimmoFlow.</p>
         </div>
       </div>
     </div>`;
+    console.log (this.executeMail(to, subject, html))
   return this.executeMail(to, subject, html);
 }
 }

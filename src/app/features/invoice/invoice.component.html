@@ -57,7 +57,7 @@
                 <span class="label">{{ s.date | date:'dd/MM' }} ({{ s.workDuration }})</span>
               </div>
               <div class="input-box" [class.saving]="savingId() === s.id.toString()">
-                <input type="number" step="0.01" [value]="s.price" (change)="updateItemPrice('timeSessions', s.id, $any($event.target).value)">
+                <input [readonly]=true type="number" step="0.01" [value]="s.price" (change)="updateItemPrice('timeSessions', s.id, $any($event.target).value)">
                 <span class="eur">€</span>
               </div>
             </div>
@@ -65,7 +65,7 @@
           <div class="row price">
             <div class="content"><span class="label">{{ travelLabel() }}</span></div>
             <div class="input-box" [class.saving]="savingId() === 'travelCost'">
-              <input type="number" step="0.01" [value]="intervention()?.travelCost" (change)="updateSingleField('travelCost', $any($event.target).value)">
+              <input [readonly]=true type="number" step="0.01" [value]="intervention()?.travelCost" (change)="updateSingleField('travelCost', $any($event.target).value)">
               <span class="eur">€</span>
             </div>
           </div>
@@ -79,7 +79,7 @@
             <div class="row price">
               <div class="content"><span class="label">{{ m.description }}</span></div>
               <div class="input-box" [class.saving]="savingId() === m.id.toString()">
-                <input type="number" step="0.01" [value]="m.price" (change)="updateItemPrice('materials', m.id, $any($event.target).value)">
+                <input [readonly]=true type="number" step="0.01" [value]="m.price" (change)="updateItemPrice('materials', m.id, $any($event.target).value)">
                 <span class="eur">€</span>
               </div>
             </div>
@@ -87,9 +87,14 @@
         </div>
       </section>
 
-<button class="total-button-action" (click)="sendNotification()" [disabled]="loading()">
+<button class="total-button-action" 
+        [class.is-billed]="intervention()?.status === 'BILLED'"
+        (click)="sendNotification()" 
+        [disabled]="loading() || intervention()?.status === 'BILLED'">
   <div class="left-side">
-    <span class="action-label">Cliquer pour notifier la réception du paiement</span>
+    <span class="action-label">
+      {{ intervention()?.status === 'BILLED' ? 'Paiement déjà notifié' : 'Cliquer pour notifier la réception du paiement' }}
+    </span>
   </div>
   <div class="right-side">
     <span class="total-amount">{{ grandTotal() | number:'1.2-2' }}€</span>
@@ -110,14 +115,7 @@
       </svg>
       <span>Accueil</span>
     </button>
-  
-    <button class="nav-item action-active" (click)="sendNotification()">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-      </svg>
-      <span>Notifier</span>
-    </button>
+
   </nav>
 @if (showNotificationModal()) {
   <app-notification-modal 
