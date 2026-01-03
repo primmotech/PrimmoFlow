@@ -7,19 +7,18 @@
   padding-bottom: 100px;
 
   &.dark-mode {
+    --bg-color: #121212;
     --card-bg: #1e1e1e;
     --border-color: #333;
-    --call-bg: rgba(46, 204, 113, 0.15);
     --text-primary: #ffffff;
     --text-secondary: #aaaaaa;
     --accent-color: #3498db;
   }
 
   &:not(.dark-mode) {
-    background: #f3f4f6;
+    --bg-color: #f3f4f6;
     --card-bg: #ffffff;
     --border-color: #d1d5db;
-    --call-bg: #ecfdf5;
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
     --accent-color: #3498db;
@@ -39,7 +38,7 @@
   border-bottom: 1px solid var(--border-color);
   
   .brand h1 { font-size: 1.3rem; font-weight: 800; margin: 0; }
-  .username { font-size: 0.85rem; color: #3498db; font-weight: 700; text-transform: uppercase; }
+  .username { font-size: 0.85rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; }
 }
 
 /* --- SECTIONS & CARTES --- */
@@ -49,81 +48,123 @@
   h3 { font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 12px; }
 }
 
+/* --- STRUCTURE UNIFIÉE DES CARTES --- */
 .intervention-card {
   background: var(--card-bg);
   border: 1.5px solid var(--border-color);
   border-radius: 16px;
   padding: 15px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; // Force l'empilement vertical par défaut
+  gap: 12px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: transform 0.1s ease;
 
+  &:active { transform: scale(0.98); }
+
+  /* Bordures d'état */
   &.waiting-card { border-left: 6px solid #3498db !important; }
   &.started-card { border-left: 6px solid #2ecc71 !important; }
   &.paused-card  { border-left: 6px solid #f1c40f !important; }
   &.stopped-card { border-left: 6px solid #e74c3c !important; }
   &.billed-card  { border-left: 6px solid #d8132e !important; }
 
+  /* Zone Information (Haut) */
   .card-info {
-    display: flex; flex-direction: column; gap: 2px;
-    .city { font-weight: 800; font-size: 1rem; text-transform: uppercase; }
-    .street { font-size: 0.85rem; color: var(--text-secondary); }
-    .price-hintv { color: #0be6c2; font-weight: 800; margin-top: 4px; }
-     .price-hintr { color: #e60b0b; font-weight: 800; margin-top: 4px; }
+    display: flex; 
+    flex-direction: column; 
+    gap: 2px;
+    width: 100%;
+
+    .city { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; color: var(--text-primary); }
+    .street { font-size: 0.9rem; color: var(--text-secondary); }
     
+    .price-hintv { color: #2ecc71; font-weight: 800; font-size: 1.1rem; margin-top: 4px; }
+    .price-hintr { color: #e74c3c; font-weight: 800; font-size: 1.1rem; margin-top: 4px; }
+    
+    /* Ligne Habitant (Planifiées) */
     .habitant-row { 
       display: flex; 
       justify-content: space-between;
       align-items: center; 
       margin-top: 8px;
-      width: 100%;
+      padding: 8px;
+      background: rgba(0,0,0,0.03);
+      border-radius: 8px;
 
       .habitant-info {
         display: flex;
         align-items: center;
         gap: 8px;
-        .habitant { font-size: 0.85rem; }
-        .call-action { color: #2ecc71; font-weight: bold; text-decoration: none; font-size: 0.8rem; }
-      }
-
-      .planned-date {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 0.8rem;
-        color: #666;
-        font-weight: 500;
-        white-space: nowrap;
-        .dark-mode & { color: #bbb; }
-        svg { opacity: 0.7; }
+        .habitant { font-size: 0.85rem; font-weight: 600; }
+        .call-action { color: #2ecc71; font-weight: bold; text-decoration: none; font-size: 0.8rem; border: 1px solid #2ecc71; padding: 2px 8px; border-radius: 4px; }
       }
     }
   }
-}
 
-/* --- BOUTONS --- */
-.card-actions {
-  display: flex; align-items: center; gap: 10px;
-  .icon-btn-edit { background: transparent; border: none; color: #7f8c8d; padding: 5px; }
-  
-  .btn-tasks {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(52, 152, 219, 0.1);
-    border: 1.5px solid rgba(52, 152, 219, 0.2);
-    color: #3498db;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
+  /* Zone Actions / Boutons (Bas) */
+  .card-actions {
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    width: 100%;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 12px;
+
+    .icon-btn-edit { background: transparent; border: none; color: var(--text-secondary); padding: 5px; }
     
-    &:active { 
-      background: #3498db; 
-      color: white; 
+    .btn-tasks {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(52, 152, 219, 0.1);
+      border: 1.5px solid rgba(52, 152, 219, 0.2);
+      color: #3498db;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      
+      .date-text { margin-left: 4px; color: var(--text-primary); }
+    }
+  }
+
+  /* Zone Contacts Spécifique "Terminée" (Verticale) */
+  .billed-contacts-aside {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+
+    .contact-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.02);
+      padding: 8px 12px;
+      border-radius: 8px;
+
+      .val {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+      }
+
+      .t {
+        color: #2ecc71;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        background: rgba(46, 204, 113, 0.1);
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
     }
   }
 }
@@ -142,269 +183,54 @@
   .modal-header {
     padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
     border-bottom: 1px solid var(--border-color);
-    h4 { margin: 0; font-size: 0.95rem; color: #3498db; text-transform: uppercase; }
+    h4 { margin: 0; font-size: 0.95rem; color: var(--accent-color); text-transform: uppercase; }
     .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); }
   }
 
-  .modal-body {
-    padding: 20px; max-height: 75vh; overflow-y: auto; overflow-x: hidden;
-    display: block !important;
+  .modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
+}
+
+/* --- TÂCHES & PHOTOS --- */
+.task-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 12px;
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    &.is-done { opacity: 0.5; .task-text { text-decoration: line-through; } }
+    .bullet { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; margin-top: 6px; }
+    .task-text { font-size: 0.95rem; color: var(--text-primary); }
   }
 }
 
-/* --- TÂCHES DANS LA MODALE --- */
-.tasks-section {
-  width: 100%;
-  .task-list {
-    list-style: none; padding: 0; margin: 0;
-    display: flex !important; flex-direction: column !important; gap: 12px;
-
-    .task-item {
-      display: flex !important; align-items: flex-start;
-      transition: opacity 0.2s ease;
-
-      &.is-done {
-        .task-text {
-          color: var(--text-secondary);
-          text-decoration: line-through;
-          opacity: 0.6;
-        }
-      }
-
-      .task-status-icon {
-        width: 24px;
-        flex-shrink: 0;
-        display: flex;
-        justify-content: flex-start;
-        padding-top: 2px;
-      }
-
-      .bullet {
-        width: 8px; height: 8px; background: #3498db; border-radius: 50%;
-        margin-top: 6px; flex-shrink: 0;
-      }
-      
-      .task-text { font-size: 0.95rem; line-height: 1.4; color: var(--text-primary); flex: 1; }
-    }
+.photo-slider {
+  display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px;
+  scrollbar-width: none;
+  .photo-slide {
+    flex: 0 0 250px; border-radius: 12px; overflow: hidden; aspect-ratio: 4/3;
+    img { width: 100%; height: 100%; object-fit: cover; }
   }
 }
 
-/* --- SLIDER PHOTOS --- */
-.modal-divider { border: 0; border-top: 1px solid var(--border-color); margin: 20px 0; }
-
-.photos-section {
-  width: 100%; display: block;
-  h5 { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; }
-
-  .photo-slider {
-    display: flex !important; flex-direction: row !important;
-    overflow-x: auto; scroll-snap-type: x mandatory;
-    gap: 15px; padding-bottom: 10px;
-    scrollbar-width: none; &::-webkit-scrollbar { display: none; }
-
-    .photo-slide {
-      flex: 0 0 280px; width: 280px; max-width: 80vw;
-      scroll-snap-align: center; border-radius: 12px;
-      background: #000; aspect-ratio: 4 / 3; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      border: 1px solid var(--border-color);
-
-      img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-    }
-  }
-  .slider-hint { font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 8px; font-style: italic; }
-}
-
-/* --- NAVIGATION BASSE --- */
+/* --- NAVIGATION & FAB --- */
 .bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 75px;
-  background: var(--card-bg);
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 1000;
-
+  position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
+  background: var(--card-bg); border-top: 1px solid var(--border-color);
+  display: flex; justify-content: space-around; align-items: center; z-index: 1000;
   .nav-item {
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-secondary);
-    transition: color 0.2s ease;
-    
-    svg { 
-      width: 24px; 
-      height: 24px; 
-      stroke-width: 2; 
-      fill: none;
-      overflow: visible;
-      display: block;
-    }
-
-    span { 
-      font-size: 0.7rem; 
-      font-weight: 700; 
-      text-transform: uppercase; 
-      letter-spacing: 0.3px;
-    }
-
-    &.active { 
-      color: var(--accent-color); 
-      svg { stroke-width: 2.5; }
-    }
+    text-decoration: none; display: flex; flex-direction: column; align-items: center;
+    color: var(--text-secondary); gap: 4px;
+    span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+    &.active { color: var(--accent-color); }
   }
 }
 
-/* --- FAB (BOUTON AJOUT) --- */
 .fab-btn {
-  position: fixed;
-  right: 20px;
-  bottom: 95px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background: #3498db;
-  border: none;
+  position: fixed; right: 20px; bottom: 95px; width: 56px; height: 56px;
+  border-radius: 28px; background: var(--accent-color); border: none;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 900;
-  &:active { transform: scale(0.95); }
+  display: flex; align-items: center; justify-content: center; z-index: 900;
 }
 
 .offline-indicator {
-  background: #e74c3c;
-  color: white;
-  text-align: center;
-  padding: 5px;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-/* --- AJUSTEMENTS CARTES PLANIFIÉES --- */
-.large-address {
-  font-size: 1.15rem !important; // Plus grand que le 1rem par défaut
-  letter-spacing: 0.5px;
-}
-
-.large-street {
-  font-size: 0.95rem !important; // Plus grand que le 0.85rem par défaut
-  margin-bottom: 4px;
-}
-
-.block-date {
-  margin-top: 6px; // Espace après la ligne de l'habitant
-  display: flex;
-  align-items: center;
-  
-  .date-text {
-    text-transform: capitalize; // Pour que "Lundi" ait une majuscule
-    font-weight: 600;
-    color: var(--accent-color); // Met la date en valeur avec ta couleur bleue
-  }
-}
-
-// Optionnel : si tu veux que la ligne habitant prenne moins de place visuellement
-.habitant-row {
-  margin-top: 4px !important;
-}
-.card-contacts-column {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  text-align: right;
-  padding-left: 10px;
-  border-left: 1px solid var(--border-color);
-  min-width: 130px;
-
-  .contact-sub-block {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-
-    small {
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      font-weight: bold;
-    }
-
-    .contact-name {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .contact-tel {
-      font-size: 0.75rem;
-      color: #2ecc71;
-      text-decoration: none;
-      font-weight: 600;
-    }
-  }
-}
-
-// Pour s'assurer que le contenu ne se chevauche pas
-.intervention-card {
-  gap: 10px;
-}
-/* --- BLOC COMPACT BILLED (3 LIGNES) --- */
-.billed-contacts-aside {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px; // Espace minimal entre les lignes
-  min-width: 160px;
-  border-left: 1px solid var(--border-color);
-  padding-left: 12px;
-  text-align: right;
-
-  .contact-line {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 5px;
-    font-size: 1rem;
-    line-height: 1;
-
-    .role {
-      font-weight: 800;
-      color: var(--text-secondary);
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-
-    .val {
-      font-weight: 700;
-      color: var(--text-primary);
-      max-width: 80px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .t {
-      color: #2ecc71;
-      text-decoration: none;
-      font-weight: 600;
-      //font-family: monospace; // Chiffres mieux alignés
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-  }
-}
-
-/* Ajustement de la carte pour éviter les chevauchements */
-.intervention-card {
-  gap: 12px;
-  
-  .card-info {
-    flex: 1;
-    min-width: 0; // Obligatoire pour que le texte long ne pousse pas le bloc de droite
-  }
+  background: #e74c3c; color: white; text-align: center; padding: 5px; font-size: 0.8rem;
 }
