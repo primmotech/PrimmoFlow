@@ -97,15 +97,7 @@ export class AddInterventionComponent implements OnInit {
     }
   }
 
-  async loadTechnicians() {
-    try {
-      const response = await this.auth.databases.listDocuments(this.DB_ID, 'user_profiles', [Query.limit(100)]);
-      this.technicians.set(response.documents.map(d => ({
-        email: d['email'],
-        name: d['nickName'] || d['email']
-      })));
-    } catch (e) { console.error(e); }
-  }
+
 
   // --- Gestion Tâches UI ---
   addTask() { 
@@ -273,4 +265,24 @@ export class AddInterventionComponent implements OnInit {
   }
 
   goBack() { this.router.navigate(['/dashboard']); }
+  // Modifiez votre méthode loadTechnicians existante par celle-ci :
+async loadTechnicians() {
+  try {
+    const response = await this.auth.databases.listDocuments(
+      this.DB_ID, 
+      'user_profiles', 
+      [
+        Query.limit(100),
+        Query.equal('assignable', true) // <--- AJOUT DU FILTRE ICI
+      ]
+    );
+    
+    this.technicians.set(response.documents.map(d => ({
+      email: d['email'],
+      name: d['nickName'] || d['email']
+    })));
+  } catch (e) { 
+    console.error("Erreur lors du chargement des techniciens assignables:", e); 
+  }
+}
 }
