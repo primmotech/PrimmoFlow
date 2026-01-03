@@ -87,10 +87,14 @@
         </div>
       </section>
 
-      <div class="total-display">
-        <span class="total-label">TOTAL À FACTURER</span>
-        <span class="total-amount">{{ grandTotal() | number:'1.2-2' }}€</span>
-      </div>
+<button class="total-button-action" (click)="sendNotification()" [disabled]="loading()">
+  <div class="left-side">
+    <span class="action-label">Cliquer pour notifier la réception du paiement</span>
+  </div>
+  <div class="right-side">
+    <span class="total-amount">{{ grandTotal() | number:'1.2-2' }}€</span>
+  </div>
+</button>
     }
   </main>
 
@@ -115,12 +119,10 @@
       <span>Notifier</span>
     </button>
   </nav>
-
-  @if (showNotificationModal()) {
-    <app-notification-modal 
-      [email]="creatorEmail()" 
-      (confirm)="handleNotificationConfirmation($event)"
-      (close)="showNotificationModal.set(false)">
-    </app-notification-modal>
-  }
-</div>
+@if (showNotificationModal()) {
+  <app-notification-modal 
+    [email]="assignedName() "
+    (confirm)="handleNotificationConfirmation($event)"
+    (close)="showNotificationModal.set(false)">
+  </app-notification-modal>
+}

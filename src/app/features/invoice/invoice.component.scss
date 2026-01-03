@@ -1,15 +1,31 @@
-/* --- WRAPPER GLOBAL --- */
+/* --- VARIABLES & BASE --- */
+:host {
+  --bg-main: #111;
+  --card-bg: #1a1a1a;
+  --accent-blue: #3498db;
+  --accent-orange: #e67e22;
+  --success-green: #2ecc71;
+  --border-color: #222;
+  --text-muted: #555;
+  --text-secondary: #888;
+}
+
 .mobile-wrapper {
-  background: #111;
+  background: var(--bg-main);
   color: #fff;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
-  padding-bottom: 100px; /* Espace pour la bottom-nav */
+  padding-bottom: 120px; /* Espace pour le bouton total + nav */
+
+  &.dark-mode {
+    /* Ajustements dark mode si nécessaire */
+  }
 }
 
-/* --- HEADER ADRESSE (Ville en grand) --- */
+/* --- HEADER ADRESSE --- */
 .address-header {
   padding: 40px 20px 25px;
+  
   .city-title {
     font-size: 2.2rem;
     font-weight: 900;
@@ -18,79 +34,115 @@
     margin: 0;
     line-height: 1;
   }
+  
   .street-detail {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #3498db;
+    color: var(--accent-blue);
     margin-top: 8px;
     display: block;
   }
 }
 
-/* --- SECTIONS & TITRES --- */
-.container { padding: 0 15px; }
+/* --- CONTENEUR & TITRES --- */
+.container {
+  padding: 0 15px;
+}
+
+.section {
+  margin-bottom: 25px;
+}
+
 .title {
   font-size: 0.7rem;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin: 25px 0 10px 5px;
+  margin: 0 0 10px 5px;
 }
 
 /* --- CARTES GÉNÉRIQUES --- */
 .generic-card {
-  background: #1a1a1a;
+  background: var(--card-bg);
   border-radius: 16px;
   overflow: hidden;
+  border: 1px solid var(--border-color);
 
   .row {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid var(--border-color);
     gap: 12px;
-    &:last-child { border-bottom: none; }
 
-    .icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .icon {
+      font-size: 1.1rem;
+      width: 24px;
+      text-align: center;
+    }
 
     .content {
       flex: 1;
-      .label { font-weight: 700; font-size: 0.95rem; color: #eee; }
-      .status { font-size: 0.6rem; font-weight: 800; opacity: 0.4; text-transform: uppercase; }
+      .label {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #eee;
+        display: block;
+      }
+      .status {
+        font-size: 0.6rem;
+        font-weight: 800;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        opacity: 0.6;
+      }
     }
   }
 }
 
-/* --- SPECIFIQUE CONTACTS --- */
+/* --- CONTACTS --- */
 .tel-link {
   font-size: 0.7rem;
   font-weight: 800;
   background: #222;
   padding: 8px 14px;
   border-radius: 8px;
-  color: #3498db;
+  color: var(--accent-blue);
   text-decoration: none;
-  &:active { background: #333; }
+  text-transform: uppercase;
+  
+  &:active {
+    background: #333;
+    transform: scale(0.95);
+  }
 }
 
-/* --- SPECIFIQUE TRAVAUX (Badge à droite) --- */
+/* --- TRAVAUX --- */
 .status-badge {
   font-size: 0.65rem;
   font-weight: 800;
   padding: 6px 10px;
   border-radius: 8px;
   background: #222;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
   min-width: 95px;
   text-align: center;
 }
+
 .row.task.done {
-  .icon { color: #2ecc71; }
-  .status-badge { color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+  .icon { color: var(--success-green); }
+  .status-badge {
+    color: var(--success-green);
+    background: rgba(46, 204, 113, 0.1);
+  }
 }
 
-/* --- SPECIFIQUE PRIX & INPUTS --- */
+/* --- PRIX & INPUTS --- */
 .input-box {
   display: flex;
   align-items: center;
@@ -98,7 +150,11 @@
   padding: 6px 12px;
   border-radius: 10px;
   border: 1px solid transparent;
-  &.saving { border-color: #2ecc71; }
+  transition: border-color 0.3s;
+
+  &.saving {
+    border-color: var(--success-green);
+  }
 
   input {
     background: transparent;
@@ -109,30 +165,74 @@
     text-align: right;
     outline: none;
     font-size: 1.1rem;
+    
+    /* Supprimer les flèches sur Chrome/Safari */
+    &::-webkit-inner-spin-button, 
+    &::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   }
-  .eur { color: #3498db; font-weight: 900; margin-left: 4px; }
+  
+  .eur {
+    color: var(--accent-blue);
+    font-weight: 900;
+    margin-left: 4px;
+  }
 }
 
-/* --- AFFICHAGE TOTAL --- */
-.total-display {
-  margin-top: 30px;
-  padding: 20px;
-  background: #222;
+/* --- BOUTON TOTAL ACTION (FOND BLEU) --- */
+.total-button-action {
+  width: 100%;
+  margin: 30px 0;
+  padding: 24px 20px;
+  background: var(--accent-blue); // Fond bleu solide
   border-radius: 16px;
+  border: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  .total-label { font-size: 0.8rem; font-weight: 800; opacity: 0.5; }
-  .total-amount { font-size: 1.5rem; font-weight: 900; color: #fff; }
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease;
+  text-align: left;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); // Ombre bleue légère
+
+  &:disabled { 
+    opacity: 0.5; 
+    filter: grayscale(1);
+    cursor: not-allowed; 
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+    background: #2980b9; // Bleu un peu plus foncé au clic
+  }
+
+  .left-side {
+    flex: 1;
+    .action-label {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.9); // Texte blanc translucide sur fond bleu
+      text-transform: uppercase;
+      line-height: 1.3;
+      display: block;
+    }
+  }
+
+  .right-side {
+    .total-amount {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #fff; // Montant en blanc pur pour un contraste maximum
+    }
+  }
 }
 
-/* --- NAVIGATION BASSE (Ton style d'origine) --- */
+/* --- NAVIGATION BASSE --- */
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   height: 80px;
-  background: #1a1a1a;
-  border-top: 1px solid #333;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -140,16 +240,29 @@
   z-index: 1000;
 
   .nav-item {
-    background: none; border: none;
-    color: #888;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 4px; flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
     cursor: pointer;
-    span { font-size: 0.7rem; font-weight: 700; }
-    &.action-active {
-      color: #e67e22;
-      svg { stroke: #e67e22; }
+    transition: transform 0.1s;
+
+    span {
+      font-size: 0.7rem;
+      font-weight: 700;
     }
-    &:active { transform: scale(0.9); }
+
+    &.action-active {
+      color: var(--accent-orange);
+      svg { stroke: var(--accent-orange); }
+    }
+
+    &:active {
+      transform: scale(0.9);
+    }
   }
 }

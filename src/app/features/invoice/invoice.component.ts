@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme';
 import { NotificationModalComponent } from '../notification-modal/notification-modal.component';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-invoice',
@@ -91,11 +92,44 @@ export class InvoiceComponent implements OnInit {
   private parseSafe(d: any) { try { return typeof d === 'string' ? JSON.parse(d) : d; } catch { return d; } }
   private parseArraySafe(d: any[]) { return (d || []).map(i => this.parseSafe(i)); }
   sendNotification() { this.showNotificationModal.set(true); }
-  async handleNotificationConfirmation(s: boolean) { if (s) { /* ... logique billed ... */ } this.showNotificationModal.set(false); }
   goBack() { this.router.navigate(['/dashboard']); }
   // À ajouter dans votre classe
 travelLabel = computed(() => {
   const count = this.intervention()?.travelCount || 0;
   return count > 1 ? `Déplacements (${count})` : 'Déplacement';
+  
 });
+// À ajouter après ton computed travelLabel
+assignedName = computed(() => this.intervention()?.assigned || 'le technicien');
+
+// N'oublie pas d'injecter le service dans le constructor ou via inject()
+private notificationService = inject(NotificationService);
+
+async handleNotificationConfirmation(confirmed: boolean) {
+  if (confirmed) {
+    const intervention = this.intervention();
+    const email = intervention?.createdByEmail; // L'email du créateur (destinataire)
+    const technician = this.assignedName(); // Le nom récupéré via ton signal
+    const total = this.grandTotal();
+    const city = intervention?.adresse?.ville || 'Intervention';
+
+    try {
+      // 1. On envoie l'email
+      await this.notificationService.sendPaymentNotification(email, technician, total, city);
+      
+      // 2. On peut marquer l'intervention comme "Facturée" en DB si tu as un champ prévu
+      await this.authService.databases.updateDocument(
+        this.DB_ID, 
+        this.COL_INTERVENTIONS, 
+        intervention.id, 
+        { status: "BILLED"} // Exemple de flag
+      );
+      
+      console.log("Notification envoyée avec succès !");
+    } catch (error) {
+      console.error("Erreur lors de l'envoi :", error);
+    }
+  }
+  this.showNotificationModal.set(false);
+}
 }
