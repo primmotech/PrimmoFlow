@@ -67,7 +67,8 @@ export class Whitelist implements OnInit, OnDestroy {
         .map(d => ({ 
           email: d['email'], 
           nickName: d['nickName'], 
-          role: d['role'], 
+          role: d['role'],
+          assignable: d['assignable'] ?? false, // Récupération du statut assignable
           ...d 
         }));
 
@@ -76,9 +77,26 @@ export class Whitelist implements OnInit, OnDestroy {
     } catch (e) { console.error(e); }
   }
 
-
-
-
+  async toggleAssignable(user: any) {
+    try {
+      const newStatus = !user.assignable;
+      const id = this.auth.formatId(user.email);
+      
+      await this.auth.databases.updateDocument(
+        this.dbId, 
+        this.colProfiles, 
+        id, 
+        { assignable: newStatus }
+      );
+      
+      // Mise à jour locale immédiate pour la réactivité UI
+      this.authorizedUsers.update(users => 
+        users.map(u => u.email === user.email ? { ...u, assignable: newStatus } : u)
+      );
+    } catch (e) {
+      console.error("Erreur toggle assignable:", e);
+    }
+  }
 
   async updateUserRole(email: string, newRole: string) {
     try {
@@ -97,72 +115,76 @@ export class Whitelist implements OnInit, OnDestroy {
       } catch (e) { console.error(e); }
     }
   }
- 
 
-async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
-  const email = emailInput.value.trim().toLowerCase();
-  const nickName = nameInput.value.trim() || email.split('@')[0];
-  const id = this.auth.formatId(email);
+  async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
+    const email = emailInput.value.trim().toLowerCase();
+    const nickName = nameInput.value.trim() || email.split('@')[0];
+    const id = this.auth.formatId(email);
 
-  if (!email.includes('@')) return alert("Email invalide");
+    if (!email.includes('@')) return alert("Email invalide");
 
-  try {
-    this.loading.set(true);
-    
-    // 1. Enregistrement BDD
-    await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
-      email, addedAt: new Date().toISOString(), hasProfile: false 
-    });
-    
-    await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
-      email, nickName, role: 'Aucun', themePreference: 'dark', updatedAt: new Date().toISOString()
-    });
-
-    // 2. Envoi Email stylé via le service
-    try {
-      await this.notificationService.sendWelcomeEmail(email, nickName);
-    } catch (mailError) {
-      console.warn("Utilisateur ajouté, mais échec mail:", mailError);
-    }
-
-    alert(`Utilisateur ${email} autorisé !`);
-    emailInput.value = ''; nameInput.value = '';
-    await this.loadAuthorizedUsers();
-
-  } catch (error: any) { 
-    alert("Erreur : " + error.message); 
-  } finally { 
-    this.loading.set(false); 
-  }
-}
-
-async deleteEmail(user: any) {
-  const email = user.email;
-  if (email === this.auth.userEmail()) return alert("Vous ne pouvez pas vous supprimer vous-même.");
-  
-  if (confirm(`⚠️ Supprimer définitivement ${email} ?`)) {
     try {
       this.loading.set(true);
-      const id = this.auth.formatId(email);
+      
+      // 1. Enregistrement BDD
+      await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
+        email, addedAt: new Date().toISOString(), hasProfile: false 
+      });
+      
+      await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
+        email, 
+        nickName, 
+        role: 'Aucun', 
+        assignable: false, // Ajout par défaut à false
+        themePreference: 'dark', 
+        updatedAt: new Date().toISOString()
+      });
 
-      await this.auth.databases.deleteDocument(this.dbId, this.colWhitelist, id);
-      try { await this.auth.databases.deleteDocument(this.dbId, this.colProfiles, id); } catch(e){}
-
-      // Envoi Email de révocation via le service
+      // 2. Envoi Email stylé via le service
       try {
-        await this.notificationService.sendRevocationEmail(email, user.nickName || email);
+        await this.notificationService.sendWelcomeEmail(email, nickName);
       } catch (mailError) {
-        console.warn("Accès supprimé, mais échec notification mail.");
+        console.warn("Utilisateur ajouté, mais échec mail:", mailError);
       }
 
-      alert(`Accès révoqué pour ${email}.`);
+      alert(`Utilisateur ${email} autorisé !`);
+      emailInput.value = ''; nameInput.value = '';
       await this.loadAuthorizedUsers();
 
-    } catch (e: any) {
-      alert("Erreur suppression : " + e.message);
-    } finally {
-      this.loading.set(false);
+    } catch (error: any) { 
+      alert("Erreur : " + error.message); 
+    } finally { 
+      this.loading.set(false); 
+    }
+  }
+
+  async deleteEmail(user: any) {
+    const email = user.email;
+    if (email === this.auth.userEmail()) return alert("Vous ne pouvez pas vous supprimer vous-même.");
+    
+    if (confirm(`⚠️ Supprimer définitivement ${email} ?`)) {
+      try {
+        this.loading.set(true);
+        const id = this.auth.formatId(email);
+
+        await this.auth.databases.deleteDocument(this.dbId, this.colWhitelist, id);
+        try { await this.auth.databases.deleteDocument(this.dbId, this.colProfiles, id); } catch(e){}
+
+        // Envoi Email de révocation via le service
+        try {
+          await this.notificationService.sendRevocationEmail(email, user.nickName || email);
+        } catch (mailError) {
+          console.warn("Accès supprimé, mais échec notification mail.");
+        }
+
+        alert(`Accès révoqué pour ${email}.`);
+        await this.loadAuthorizedUsers();
+
+      } catch (e: any) {
+        alert("Erreur suppression : " + e.message);
+      } finally {
+        this.loading.set(false);
+      }
     }
   }
 }
-} 
