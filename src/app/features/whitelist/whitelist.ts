@@ -115,7 +115,7 @@ async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
     });
     
     await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
-      email, nickName, role: 'Technicien', themePreference: 'dark', updatedAt: new Date().toISOString()
+      email, nickName, role: 'Aucun', themePreference: 'dark', updatedAt: new Date().toISOString()
     });
 
     // 2. Envoi Email stylé via le service

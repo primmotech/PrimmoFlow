@@ -23,7 +23,7 @@ export const PERMISSION_STRUCTURE = [
       },
       { 
         id: 'miss_assign', 
-        label: 'Assigner des techniciens / Planning', 
+        label: 'Assigner des bonhommes / Planning', 
         target: 'src/app/features/planning/planning.ts' 
       }
     ]

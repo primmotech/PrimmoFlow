@@ -73,7 +73,7 @@ export class Parameters implements OnInit {
           firstname: data['firstname'] || '',
           nickName: data['nickName'] || '',
           phone: data['phone'] || '',
-          role: data['role'] || 'Technicien',
+          role: data['role'] || 'Aucun',
           gps: data['gps'] || 'maps',
           travelCost: Number(data['travelCost'] || 0),
           hourlyRate: Number(data['hourlyRate'] || 0),

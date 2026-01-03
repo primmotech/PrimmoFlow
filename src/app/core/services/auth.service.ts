@@ -104,7 +104,7 @@ export class AuthService {
     const profile = await this.getUserProfile(email);
     if (profile) {
       this.userNickName.set(profile['nickName'] || email.split('@')[0]);
-      const role = profile['role'] || 'Technicien';
+      const role = profile['role'] || 'Aucun';
       this.userRole.set(role);
       await this.loadPermissions(role);
       this.themeService.initTheme(profile['themePreference'] || 'dark');

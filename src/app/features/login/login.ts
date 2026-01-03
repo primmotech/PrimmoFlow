@@ -94,7 +94,7 @@ async onRegister() {
     const profileData = {
       email: this.email,
       nickName: this.email.split('@')[0],
-      role: 'Technicien',
+      role: 'Aucun',
       themePreference: 'dark'
     };
 

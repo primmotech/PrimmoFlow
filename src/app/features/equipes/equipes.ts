@@ -52,7 +52,7 @@ export class Equipes implements OnInit {
         name: d['nickName'] || d.$id 
       })));
     } catch (e) {
-      console.error("Erreur chargement techniciens:", e);
+      console.error("Erreur chargement :", e);
     }
   }
 

@@ -44,7 +44,7 @@ export class ProfileService {
           const newProfile = {
             email: email,
             displayName: email.split('@')[0], // Nom par défaut basé sur l'email
-            role: 'Technicien Junior',
+            role: 'Aucun',
             createdAt: new Date().toISOString()
           };
 
