@@ -17,8 +17,17 @@ export class LoginComponent implements OnInit {
   themeService = inject(ThemeService);
   router = inject(Router);
 
+  // Champs d'authentification
   email = '';
   password = '';
+  confirmPassword = '';
+
+  // Champs du profil (Etape REGISTER)
+  lastname = '';
+  firstname = '';
+  phone = '';
+  nickName = '';
+
   step = signal<'EMAIL' | 'LOGIN' | 'REGISTER'>('EMAIL');
   loading = signal(false);
   errorMessage = signal('');
@@ -26,12 +35,16 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() { 
     this.themeService.initTheme(); 
-    this.debugCookies("Initialisation Login");
   }
 
-  private debugCookies(context: string) {
-    const cookies = document.cookie;
-    console.log(`[DEBUG COOKIES - ${context}] :`, cookies || "Aucun cookie trouvé");
+  // Nettoyage des sessions actives pour éviter l'erreur "Creation of a session is prohibited"
+  private async clearActiveSessions() {
+    try {
+      await this.authService['account'].deleteSession('current');
+      console.log("Ancienne session nettoyée.");
+    } catch (e) {
+      // Si aucune session n'existe, Appwrite renvoie une erreur 401 que l'on ignore ici
+    }
   }
 
   async handleEmailStep() {
@@ -51,9 +64,10 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      if (whitelistDoc['hasAccount'] === true) {
+      if (whitelistDoc['hasProfile'] === true) {
         this.step.set('LOGIN');
       } else {
+        this.nickName = this.email.split('@')[0];
         this.step.set('REGISTER');
       }
     } catch (e: any) {
@@ -66,12 +80,12 @@ export class LoginComponent implements OnInit {
   async onLogin() {
     this.loading.set(true);
     this.errorMessage.set('');
-    try {
-      // Nettoyage préventif pour éviter la 401 de conflit de session
-      try { await this.authService['account'].deleteSession('current'); } catch (e) {}
+    
+    // Protection session fantôme
+    await this.clearActiveSessions();
 
+    try {
       await this.authService.login(this.email, this.password);
-      this.debugCookies("Après Login");
       this.router.navigate(['/dashboard']);
     } catch (error: any) {
       this.errorMessage.set("Email ou mot de passe incorrect.");
@@ -80,49 +94,97 @@ export class LoginComponent implements OnInit {
     }
   }
 
-async onRegister() {
-  this.loading.set(true);
-  this.errorMessage.set('');
-  try {
-    const id = this.authService.formatId(this.email);
-    const dbId = '694eba69001c97d55121';
+  isRegisterValid(): boolean {
+    return (
+      this.lastname.trim().length >= 2 &&
+      this.firstname.trim().length >= 2 &&
+      this.phone.trim().length >= 10 &&
+      this.nickName.trim().length >= 2 &&
+      this.password.length >= 6 &&
+      this.password === this.confirmPassword
+    );
+  }
 
-    // 1. Création et Connexion via le service fusionné
-    await this.authService.register(this.email, this.password);
-
-    // 2. Création du profil (LoadUserProfile sera appelé automatiquement par le guard au prochain refresh)
-    const profileData = {
-      email: this.email,
-      nickName: this.email.split('@')[0],
-      role: 'Aucun',
-      themePreference: 'dark'
-    };
-
-    try {
-      await this.authService.databases.createDocument(dbId, 'user_profiles', id, profileData);
-    } catch (error: any) {
-      if (error.code === 409) {
-        await this.authService.databases.updateDocument(dbId, 'user_profiles', id, profileData);
-      } else { throw error; }
+  async onRegister() {
+    if (!this.isRegisterValid()) {
+      this.errorMessage.set(this.password !== this.confirmPassword ? 
+        "Les mots de passe ne correspondent pas." : 
+        "Veuillez remplir tous les champs obligatoires.");
+      return;
     }
 
-    // 3. Signalement à la Whitelist (Attention aux permissions de collection)
-    await this.authService.databases.updateDocument(dbId, 'authorized_users', id, { hasAccount: true });
+    this.loading.set(true);
+    this.errorMessage.set('');
     
-    // 4. On rafraîchit la session locale avant de partir pour charger le rôle/permissions
-    await this.authService.checkSession();
-    
-    this.router.navigate(['/dashboard']);
-  } catch (error: any) {
-    this.errorMessage.set("Erreur : " + error.message);
-  } finally {
-    this.loading.set(false);
+    // Protection session fantôme avant de commencer
+    await this.clearActiveSessions();
+
+    try {
+      const id = this.authService.formatId(this.email);
+      const dbId = '694eba69001c97d55121';
+
+      // 1. Inscription avec gestion du compte déjà existant (ton image 1)
+      try {
+        await this.authService.register(this.email, this.password);
+      } catch (authError: any) {
+        if (authError.code === 409) {
+          // Si le compte existe, on se logue pour pouvoir modifier le profil
+          await this.authService.login(this.email, this.password);
+        } else {
+          throw authError;
+        }
+      }
+
+      // 2. Préparation des données du profil
+      const profileData = {
+        email: this.email,
+        lastname: this.lastname.trim().toUpperCase(),
+        firstname: this.firstname.trim(),
+        phone: this.phone.trim(),
+        nickName: this.nickName.trim(),
+        role: 'Aucun',
+        themePreference: 'dark'
+      };
+
+      // 3. Upsert (Create ou Update) du profil
+      try {
+        await this.authService.databases.createDocument(dbId, 'user_profiles', id, profileData);
+      } catch (dbError: any) {
+        if (dbError.code === 409) {
+          await this.authService.databases.updateDocument(dbId, 'user_profiles', id, profileData);
+        } else {
+          throw dbError;
+        }
+      }
+
+      // 4. Mise à jour de la Whitelist
+      await this.authService.databases.updateDocument(dbId, 'authorized_users', id, { hasProfile: true });
+      
+      // 5. Finalisation
+      await this.authService.checkSession();
+      this.router.navigate(['/dashboard']);
+
+    } catch (error: any) {
+      this.errorMessage.set("Erreur : " + error.message);
+    } finally {
+      this.loading.set(false);
+    }
   }
-}
 
   reset() { 
     this.step.set('EMAIL'); 
     this.errorMessage.set(''); 
     this.password = '';
+    this.confirmPassword = '';
+    this.lastname = '';
+    this.firstname = '';
+    this.phone = '';
+    this.nickName = '';
   }
+  // Ajoute cette méthode simple
+scrollToInput(event: any) {
+  setTimeout(() => {
+    event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300); // Délai pour laisser le temps au clavier de finir son animation
+}
 }

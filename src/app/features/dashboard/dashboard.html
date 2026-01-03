@@ -97,7 +97,7 @@
               </svg>
               <div class="planned-date block-date">
 
-                <span class="date-text">{{ inter.plannedAt | date:'EEEE dd/MM HH:mm' }}</span>
+                <span class="date-text">{{ inter.plannedAt | date:'EEE dd/MM HH:mm' }}</span>
               </div>
               }
             </button>
@@ -120,14 +120,14 @@
         <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
         
         @if (inter.status === 'END') {
-          <div class="price-hintv">{{ inter.totalFinal || 0 | number:'1.2-2'}}€</div>
+          <div class="price-hintr">{{ inter.totalFinal || 0 | number:'1.2-2'}}€</div>
         }
         @if (inter.status === 'BILLED') {
-          <div class="price-hintr">{{ inter.totalFinal || 0 | number:'1.2-2'}}€</div>
+          <div class="price-hintv">{{ inter.totalFinal || 0 | number:'1.2-2'}}€</div>
         }
       </div>
 
-      @if (inter.status === 'BILLED') {
+      @if (inter.status === 'END') {
   <div class="billed-contacts-aside">
     <div class="contact-line">
 

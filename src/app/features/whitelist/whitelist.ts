@@ -111,7 +111,7 @@ async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
     
     // 1. Enregistrement BDD
     await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
-      email, addedAt: new Date().toISOString(), hasAccount: false 
+      email, addedAt: new Date().toISOString(), hasProfile: false 
     });
     
     await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
