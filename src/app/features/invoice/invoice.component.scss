@@ -1,104 +1,155 @@
+/* --- WRAPPER GLOBAL --- */
 .mobile-wrapper {
-  background: #111; color: #fff; min-height: 100vh; font-family: 'Inter', sans-serif; padding-bottom: 40px;
+  background: #111;
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  padding-bottom: 100px; /* Espace pour la bottom-nav */
 }
 
-/* HEADER ADRESSE MASSIF */
+/* --- HEADER ADRESSE (Ville en grand) --- */
 .address-header {
-  padding: 40px 20px 20px;
-  .city { font-size: 0.8rem; font-weight: 800; color: #3498db; text-transform: uppercase; letter-spacing: 2px; }
-  .main-address { font-size: 1.8rem; font-weight: 900; margin: 5px 0 0; line-height: 1.1; }
+  padding: 40px 20px 25px;
+  .city-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    margin: 0;
+    line-height: 1;
+  }
+  .street-detail {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #3498db;
+    margin-top: 8px;
+    display: block;
+  }
 }
 
+/* --- SECTIONS & TITRES --- */
 .container { padding: 0 15px; }
-.title { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 1px; margin: 25px 0 10px 5px; }
+.title {
+  font-size: 0.7rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 25px 0 10px 5px;
+}
 
-/* CARTES GÉNÉRIQUES (Zéro bordure, look épuré) */
+/* --- CARTES GÉNÉRIQUES --- */
 .generic-card {
-  background: #1a1a1a; border-radius: 16px; overflow: hidden;
-  
+  background: #1a1a1a;
+  border-radius: 16px;
+  overflow: hidden;
+
   .row {
-    display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #222; gap: 12px;
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #222;
+    gap: 12px;
     &:last-child { border-bottom: none; }
-    
+
     .icon { font-size: 1.1rem; width: 24px; text-align: center; }
-    
+
     .content {
-      flex: 1; display: flex; flex-direction: column;
+      flex: 1;
       .label { font-weight: 700; font-size: 0.95rem; color: #eee; }
-      .status { font-size: 0.6rem; font-weight: 800; opacity: 0.4; margin-top: 2px; }
-    }
-
-    /* Spécificité Task Done */
-    &.done { .icon { color: #2ecc71; } .status { color: #2ecc71; opacity: 1; } }
-
-    /* Liens Appel */
-    .tel-link { font-size: 0.7rem; font-weight: 800; background: #222; padding: 6px 12px; border-radius: 8px; color: #3498db; text-decoration: none; }
-  }
-
-  /* Spécificité Finance */
-  .row.price {
-    .input-box {
-      display: flex; align-items: center; background: #222; padding: 6px 10px; border-radius: 10px; border: 1px solid transparent;
-      &.saving { border-color: #2ecc71; }
-      input { background: transparent; border: none; color: #fff; font-weight: 900; width: 60px; text-align: right; outline: none; font-size: 1rem; }
-      .eur { color: #3498db; font-weight: 900; margin-left: 4px; font-size: 0.9rem; }
+      .status { font-size: 0.6rem; font-weight: 800; opacity: 0.4; text-transform: uppercase; }
     }
   }
 }
 
-/* BOUTON TOTAL */
-.footer-action { padding-top: 30px; }
-.btn-total {
-  width: 100%; border: none; background: #c01c28; color: #fff; padding: 22px; border-radius: 20px;
-  display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 10px 25px rgba(192, 28, 40, 0.3);
-  .btn-txt { font-weight: 800; letter-spacing: 1px; }
-  .btn-val { font-size: 1.6rem; font-weight: 900; }
-  &:active { transform: scale(0.98); opacity: 0.9; }
+/* --- SPECIFIQUE CONTACTS --- */
+.tel-link {
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: #222;
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #3498db;
+  text-decoration: none;
+  &:active { background: #333; }
 }
-.row.empty {
-  justify-content: center;
-  padding: 20px;
-  .status {
-    font-size: 0.7rem;
-    letter-spacing: 1px;
-    opacity: 0.3;
-  }
+
+/* --- SPECIFIQUE TRAVAUX (Badge à droite) --- */
+.status-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #222;
+  color: #555;
+  text-transform: uppercase;
+  min-width: 95px;
+  text-align: center;
 }
-.row.task {
+.row.task.done {
+  .icon { color: #2ecc71; }
+  .status-badge { color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+}
+
+/* --- SPECIFIQUE PRIX & INPUTS --- */
+.input-box {
   display: flex;
   align-items: center;
-  justify-content: space-between; // Force l'espace entre le contenu et le badge
-  gap: 12px;
+  background: #222;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  &.saving { border-color: #2ecc71; }
 
-  .content {
-    flex: 1; // Prend tout l'espace restant au milieu
-    .label {
-      font-weight: 700;
-      font-size: 0.95rem;
-    }
+  input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-weight: 900;
+    width: 65px;
+    text-align: right;
+    outline: none;
+    font-size: 1.1rem;
   }
+  .eur { color: #3498db; font-weight: 900; margin-left: 4px; }
+}
 
-  /* Style du badge à droite (style bouton "Appeler") */
-  .status-badge {
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: #222; // Fond sombre comme le bouton appeler
-    color: #555;      // Gris par défaut
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    min-width: 90px;
-    text-align: center;
-  }
+/* --- AFFICHAGE TOTAL --- */
+.total-display {
+  margin-top: 30px;
+  padding: 20px;
+  background: #222;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .total-label { font-size: 0.8rem; font-weight: 800; opacity: 0.5; }
+  .total-amount { font-size: 1.5rem; font-weight: 900; color: #fff; }
+}
 
-  /* Version quand c'est fait */
-  &.done {
-    .icon { color: #2ecc71; }
-    .status-badge {
-      color: #2ecc71; // Texte vert
-      background: rgba(46, 204, 113, 0.1); // Optionnel: léger fond vert
+/* --- NAVIGATION BASSE (Ton style d'origine) --- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: #1a1a1a;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 1000;
+
+  .nav-item {
+    background: none; border: none;
+    color: #888;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px; flex: 1;
+    cursor: pointer;
+    span { font-size: 0.7rem; font-weight: 700; }
+    &.action-active {
+      color: #e67e22;
+      svg { stroke: #e67e22; }
     }
+    &:active { transform: scale(0.9); }
   }
 }
