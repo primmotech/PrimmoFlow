@@ -260,6 +260,7 @@ handleCompletedClick(inter: any) {
     this.goToInvoice(inter.id);
   }
 }
+
 private sanitizeIntervention(payload: any) {
   let missionData = payload['mission'];
 
@@ -267,17 +268,23 @@ private sanitizeIntervention(payload: any) {
     try {
       missionData = JSON.parse(missionData);
     } catch (e) {
-      // Fallback si c'est du texte brut (compatibilité)
       missionData = { tasks: missionData.split('\n').map((t: any) => ({ label: t.trim(), done: false })) };
     }
   }
 
+  // Extraction et Parsing
   return {
     ...payload,
     id: payload.$id,
+    // Parsing de l'adresse
     adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
+    
+    // Parsing des habitants (déjà existant dans ton code)
     habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
-    // On extrait le tableau 'tasks' de notre objet mission
+    
+    // NOUVEAU : Parsing du propriétaire de la même façon
+    proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
+    
     mission: missionData?.tasks || [], 
     photos: Array.isArray(payload['photos']) ? payload['photos'] : []
   };

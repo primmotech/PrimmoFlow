@@ -70,7 +70,8 @@
     display: flex; flex-direction: column; gap: 2px;
     .city { font-weight: 800; font-size: 1rem; text-transform: uppercase; }
     .street { font-size: 0.85rem; color: var(--text-secondary); }
-    .price-hint { color: #e60b0b; font-weight: 800; margin-top: 4px; }
+    .price-hintv { color: #0be6c2; font-weight: 800; margin-top: 4px; }
+     .price-hintr { color: #e60b0b; font-weight: 800; margin-top: 4px; }
     
     .habitant-row { 
       display: flex; 
@@ -283,4 +284,127 @@
   padding: 5px;
   font-size: 0.8rem;
   font-weight: bold;
+}
+/* --- AJUSTEMENTS CARTES PLANIFIÉES --- */
+.large-address {
+  font-size: 1.15rem !important; // Plus grand que le 1rem par défaut
+  letter-spacing: 0.5px;
+}
+
+.large-street {
+  font-size: 0.95rem !important; // Plus grand que le 0.85rem par défaut
+  margin-bottom: 4px;
+}
+
+.block-date {
+  margin-top: 6px; // Espace après la ligne de l'habitant
+  display: flex;
+  align-items: center;
+  
+  .date-text {
+    text-transform: capitalize; // Pour que "Lundi" ait une majuscule
+    font-weight: 600;
+    color: var(--accent-color); // Met la date en valeur avec ta couleur bleue
+  }
+}
+
+// Optionnel : si tu veux que la ligne habitant prenne moins de place visuellement
+.habitant-row {
+  margin-top: 4px !important;
+}
+.card-contacts-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: right;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-color);
+  min-width: 130px;
+
+  .contact-sub-block {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+
+    small {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: bold;
+    }
+
+    .contact-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .contact-tel {
+      font-size: 0.75rem;
+      color: #2ecc71;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  }
+}
+
+// Pour s'assurer que le contenu ne se chevauche pas
+.intervention-card {
+  gap: 10px;
+}
+/* --- BLOC COMPACT BILLED (3 LIGNES) --- */
+.billed-contacts-aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px; // Espace minimal entre les lignes
+  min-width: 160px;
+  border-left: 1px solid var(--border-color);
+  padding-left: 12px;
+  text-align: right;
+
+  .contact-line {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 5px;
+    font-size: 1rem;
+    line-height: 1;
+
+    .role {
+      font-weight: 800;
+      color: var(--text-secondary);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .val {
+      font-weight: 700;
+      color: var(--text-primary);
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .t {
+      color: #2ecc71;
+      text-decoration: none;
+      font-weight: 600;
+      //font-family: monospace; // Chiffres mieux alignés
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+  }
+}
+
+/* Ajustement de la carte pour éviter les chevauchements */
+.intervention-card {
+  gap: 12px;
+  
+  .card-info {
+    flex: 1;
+    min-width: 0; // Obligatoire pour que le texte long ne pousse pas le bloc de droite
+  }
 }
