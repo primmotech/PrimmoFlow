@@ -32,6 +32,7 @@
     "@angular/service-worker": "^20.3.0",
     "appwrite": "^21.5.0",
     "browser-image-compression": "^2.0.2",
+    "node-appwrite": "^21.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

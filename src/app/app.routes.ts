@@ -17,39 +17,63 @@ import { permissionGuard } from './core/guards/permissions.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { path: 'profile', component: ProfileComponent },
   { path: 'dashboard', component: DashboardComponent },
   
-  // Routes protégées par permissions
+  // --- NAVIGATION DASHBOARD (dash_nav) ---
   { 
-    path: 'whitelist', 
-    component: Whitelist, 
-    canActivate: [permissionGuard('adm_whitelist')] 
+    path: 'add-intervention', 
+    component: AddInterventionComponent,
+    canActivate: [permissionGuard('dash_nav_add')] 
   },
   { 
-    path: 'roles', 
-    component: Roles, 
-    canActivate: [permissionGuard('adm_roles')] 
+    path: 'intervention/:id', 
+    component: DetailsInterventionComponent,
+    canActivate: [permissionGuard('dash_nav_details')] 
+  },
+  { 
+    path: 'invoice/:id', 
+    component: InvoiceComponent,
+    canActivate: [permissionGuard('dash_nav_invoice')] 
+  },
+  { 
+    path: 'commandes', 
+    component: CommandesComponent,
+    canActivate: [permissionGuard('dash_nav_orders')] 
+  },
+  { 
+    path: 'completed-missions', 
+    component: CompletedInterventionsComponent,
+    canActivate: [permissionGuard('dash_nav_archives')] 
   },
   { 
     path: 'parameters', 
     component: Parameters,
-  },
-  
-  // Routes Missions / Interventions
-  { path: 'planning/:id', component: Planning },
-  { path: 'add-intervention', component: AddInterventionComponent },
-  { path: 'edit-intervention/:id', component: AddInterventionComponent },
-  { path: 'intervention/:id', component: DetailsInterventionComponent },
-  { path: 'history/:id', component: HistoryComponent },
-  { path: 'invoice/:id', component: InvoiceComponent },
-  { path: 'commandes', component: CommandesComponent },
-  { path: 'equipes', component: Equipes },
-  { 
-    path: 'completed-missions', 
-    component: CompletedInterventionsComponent 
+    canActivate: [permissionGuard('dash_nav_params')] 
   },
 
+  // --- ADMINISTRATION (param_panel) ---
+  { 
+    path: 'equipes', 
+    component: Equipes,
+    canActivate: [permissionGuard('param_panel_equipes')] 
+  },
+  { 
+    path: 'roles', 
+    component: Roles, 
+    canActivate: [permissionGuard('param_panel_roles')] 
+  },
+  { 
+    path: 'whitelist', 
+    component: Whitelist, 
+    canActivate: [permissionGuard('param_panel_whitelist')] 
+  },
+
+  // --- ROUTES TECHNIQUES / PROFIL ---
+  { path: 'profile', component: ProfileComponent }, // À garder ou supprimer selon ton usage
+  { path: 'planning/:id', component: Planning },
+  { path: 'edit-intervention/:id', component: AddInterventionComponent },
+  { path: 'history/:id', component: HistoryComponent },
+
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: '**', redirectTo: 'login' } // Redirection de sécurité
+  { path: '**', redirectTo: 'login' }
 ];

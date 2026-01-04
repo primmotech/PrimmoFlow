@@ -13,82 +13,31 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./dashboard.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  // Services
+  // Injection des services
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
-  private router = inject(Router);
+  public router = inject(Router); 
 
-  // States
+  // Signaux d'état
   interventions = signal<any[]>([]);
   loading = signal(true);
   isOffline = signal(!navigator.onLine);
-  selectedIntervention = signal<any>(null); // Pour la modale
+  selectedIntervention = signal<any>(null);
 
-  // Souscriptions
+  // Propriétés privées et ID Appwrite
   private unsubscribeRealtime: (() => void) | null = null;
   private onlineHandler = () => this.isOffline.set(!navigator.onLine);
 
-  // Constantes Appwrite
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COL_INTERVENTIONS = 'interventions';
-    private readonly BUCKET_ID = '69502be400074c6f43f5';
+  private readonly BUCKET_ID = '69502be400074c6f43f5';
 
-
-  // Gestion du Long Press
+  // Gestion du clic long (Suppression)
   private longPressTimeout: any;
   public isLongPressing = false;
 
-  // --- LOGIQUE LONG PRESS ---
+  // --- FILTRES DE LISTES (Computed) ---
 
-  // Déclenché au mousedown ou touchstart
-  onPressStart(inter: any) {
-    this.isLongPressing = false;
-    // On lance un chrono de 800ms
-    this.longPressTimeout = setTimeout(() => {
-      this.isLongPressing = true;
-      this.confirmDeletion(inter);
-    }, 800);
-  }
-
-  // Déclenché au mouseup, touchend ou si on bouge le doigt (scroll)
-  onPressEnd() {
-    if (this.longPressTimeout) {
-      clearTimeout(this.longPressTimeout);
-    }
-  }
-
-  private async confirmDeletion(inter: any) {
-    const city = inter.adresse?.ville || 'cette intervention';
-    if (confirm(`⚠️ SUPPRESSION DÉFINITIVE\n\nSouhaitez-vous vraiment supprimer l'intervention à ${city} ?`)) {
-      try {
-        await this.authService.databases.deleteDocument(
-          this.DB_ID,
-          this.COL_INTERVENTIONS,
-          inter.id
-        );
-        // Le Realtime (subscribeToChanges) s'occupera de mettre à jour la liste automatiquement
-      } catch (error) {
-        console.error("Erreur suppression:", error);
-        alert("Impossible de supprimer l'intervention.");
-      }
-    }
-  }
-
-  // Modifie ta fonction de clic existante pour bloquer la navigation si c'est un appui long
-  handleCardClick(inter: any, type: 'details' | 'invoice') {
-    if (this.isLongPressing) return; // Ne fait rien si on vient de déclencher la suppression
-
-    if (type === 'details') {
-      this.goToDetails(inter.id);
-    } else {
-      this.handleCompletedClick(inter);
-    }
-  }
-
- 
-
-
-  // --- FILTRAGE RÉACTIF ---
   pendingInterventions = computed(() => 
     this.interventions().filter(i => i.status === 'OPEN' || i.status === 'WAITING')
   );
@@ -100,6 +49,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   completedInterventions = computed(() => 
     this.interventions().filter(i => i.status === 'END' || i.status === 'BILLED')
   );
+
+  // --- CYCLE DE VIE ---
 
   ngOnInit() {
     this.themeService.initTheme();
@@ -114,6 +65,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.unsubscribeRealtime) this.unsubscribeRealtime();
   }
 
+  // --- LOGIQUE MÉTIER ET PERMISSIONS ---
+
   async initDashboard() {
     this.loading.set(true);
     await this.authService.checkSession();
@@ -126,8 +79,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-
-
   async loadInterventions(userEmail: string) {
     const activeStatuses = ['OPEN', 'WAITING', 'PLANNED', 'STOPPED', 'PAUSED', 'STARTED', 'END', 'BILLED'];
     try {
@@ -138,15 +89,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
         Query.limit(100)
       ];
 
-      if (!this.authService.hasPerm('miss_view_all')) {
+      // Vérification de la permission de visibilité globale
+      if (!this.authService.hasPerm('dash_view_all')) {
         const profile = await this.authService.loadUserProfile(userEmail);
         const userTeamId = profile?.['teamId'];
+
         if (this.authService.userRole() === 'Responsable' && userTeamId) {
+          // Un responsable sans "view_all" voit les membres de son équipe
           const members = await this.authService.databases.listDocuments(this.DB_ID, 'user_profiles', [Query.equal('teamId', userTeamId)]);
           const memberEmails = members.documents.map(d => d['email']);
-          queries.push(Query.or([Query.equal('assigned', memberEmails), Query.equal('createdBy', userEmail)]));
+          queries.push(Query.or([
+            Query.equal('assigned', memberEmails), 
+            Query.equal('createdBy', userEmail)
+          ]));
         } else {
-          queries.push(Query.or([Query.equal('assigned', userEmail), Query.equal('createdBy', userEmail)]));
+          // Un technicien ne voit que ses propres fiches
+          queries.push(Query.or([
+            Query.equal('assigned', userEmail), 
+            Query.equal('createdBy', userEmail)
+          ]));
         }
       }
 
@@ -154,11 +115,100 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const sanitizedDocs = response.documents.map(d => this.sanitizeIntervention(d));
       this.interventions.set(sanitizedDocs);
     } catch (error) {
-      console.error("Erreur Appwrite Load:", error);
+      console.error("Erreur chargement Dashboard:", error);
     } finally {
       this.loading.set(false);
     }
   }
+
+  // --- ACTIONS UTILISATEUR ---
+
+  onPressStart(inter: any) {
+    this.isLongPressing = false;
+    if (this.authService.hasPerm('dash_act_delete')) {
+      this.longPressTimeout = setTimeout(() => {
+        this.isLongPressing = true;
+        this.confirmDeletion(inter);
+      }, 800);
+    }
+  }
+
+  onPressEnd() {
+    if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+  }
+
+  private async confirmDeletion(inter: any) {
+    const city = inter.adresse?.ville || 'cette intervention';
+    if (confirm(`⚠️ SUPPRESSION DÉFINITIVE\n\nSouhaitez-vous vraiment supprimer l'intervention à ${city} ?`)) {
+      try {
+        await this.authService.databases.deleteDocument(this.DB_ID, this.COL_INTERVENTIONS, inter.id);
+      } catch (error) {
+        console.error("Erreur suppression:", error);
+      }
+    }
+  }
+
+  handleCardClick(inter: any, type: 'details' | 'invoice') {
+    if (this.isLongPressing) return;
+
+    if (type === 'details') {
+      if (this.authService.hasPerm('dash_nav_details')) {
+        this.goToDetails(inter.id);
+      }
+    } else {
+      this.handleCompletedClick(inter);
+    }
+  }
+
+  handleCompletedClick(inter: any) {
+    if (inter.status === 'BILLED') {
+      if (this.authService.hasPerm('dash_nav_billed')) {
+        this.markAsPaid(inter, { stopPropagation: () => {} } as Event);
+      }
+    } else {
+      if (this.authService.hasPerm('dash_nav_invoice')) {
+        this.goToInvoice(inter.id);
+      }
+    }
+  }
+
+  async markAsPaid(intervention: any, event: Event) {
+    event.stopPropagation();
+    if (confirm(`Confirmer le paiement reçu ?`)) {
+      try {
+        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, { 
+          status: 'PAID', paidAt: new Date().toISOString() 
+        });
+        this.interventions.update(prev => prev.filter(i => i.id !== intervention.id));
+      } catch (error) { console.error(error); }
+    }
+  }
+
+  // --- NAVIGATION ---
+
+  goToEdit(id: string) { this.router.navigate(['/edit-intervention', id]); }
+  goToDetails(id: string) { if (id) this.router.navigate(['/intervention', id]); }
+  goToPlanning(intervention: any, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/planning', intervention.id], { state: { data: intervention } });
+  }
+  goToInvoice(id: string) { if (id) this.router.navigate(['/invoice', id]); }
+  goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
+  goToAdd() { this.router.navigate(['/add-intervention']); }
+
+  // --- MODALE TÂCHES ET VISUALISATION ---
+
+  openTasks(inter: any, event: Event) {
+    event.stopPropagation();
+    const tasks = Array.isArray(inter.mission) ? inter.mission : [];
+    this.selectedIntervention.set({ ...inter, mission: tasks });
+  }
+
+  closeTasks() {
+    this.selectedIntervention.set(null);
+  }
+
+  // --- REALTIME ET SANTIZATION ---
 
   subscribeToChanges() {
     this.unsubscribeRealtime = this.authService.client.subscribe(
@@ -175,118 +225,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-
-
-  closeTasks() {
-    this.selectedIntervention.set(null);
-  }
-
-  // --- ACTIONS & NAVIGATION ---
-  async markAsPaid(intervention: any, event: Event) {
-    event.stopPropagation();
-    if (confirm(`Confirmer le paiement ?`)) {
-      try {
-        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, { 
-          status: 'PAID', paidAt: new Date().toISOString() 
-        });
-        this.interventions.update(prev => prev.filter(i => i.id !== intervention.id));
-      } catch (error) { console.error(error); }
+  private sanitizeIntervention(payload: any) {
+    let missionData = payload['mission'];
+    if (typeof missionData === 'string') {
+      try { missionData = JSON.parse(missionData); } catch (e) { missionData = null; }
     }
+    return {
+      ...payload,
+      id: payload.$id,
+      adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
+      habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
+      proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
+      mission: missionData?.tasks || [], 
+      photos: Array.isArray(payload['photos']) ? payload['photos'] : []
+    };
   }
-
-  goToEdit(id: string) { this.router.navigate(['/edit-intervention', id]); }
-  goToDetails(id: string) { if (id) this.router.navigate(['/intervention', id]); }
-  goToPlanning(intervention: any, event: Event) {
-    event.stopPropagation();
-    this.router.navigate(['/planning', intervention.id], { state: { data: intervention } });
-  }
-  goToInvoice(id: string) { if (id) this.router.navigate(['/invoice', id]); }
-  goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
 
   getStatusClass(status: string): string {
     const classes: any = { 'WAITING': 'waiting-card', 'OPEN': 'waiting-card', 'PAUSED': 'paused-card', 'STARTED': 'started-card', 'BILLED': 'billed-card', 'END': 'completed-card' };
     return classes[status] || '';
   }
-  // --- MÉTHODES DE NAVIGATION MANQUANTES ---
-  goToAdd() { 
-    this.router.navigate(['/add-intervention']); 
+
+  parseJson(jsonString: any) {
+    if (!jsonString) return { url: '' };
+    if (typeof jsonString === 'object') return jsonString;
+    try { return JSON.parse(jsonString); } catch (e) { return { url: this.getFileView(jsonString) }; }
   }
 
-  goToProfile() { 
-    this.router.navigate(['/profile']); 
+  getFileView(fileId: string) {
+    return this.authService.storage.getFileView(this.BUCKET_ID, fileId);
   }
-
-  goToHistory(id: string) { 
-    if (id) this.router.navigate(['/history', id]); 
-  }
-
-// Ajoutez cette méthode dans votre classe DashboardComponent
-parseJson(jsonString: any) {
-  if (!jsonString) return { url: '' };
-  if (typeof jsonString === 'object') return jsonString; // Déjà un objet
-  try {
-    return JSON.parse(jsonString);
-  } catch (e) {
-    // Si ce n'est pas du JSON, on suppose que c'est un ID de fichier
-    return { url: this.getFileView(jsonString) };
-  }
-}
-openTasks(inter: any, event: Event) {
-  event.stopPropagation();
-  
-  // On prend directement les tâches déjà préparées par sanitizeIntervention
-  const tasks = Array.isArray(inter.mission) ? inter.mission : [];
-
-  this.selectedIntervention.set({
-    ...inter,
-    mission: tasks // Contient maintenant [{label: "...", done: true/false}, ...]
-  });
-}
-
-
-
-
-getFileView(fileId: string) {
-  // .getFileView renvoie l'URL de l'image originale
-  return this.authService.storage.getFileView(this.BUCKET_ID, fileId);
-}
-handleCompletedClick(inter: any) {
-  if (inter.status === 'BILLED') {
-    // Si la facture est émise, le clic sur la carte lance l'encaissement
-    // On passe un objet vide avec stopPropagation pour éviter les erreurs
-    this.markAsPaid(inter, { stopPropagation: () => {} } as Event);
-  } else {
-    // Dans les autres cas (statut 'END'), on va vers la facture
-    this.goToInvoice(inter.id);
-  }
-}
-
-private sanitizeIntervention(payload: any) {
-  let missionData = payload['mission'];
-
-  if (typeof missionData === 'string') {
-    try {
-      missionData = JSON.parse(missionData);
-    } catch (e) {
-      missionData = { tasks: missionData.split('\n').map((t: any) => ({ label: t.trim(), done: false })) };
-    }
-  }
-
-  // Extraction et Parsing
-  return {
-    ...payload,
-    id: payload.$id,
-    // Parsing de l'adresse
-    adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
-    
-    // Parsing des habitants (déjà existant dans ton code)
-    habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
-    
-    // NOUVEAU : Parsing du propriétaire de la même façon
-    proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
-    
-    mission: missionData?.tasks || [], 
-    photos: Array.isArray(payload['photos']) ? payload['photos'] : []
-  };
-}
 }

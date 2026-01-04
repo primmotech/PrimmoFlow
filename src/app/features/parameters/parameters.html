@@ -9,18 +9,24 @@
       <h3>Informations Profil</h3>
       <div class="settings-card profile-form compact">
         <div class="form-row">
-          <div class="form-field half"><label>Nom</label><input type="text" [(ngModel)]="userData().lastname" (ngModelChange)="onFieldChange()"></div>
-          <div class="form-field half"><label>Prénom</label><input type="text" [(ngModel)]="userData().firstname" (ngModelChange)="onFieldChange()"></div>
+          <div class="form-field half">
+            <label>Nom</label>
+            <input type="text" [(ngModel)]="userData().lastname" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_name')">
+          </div>
+          <div class="form-field half">
+            <label>Prénom</label>
+            <input type="text" [(ngModel)]="userData().firstname" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_name')">
+          </div>
         </div>
 
         <div class="form-field">
           <label>Surnom (nickName)</label>
-          <input type="text" [(ngModel)]="userData().nickName" (ngModelChange)="onFieldChange()">
+          <input type="text" [(ngModel)]="userData().nickName" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_nickname')">
         </div>
 
         <div class="form-field">
           <label>Téléphone</label>
-          <input type="tel" [(ngModel)]="userData().phone" (ngModelChange)="onFieldChange()">
+          <input type="tel" [(ngModel)]="userData().phone" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_phone')">
         </div>
 
         <div class="form-row">
@@ -32,38 +38,47 @@
 
         <div class="form-field">
           <label>GPS par défaut</label>
-          <select [(ngModel)]="userData().gps" (ngModelChange)="onFieldChange()">
+          <select [(ngModel)]="userData().gps" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_gps')">
             <option value="maps">Google Maps</option>
             <option value="waze">Waze</option>
             <option value="iphone">Apple Plans</option>
           </select>
         </div>
 
-        <div class="form-row">
-          <div class="form-field half"><label>Dépl. (€)</label><input type="number" [(ngModel)]="userData().travelCost" (ngModelChange)="onFieldChange()"></div>
-          <div class="form-field half"><label>Taux (€/h)</label><input type="number" [(ngModel)]="userData().hourlyRate" (ngModelChange)="onFieldChange()"></div>
-        </div>
-
-        <div class="form-field">
-          <label>Arrondi travail</label>
-          <select [(ngModel)]="userData().rounding" (ngModelChange)="onFieldChange()">
-            <option *ngFor="let opt of roundingOptions" [value]="opt">{{ opt }} min</option>
-          </select>
-        </div>
-    <section class="settings-group">
-      <h3>Apparence</h3>
-      <div class="settings-card">
-        <div class="setting-item" (click)="toggleTheme()">
-          <div class="setting-info">
-            <svg *ngIf="themeService.darkMode()" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            <svg *ngIf="!themeService.darkMode()" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <span *ngIf="themeService.darkMode()" >Mode Clair</span>
-            <span *ngIf="!themeService.darkMode()" >Mode Sombre</span>
+        <ng-container *ngIf="authService.hasPerm('param_view_costs')">
+          <div class="form-row">
+            <div class="form-field half">
+              <label>Dépl. (€)</label>
+              <input type="number" [(ngModel)]="userData().travelCost" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_costs')">
+            </div>
+            <div class="form-field half">
+              <label>Taux (€/h)</label>
+              <input type="number" [(ngModel)]="userData().hourlyRate" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_costs')">
+            </div>
           </div>
-          <div class="toggle-switch" [class.active]="themeService.darkMode()"><div class="switch-handle"></div></div>
-        </div>
-      </div>
-    </section>
+
+          <div class="form-field">
+            <label>Arrondi travail</label>
+            <select [(ngModel)]="userData().rounding" (ngModelChange)="onFieldChange()" [disabled]="!authService.hasPerm('param_edit_costs')">
+              <option *ngFor="let opt of roundingOptions" [value]="opt">{{ opt }} min</option>
+            </select>
+          </div>
+        </ng-container>
+
+        <section class="settings-group">
+          <h3>Apparence</h3>
+          <div class="settings-card">
+            <div class="setting-item" (click)="authService.hasPerm('param_edit_theme') ? toggleTheme() : null">
+              <div class="setting-info">
+                <svg *ngIf="themeService.darkMode()" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg *ngIf="!themeService.darkMode()" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <span>{{ themeService.darkMode() ? 'Mode Clair' : 'Mode Sombre' }}</span>
+              </div>
+              <div class="toggle-switch" [class.active]="themeService.darkMode()"><div class="switch-handle"></div></div>
+            </div>
+          </div>
+        </section>
+
         <div class="card-actions">
           <button (click)="saveProfile()" class="save-button-inline" [class.dirty]="isDirty()" [disabled]="!isDirty() || saving()">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
@@ -72,13 +87,9 @@
         </div>
       </div>
     </section>
-
-
   </main>
 
-
-
-      <nav class="bottom-nav">
+  <nav class="bottom-nav">
     <a routerLink="/dashboard" class="nav-item">
        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -91,25 +102,19 @@
       <span>Accueil</span>
     </a>
  
-    @if (authService.hasPerm('miss_view_all')) {
-      <a routerLink="/equipes" routerLinkActive="active" class="nav-item">
+    <a *ngIf="authService.hasPerm('param_panel_equipes')" routerLink="/equipes" routerLinkActive="active" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
         <span>Équipes</span>
-      </a>
-    }
+    </a>
 
-    @if (authService.hasPerm('adm_roles')) {
-      <a routerLink="/roles" routerLinkActive="active" class="nav-item">
+    <a *ngIf="authService.hasPerm('param_panel_roles')" routerLink="/roles" routerLinkActive="active" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <span>Rôles</span>
-      </a>
-    }
+    </a>
 
-    @if (authService.hasPerm('adm_whitelist')) {
-      <a routerLink="/whitelist" routerLinkActive="active" class="nav-item">
+    <a *ngIf="authService.hasPerm('param_panel_whitelist')" routerLink="/whitelist" routerLinkActive="active" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
         <span>Whitelist</span>
-      </a>
-    }
+    </a>
   </nav>
 </div>
