@@ -13,8 +13,6 @@
         <div class="add-user-form">
           <input #emailInput type="email" placeholder="Email (ex: martin@mail.com)">
           
-          <input #nameInput type="text" placeholder="Pseudo (ex: Mich)">
-          
           <div class="row">
             <div class="select-wrapper flex-1">
               <select #roleInput class="custom-select-small create-select">
@@ -25,7 +23,7 @@
               </select>
             </div>
 
-            <button (click)="addEmail(emailInput, nameInput, roleInput)" class="add-full-btn">
+            <button (click)="addEmail(emailInput, roleInput)" class="add-full-btn">
               Ajouter
             </button>
           </div>
@@ -40,19 +38,13 @@
           <div class="loader-inner">Chargement...</div>
         } @else {
           @for (user of authorizedUsers(); track user.email) {
-            <div class="setting-item">
+            <div class="setting-item-stack">
               
-              <div class="setting-info">
-                <div class="user-details" (click)="editNickName(user)">
-                  <span class="user-nickname">
-                    {{ user.nickName || 'Sans pseudo' }}
-                    <svg class="edit-icon-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                    </svg>
-                  </span>
-                  <span class="user-email-sub">{{ user.email }}</span>
-                </div>
+              <div class="user-email-header">
+                {{ user.email }}
+              </div>
 
+              <div class="user-actions-row">
                 <div class="select-wrapper">
                   <select class="custom-select-small" 
                           [ngModel]="user.role" 
@@ -62,30 +54,28 @@
                     }
                   </select>
                 </div>
-              </div>
 
-              <div class="action-controls">
-                <div class="toggle-wrapper">
-                  <label class="switch">
-                    <input type="checkbox" 
-                           [checked]="user.assignable" 
-                           (change)="toggleAssignable(user)">
-                    <span class="slider round"></span>
-                  </label>
-                  <span class="toggle-label">Assignable</span>
+                <div class="right-controls">
+                  <div class="toggle-wrapper">
+                    <label class="switch">
+                      <input type="checkbox" [checked]="user.assignable" (change)="toggleAssignable(user)">
+                      <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">Assignable</span>
+                  </div>
+
+                  <button (click)="deleteEmail(user)" class="delete-btn-rounded">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
                 </div>
-
-                <button (click)="deleteEmail(user)" class="delete-btn-rounded">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </button>
               </div>
 
             </div>
           } @empty {
-            <div class="empty-list-msg">Aucun utilisateur dans la liste.</div>
+            <div class="empty-list-msg">Aucun accès configuré.</div>
           }
         }
       </div>

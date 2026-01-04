@@ -63,13 +63,13 @@ export class LoginComponent implements OnInit {
         this.errorMessage.set("Accès non autorisé. Contactez un administrateur.");
         return;
       }
-
-      if (whitelistDoc['hasProfile'] === true) {
-        this.step.set('LOGIN');
-      } else {
-        this.nickName = this.email.split('@')[0];
-        this.step.set('REGISTER');
-      }
+if (whitelistDoc['hasProfile'] === true) {
+  this.step.set('LOGIN');
+} else {
+  // On vide pour laisser la génération auto se faire via les inputs nom/prénom
+  this.nickName = ''; 
+  this.step.set('REGISTER');
+}
     } catch (e: any) {
       this.errorMessage.set("Erreur technique : " + e.message);
     } finally {
@@ -197,4 +197,22 @@ async onRegister() {
       this.loading.set(false);
     }
   }
+
+// Appelé à chaque fois que l'utilisateur tape dans Prénom ou Nom
+onNameChange() {
+  this.generateNickName();
+}
+
+private generateNickName() {
+  // 1. On nettoie et on prend les 4 premières lettres du prénom
+  const p1 = this.firstname.trim().substring(0, 4);
+  const part1 = p1 ? p1.charAt(0).toUpperCase() + p1.slice(1).toLowerCase() : '';
+
+  // 2. On nettoie et on prend les 3 premières lettres du nom
+  const p2 = this.lastname.trim().substring(0, 3);
+  const part2 = p2 ? p2.charAt(0).toUpperCase() + p2.slice(1).toLowerCase() : '';
+
+  // 3. On assemble (Ex: John + Der = JohnDer)
+  this.nickName = `${part1}${part2}`;
+}
 }

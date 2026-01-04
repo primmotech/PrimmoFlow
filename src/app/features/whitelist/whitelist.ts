@@ -49,177 +49,92 @@ export class Whitelist implements OnInit, OnDestroy {
     this.loading.set(false);
   }
 
- 
+  async loadAuthorizedUsers() {
+    try {
+      const authSnap = await this.auth.databases.listDocuments(this.dbId, this.colWhitelist);
+      const profileSnap = await this.auth.databases.listDocuments(this.dbId, this.colProfiles);
+      const profiles = profileSnap.documents;
 
-async loadAuthorizedUsers() {
-  try {
-    const authSnap = await this.auth.databases.listDocuments(this.dbId, this.colWhitelist);
-    const profileSnap = await this.auth.databases.listDocuments(this.dbId, this.colProfiles);
-    
-    const profiles = profileSnap.documents;
+      const users = authSnap.documents.map(authDoc => {
+        const profile = profiles.find(p => p.$id === authDoc.$id);
+        return {
+          email: authDoc['email'],
+          role: profile?.['role'] || 'Aucun',
+          assignable: profile?.['assignable'] ?? false,
+          $id: authDoc.$id
+        };
+      });
 
-    const users = authSnap.documents.map(authDoc => {
-      // On cherche le profil correspondant par ID
-      const profile = profiles.find(p => p.$id === authDoc.$id);
-      
-      return {
-        email: authDoc['email'],
-        // Si le profil existe on prend ses data, sinon valeurs par défaut
-        nickName: profile?.['nickName'] || authDoc['email'].split('@')[0],
-        role: profile?.['role'] || 'Aucun',
-        assignable: profile?.['assignable'] ?? false,
-        $id: authDoc.$id
-      };
-    });
-
-    users.sort((a: any, b: any) => a.nickName?.localeCompare(b.nickName));
-    this.authorizedUsers.set(users);
-  } catch (e) {
-    console.error("Erreur chargement users:", e);
+      users.sort((a: any, b: any) => a.email.localeCompare(b.email));
+      console.log("Loaded users:", users);
+      this.authorizedUsers.set(users);
+    } catch (e) {
+      console.error("Erreur chargement users:", e);
+    }
   }
-}
 
   async toggleAssignable(user: any) {
     try {
       const newStatus = !user.assignable;
       const id = this.auth.formatId(user.email);
-      
-      await this.auth.databases.updateDocument(
-        this.dbId, 
-        this.colProfiles, 
-        id, 
-        { assignable: newStatus }
-      );
-      
-      // Mise à jour locale immédiate pour la réactivité UI
+      await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { assignable: newStatus });
       this.authorizedUsers.update(users => 
         users.map(u => u.email === user.email ? { ...u, assignable: newStatus } : u)
       );
-    } catch (e) {
-      console.error("Erreur toggle assignable:", e);
-    }
+    } catch (e) { console.error(e); }
   }
 
-async updateUserRole(email: string, newRole: string) {
-  try {
-    const id = this.auth.formatId(email);
-    await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { 
-      role: newRole 
-    });
-
-    // Mise à jour du signal local pour une interface fluide
-    this.authorizedUsers.update(users => 
-      users.map(u => u.email === email ? { ...u, role: newRole } : u)
-    );
-
-    // Si c'est mon propre rôle, je mets à jour mon AuthService
-    if (email === this.auth.userEmail()) {
-      this.auth.userRole.set(newRole);
-      // Optionnel: recharger les permissions pour voir les changements immédiatement
-      // await this.auth.loadPermissions(newRole);
-    }
-  } catch (e) {
-    console.error("Erreur update role:", e);
-    alert("Erreur lors de la mise à jour du rôle.");
+  async updateUserRole(email: string, newRole: string) {
+    try {
+      const id = this.auth.formatId(email);
+      await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { role: newRole });
+      this.authorizedUsers.update(users => 
+        users.map(u => u.email === email ? { ...u, role: newRole } : u)
+      );
+      if (email === this.auth.userEmail()) this.auth.userRole.set(newRole);
+    } catch (e) { console.error(e); }
   }
-}
-
-  async editNickName(user: any) {
-    const newName = prompt("Pseudo :", user.nickName);
-    if (newName?.trim()) {
-      try {
-        await this.auth.databases.updateDocument(this.dbId, this.colProfiles, this.auth.formatId(user.email), { nickName: newName.trim() });
-        if (user.email === this.auth.userEmail()) this.auth.userNickName.set(newName.trim());
-        this.loadAuthorizedUsers();
-      } catch (e) { console.error(e); }
-    }
-  }
-
-
 
   async deleteEmail(user: any) {
     const email = user.email;
-    if (email === this.auth.userEmail()) return alert("Vous ne pouvez pas vous supprimer vous-même.");
+    if (email === this.auth.userEmail()) return alert("Action impossible.");
     
-    if (confirm(`⚠️ Supprimer définitivement ${email} ?`)) {
+    if (confirm(`Supprimer définitivement ${email} ?`)) {
       try {
         this.loading.set(true);
         const id = this.auth.formatId(email);
-
         await this.auth.databases.deleteDocument(this.dbId, this.colWhitelist, id);
         try { await this.auth.databases.deleteDocument(this.dbId, this.colProfiles, id); } catch(e){}
-
-        // Envoi Email de révocation via le service
-        try {
-          await this.notificationService.sendRevocationEmail(email, user.nickName || email);
-        } catch (mailError) {
-          console.warn("Accès supprimé, mais échec notification mail.");
-        }
-
-        alert(`Accès révoqué pour ${email}.`);
+        
+        await this.notificationService.sendRevocationEmail(email, email);
         await this.loadAuthorizedUsers();
-
-      } catch (e: any) {
-        alert("Erreur suppression : " + e.message);
-      } finally {
-        this.loading.set(false);
-      }
+      } catch (e: any) { alert(e.message); } finally { this.loading.set(false); }
     }
   }
+
   async loadRoles() {
-  try {
-    const res = await this.auth.databases.listDocuments(this.dbId, this.colRoles);
-    //console.log("Rôles récupérés :", res.documents); // <--- AJOUTE CECI
-    this.roles.set(res.documents.map(d => ({ id: d.$id, ...d })));
-  } catch (e) { 
-    console.error("Erreur lors du chargement des rôles :", e); 
+    try {
+      const res = await this.auth.databases.listDocuments(this.dbId, this.colRoles);
+      this.roles.set(res.documents.map(d => ({ id: d.$id, ...d })));
+    } catch (e) { console.error(e); }
   }
-}
-async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement, roleInput: HTMLSelectElement) {
-  const email = emailInput.value.trim().toLowerCase();
-  const nickName = nameInput.value.trim() || email.split('@')[0];
-  const selectedRole = roleInput.value; // Récupère le rôle choisi
-  const id = this.auth.formatId(email);
 
-  if (!email.includes('@')) return alert("Email invalide");
 
-  try {
-    this.loading.set(true);
-    
-    // 1. Inscription Whitelist
-    await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
-      email, addedAt: new Date().toISOString(), hasProfile: false 
-    });
-    
-    // 2. Création du profil avec le rôle choisi directement
-    await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
-      email, 
-      nickName, 
-      role: selectedRole, // Utilisation du rôle sélectionné
-      assignable: false,
-      themePreference: 'dark', 
-      updatedAt: new Date().toISOString()
-    });
+  async addEmail(emailInput: HTMLInputElement, roleInput: HTMLSelectElement) {
+    const rawEmail = emailInput.value.trim().toLowerCase();
+    const id = this.auth.formatId(rawEmail);
+
+    console.log("BOÎTE D'ENVOI :");
+    console.log("ID généré:", id);
+    console.log("Email envoyé:", rawEmail);
 
     try {
-      await this.notificationService.sendWelcomeEmail(email, nickName);
-    } catch (mailError) {
-      console.warn("Utilisateur ajouté, mais échec mail:", mailError);
-    }
-
-    alert(`Utilisateur ${email} autorisé avec le rôle ${selectedRole} !`);
-    
-    // Reset du formulaire
-    emailInput.value = ''; 
-    nameInput.value = '';
-    roleInput.value = 'Aucun'; 
-    
-    await this.loadAuthorizedUsers();
-
-  } catch (error: any) { 
-    alert("Erreur : " + error.message); 
-  } finally { 
-    this.loading.set(false); 
-  }
+      await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
+        email: rawEmail, // <--- On force l'utilisation de la variable propre
+        addedAt: new Date().toISOString(), 
+        hasProfile: false 
+      });
+      // ... reste du code
+    } catch (e) { console.error(e); }
 }
 }

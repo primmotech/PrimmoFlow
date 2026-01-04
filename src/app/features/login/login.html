@@ -60,12 +60,11 @@
       <div class="step-box">
         <p class="status-msg success">Accès autorisé : Finalisez votre profil</p>
 
-        <label>Prénom</label>
-        <input type="text" [(ngModel)]="firstname" (focus)="scrollToInput($event)" placeholder="Prénom" class="input-field">
+<label>Prénom</label>
+<input type="text" [(ngModel)]="firstname" (input)="onNameChange()" (focus)="scrollToInput($event)" placeholder="Prénom" class="input-field">
 
-        <label>Nom</label>
-        <input type="text" [(ngModel)]="lastname" (focus)="scrollToInput($event)" placeholder="Nom" class="input-field">
-
+<label>Nom</label>
+<input type="text" [(ngModel)]="lastname" (input)="onNameChange()" (focus)="scrollToInput($event)" placeholder="Nom" class="input-field">
         <label>Téléphone professionnel</label>
         <input type="tel" [(ngModel)]="phone" (focus)="scrollToInput($event)" placeholder="+XXYYYYYYYYY" class="input-field">
 

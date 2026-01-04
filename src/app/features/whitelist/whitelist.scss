@@ -2,6 +2,8 @@
   min-height: 100vh;
   transition: background-color 0.3s ease;
   background-color: #f5f7fb;
+  
+  /* Variables de couleurs */
   --card-bg: #ffffff;
   --border-color: #eeeeee;
   --text-main: #333333;
@@ -21,204 +23,254 @@
   }
 }
 
-.container { padding: 16px; padding-bottom: 110px; }
+.container { 
+  padding: 16px; 
+  padding-bottom: 110px;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-/* EN-TETE */
+/* --- EN-TÊTE --- */
 .app-header-large {
   padding: 30px 20px;
   h1 { font-size: 28px; font-weight: 800; color: var(--text-main); margin: 0; }
   p { font-size: 14px; color: var(--text-soft); margin: 4px 0 0 0; }
 }
 
-/* CARTES */
+/* --- TITRES DE SECTIONS --- */
 .settings-group {
   margin-top: 25px;
-  h3 { font-size: 12px; text-transform: uppercase; color: var(--text-soft); margin: 0 0 10px 8px; letter-spacing: 0.5px; }
+  h3 { 
+    font-size: 12px; 
+    text-transform: uppercase; 
+    color: var(--text-soft); 
+    margin: 0 0 10px 8px; 
+    letter-spacing: 0.5px; 
+    font-weight: 700;
+  }
 }
 
+/* --- CARTES --- */
 .settings-card {
   background: var(--card-bg);
   border-radius: 18px;
   border: 1px solid var(--border-color);
   overflow: hidden;
+  width: 100%;
 }
 
-/* FORMULAIRE AJOUT */
+/* --- FORMULAIRE D'AJOUT --- */
 .add-user-form {
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+
   input {
-    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);
-    background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none;
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 10px; 
+    border: 1px solid var(--border-color);
+    background: var(--bg-input); 
+    color: var(--text-main); 
+    font-size: 14px; 
+    outline: none;
+    box-sizing: border-box;
     &:focus { border-color: var(--accent-color); }
   }
-  .row { display: flex; gap: 10px; input { flex: 1; } }
+
+  .row { 
+    display: flex; 
+    gap: 10px; 
+    align-items: stretch;
+  }
 }
 
 .add-full-btn {
-  background: var(--accent-color); color: white; border: none;
-  border-radius: 10px; padding: 0 20px; font-weight: 700;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0 20px;
+  font-weight: 700;
+  cursor: pointer;
   &:active { opacity: 0.8; transform: scale(0.98); }
 }
 
-/* LISTE & ITEMS - Structure optimisée avec Rôle en dessous */
-.setting-item {
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between;
-  padding: 16px;
-  min-height: 90px; 
+/* --- LISTE DES UTILISATEURS (STACK) --- */
+.setting-item-stack {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px;
   border-bottom: 1px solid var(--border-color);
-  gap: 15px;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+
   &:last-child { border-bottom: none; }
 }
 
-.setting-info {
-  flex: 1; 
-  min-width: 0;
-  display: flex; 
-  flex-direction: column; /* Aligne le contenu verticalement */
-  gap: 10px;
+.user-email-header {
+  display: block;
+  width: 100%;
+  color: var(--text-main);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
   
-  .user-details {
-    display: flex; 
-    flex-direction: column;
-    gap: 2px;
-
-    .user-nickname {
-      color: var(--text-main); 
-      font-weight: 700; 
-      font-size: 15px;
-      display: flex; 
-      align-items: center; 
-      gap: 6px;
-      
-      .edit-icon-mini {
-        width: 13px; 
-        height: 13px;
-        stroke: var(--accent-color);
-      }
-    }
-
-    .user-email-sub { 
-      color: var(--text-soft); 
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
+  /* Sécurité anti-tronquage visuel */
+  white-space: normal !important;
+  word-break: break-all !important; 
+  overflow-wrap: anywhere !important;
 }
 
-/* CONTROLES DROITE (TOGGLE + POUBELLE) */
-.action-controls {
+.user-actions-row {
   display: flex;
   align-items: center;
-  gap: 15px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
 }
 
-/* STYLE DU SELECT (Placé sous le texte) */
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* --- SELECT CUSTOM --- */
 .select-wrapper {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  width: fit-content;
 
   .custom-select-small {
     appearance: none;
     -webkit-appearance: none;
     font-size: 11px;
-    padding: 5px 24px 5px 10px;
-    border-radius: 6px;
+    padding: 8px 28px 8px 12px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     background: var(--bg-input);
-    color: var(--text-main);
-    font-weight: 800;
+    color: var(--text-soft);
+    font-weight: 700;
     text-transform: uppercase;
     outline: none;
-    min-width: 100px;
+    min-width: 130px;
   }
 
   &::after {
-    content: ''; position: absolute; right: 8px;
-    width: 0; height: 0;
-    border-left: 3px solid transparent; border-right: 3px solid transparent;
-    border-top: 4px solid var(--accent-color);
+    content: ''; 
+    position: absolute; 
+    right: 10px;
+    border-left: 4px solid transparent; 
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--accent-color);
     pointer-events: none;
   }
 }
 
-/* TOGGLE SWITCH */
+/* --- TOGGLE SWITCH --- */
 .toggle-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 
-  .toggle-label {
-    font-size: 8px;
-    text-transform: uppercase;
-    color: var(--text-soft);
-    font-weight: 800;
+  .toggle-label { 
+    font-size: 8px; 
+    text-transform: uppercase; 
+    color: var(--text-soft); 
+    font-weight: 800; 
   }
 
   .switch {
-    position: relative;
-    display: inline-block;
-    width: 34px;
+    position: relative; 
+    width: 34px; 
     height: 18px;
+
     input { opacity: 0; width: 0; height: 0; }
+
     .slider {
-      position: absolute; cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--border-color);
-      transition: .3s; border-radius: 20px;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--border-color); 
+      transition: .3s; 
+      border-radius: 20px;
+      cursor: pointer;
+
       &:before {
         position: absolute; content: ""; height: 14px; width: 14px;
-        left: 2px; bottom: 2px; background-color: white;
+        left: 2px; bottom: 2px; background-color: white; 
         transition: .3s; border-radius: 50%;
       }
     }
+
     input:checked + .slider { background-color: var(--success-green); }
     input:checked + .slider:before { transform: translateX(16px); }
   }
 }
 
-/* POUBELLE */
+/* --- BOUTON SUPPRIMER --- */
 .delete-btn-rounded {
   background: rgba(255, 59, 48, 0.1); 
   border: none;
-  width: 38px; height: 38px;
+  width: 38px; 
+  height: 38px;
   border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  svg { stroke: var(--danger-red) !important; width: 18px; height: 18px; }
-  &:active { background: var(--danger-red); svg { stroke: #ffffff !important; } }
-}
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 
-/* NAVIGATION */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-  background: var(--card-bg); display: flex; justify-content: space-around;
-  border-top: 1px solid var(--border-color); z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
-  
-  .nav-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-decoration: none; color: var(--text-soft); gap: 4px; flex: 1;
-    span { font-size: 11px; font-weight: 600; }
-    svg { stroke: var(--text-soft); width: 22px; height: 22px; }
+  svg { stroke: var(--danger-red); transition: stroke 0.2s; }
+
+  &:active { 
+    background: var(--danger-red); 
+    svg { stroke: #ffffff; } 
   }
 }
-/* Ajustement spécifique pour le select dans le formulaire d'ajout */
-.create-select {
-  width: 100% !important;
-  max-width: none !important;
-  height: 42px; /* Pour l'aligner avec le bouton Ajouter */
-  font-size: 13px !important;
+
+/* --- NAVIGATION BASSE --- */
+.bottom-nav {
+  position: fixed; 
+  bottom: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 75px;
+  background: var(--card-bg); 
+  display: flex; 
+  justify-content: space-around;
+  border-top: 1px solid var(--border-color); 
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+
+  .nav-item {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    text-decoration: none; 
+    color: var(--text-soft); 
+    gap: 4px; 
+    flex: 1;
+
+    span { font-size: 11px; font-weight: 600; }
+    svg { stroke: var(--text-soft); width: 22px; height: 22px; }
+
+    &.active {
+      color: var(--accent-color);
+      svg { stroke: var(--accent-color); }
+    }
+  }
 }
 
+/* --- UTILITAIRES --- */
+.create-select { width: 100% !important; height: 42px; font-size: 13px !important; }
 .flex-1 { flex: 1; }
+.empty-list-msg, .loader-inner { 
+  padding: 40px 20px; 
+  text-align: center; 
+  color: var(--text-soft); 
+  font-size: 14px; 
+}
