@@ -665,3 +665,177 @@
     }
   }
 }
+.tasks-vertical-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-list-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 5px;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--border-color);
+  transition: background 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 5px;
+  }
+  
+  &:first-child {
+    padding-top: 5px;
+  }
+
+  .task-label {
+    font-size: 0.95rem; // Un peu plus grand pour la liste verticale
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  &.is-done {
+    .task-label {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+  }
+
+  .checkbox-wrapper {
+    position: relative;
+    width: 24px; // Légèrement plus grand pour faciliter le clic
+    height: 24px;
+    flex-shrink: 0;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 24px;
+      width: 24px;
+      background: rgba(150, 150, 150, 0.1);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    input:checked ~ .checkmark {
+      background-color: #2ecc71;
+      border-color: #2ecc71;
+      
+      &:after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 4px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  &:active {
+    background: rgba(150, 150, 150, 0.05);
+  }
+}
+.tasks-vertical-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-list-item {
+  display: flex;
+  align-items: flex-start; // Aligne la case en haut si le texte fait plusieurs lignes
+  gap: 12px;
+  padding: 12px 5px;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .task-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    line-height: 1.3;
+    padding-top: 1px; // Petit ajustement pour aligner avec la case
+    /* Permet le retour à la ligne automatique */
+    white-space: normal; 
+    word-break: break-word; 
+  }
+
+  &.is-done {
+    .task-label {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+  }
+
+  .checkbox-wrapper {
+    position: relative;
+    width: 18px;  /* Taille réduite (3/4) */
+    height: 18px; /* Taille réduite (3/4) */
+    flex-shrink: 0;
+    margin-top: 2px; // Centre visuellement la case avec la première ligne de texte
+
+    input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 18px;
+      width: 18px;
+      background: rgba(150, 150, 150, 0.1);
+      border: 1.5px solid var(--border-color);
+      border-radius: 5px; // Rayon légèrement plus petit pour la cohérence
+      transition: all 0.2s ease;
+    }
+
+    input:checked ~ .checkmark {
+      background-color: #2ecc71;
+      border-color: #2ecc71;
+      
+      &:after {
+        content: "";
+        position: absolute;
+        left: 5px;  /* Ajusté pour la taille 18px */
+        top: 2px;   /* Ajusté pour la taille 18px */
+        width: 4px;
+        height: 8px;
+        border: solid white;
+        border-width: 0 2.5px 2.5px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  &:active {
+    background: rgba(150, 150, 150, 0.05);
+  }
+}

@@ -42,23 +42,23 @@
       </div>
     </div>
 
-    <div class="info-group sticky-tasks" *ngIf="missionTasks().length > 0">
-      <div class="glass-card tasks-card">
-        <div class="tasks-grid">
-          @for (task of missionTasks(); track $index) {
-            <label class="task-checkbox-item" [class.is-done]="task.done">
-              <div class="checkbox-wrapper">
-                <input type="checkbox" 
-                       [checked]="task.done"
-                       (change)="toggleMissionTask($index)">
-                <span class="checkmark"></span>
-              </div>
-              <span class="task-label">{{ task.label }}</span>
-            </label>
-          }
-        </div>
-      </div>
+  <div class="info-group sticky-tasks" *ngIf="missionTasks().length > 0">
+  <div class="glass-card tasks-card">
+    <div class="tasks-vertical-list">
+      @for (task of missionTasks(); track $index) {
+        <label class="task-list-item" [class.is-done]="task.done">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" 
+                   [checked]="task.done"
+                   (change)="toggleMissionTask($index)">
+            <span class="checkmark"></span>
+          </div>
+          <span class="task-label">{{ task.label }}</span>
+        </label>
+      }
     </div>
+  </div>
+</div>
 
     <div class="info-group spacer-top">
       <div class="group-header">
