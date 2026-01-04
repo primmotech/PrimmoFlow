@@ -29,16 +29,16 @@ async function createAttributes() {
     for (const attr of attributes) {
         try {
             await databases.createBooleanAttribute(DB_ID, COL_ROLES, attr, false);
-            console.log(`✅ Attribut créé : ${attr}`);
+            //console.log(`✅ Attribut créé : ${attr}`);
         } catch (e) {
             if (e.code === 409) {
-                console.log(`⚠️ L'attribut ${attr} existe déjà.`);
+                //console.log(`⚠️ L'attribut ${attr} existe déjà.`);
             } else {
                 console.error(`❌ Erreur sur ${attr}:`, e.message);
             }
         }
     }
-    console.log("\nTerminé ! Attends 1 ou 2 minutes que Appwrite les passe en statut 'available'.");
+    //console.log("\nTerminé ! Attends 1 ou 2 minutes que Appwrite les passe en statut 'available'.");
 }
 
 createAttributes();

@@ -99,7 +99,7 @@ export class MissionStore {
         payload
       );
       
-      console.log("Mission updated in Appwrite:", updatedData.id);
+      //console.log("Mission updated in Appwrite:", updatedData.id);
     } catch (error) {
       console.error("Error updating mission:", error);
     }

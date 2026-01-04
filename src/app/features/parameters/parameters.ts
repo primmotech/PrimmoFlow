@@ -144,7 +144,7 @@ export class Parameters implements OnInit {
       // Met à jour le nickname global (utilisé dans le header)
       this.authService.userNickName.set(this.userData().nickName);
       
-      console.log("Profil Appwrite mis à jour avec succès ✅");
+      //console.log("Profil Appwrite mis à jour avec succès ✅");
     } catch (error) {
       console.error("Erreur sauvegarde profil Appwrite:", error);
       alert("Erreur lors de la sauvegarde.");

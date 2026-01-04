@@ -66,7 +66,7 @@ export class Whitelist implements OnInit, OnDestroy {
       });
 
       users.sort((a: any, b: any) => a.email.localeCompare(b.email));
-      console.log("Loaded users:", users);
+      //console.log("Loaded users:", users);
       this.authorizedUsers.set(users);
     } catch (e) {
       console.error("Erreur chargement users:", e);
@@ -124,9 +124,9 @@ export class Whitelist implements OnInit, OnDestroy {
     const rawEmail = emailInput.value.trim().toLowerCase();
     const id = this.auth.formatId(rawEmail);
 
-    console.log("BOÎTE D'ENVOI :");
-    console.log("ID généré:", id);
-    console.log("Email envoyé:", rawEmail);
+    //console.log("BOÎTE D'ENVOI :");
+    //console.log("ID généré:", id);
+    //console.log("Email envoyé:", rawEmail);
 
     try {
       await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 

@@ -132,7 +132,7 @@ async handleNotificationConfirmation(confirmed: boolean) {
         status: "BILLED"
       }));
       
-      console.log("Notification envoyée et interface mise à jour !");
+      //console.log("Notification envoyée et interface mise à jour !");
     } catch (error) {
       console.error("Erreur :", error);
     }

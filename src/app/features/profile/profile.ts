@@ -115,7 +115,7 @@ export class ProfileComponent implements OnInit {
         this.initialUserData = JSON.stringify(currentData);
         this.isDirty.set(false);
         
-        console.log('Profil mis à jour avec succès');
+        //console.log('Profil mis à jour avec succès');
       } catch (error) {
         console.error('Erreur lors de la sauvegarde :', error);
       } finally {

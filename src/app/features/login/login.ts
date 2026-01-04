@@ -41,7 +41,7 @@ export class LoginComponent implements OnInit {
   private async clearActiveSessions() {
     try {
       await this.authService['account'].deleteSession('current');
-      console.log("Ancienne session nettoyée.");
+      //console.log("Ancienne session nettoyée.");
     } catch (e) {
       // Si aucune session n'existe, Appwrite renvoie une erreur 401 que l'on ignore ici
     }

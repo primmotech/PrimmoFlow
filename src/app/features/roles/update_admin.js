@@ -50,10 +50,10 @@ async function updateAdminRole() {
             ADMIN_DOC_ID, 
             permissionsToEnable
         );
-        console.log(`✅ Le document Admin "${ADMIN_DOC_ID}" a été mis à jour avec toutes les permissions !`);
+        //console.log(`✅ Le document Admin "${ADMIN_DOC_ID}" a été mis à jour avec toutes les permissions !`);
     } catch (e) {
         console.error(`❌ Erreur lors de la mise à jour :`, e.message);
-        console.log(`💡 Vérifie que l'ID "${ADMIN_DOC_ID}" est bien le bon ID de ton document dans la collection roles.`);
+        //console.log(`💡 Vérifie que l'ID "${ADMIN_DOC_ID}" est bien le bon ID de ton document dans la collection roles.`);
     }
 }
 

@@ -20,7 +20,7 @@ export class HistoryComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.interventionId = params.get('id');
       // Here you would typically load the history for this interventionId
-      console.log('Loading history for intervention:', this.interventionId);
+      //console.log('Loading history for intervention:', this.interventionId);
     });
   }
 
