@@ -281,11 +281,6 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
 
   // --- CALCULS & ACTIONS ---
 
-  updateTravel(inc: number) {
-    const currentCount = this.intervention()?.travelCount || 0;
-    const newCount = Math.max(0, currentCount + inc);
-    this.updateIntervention({ travelCount: newCount, travelCost: newCount * this.travelFee() });
-  }
 
 
 
@@ -392,4 +387,23 @@ canAddMaterial = computed(() => {
     const b = this.getBreakdown();
     return b.mat + b.time + b.travel;
   }
+  updateTravel(inc: number) {
+  const currentInter = this.intervention();
+  if (!currentInter) return;
+
+  // 1. Calculer le nouveau nombre de trajets (minimum 0)
+  const currentCount = currentInter.travelCount || 0;
+  const newCount = Math.max(0, currentCount + inc);
+  
+  // 2. Calculer le nouveau coût total des déplacements
+  // On force le calcul avec le tarif actuel pour garantir la précision
+  const newTravelCost = newCount * this.travelFee();
+
+  // 3. Mise à jour du document dans Appwrite
+  // On envoie les deux valeurs pour garder la cohérence dans la DB
+  this.updateIntervention({ 
+    travelCount: newCount, 
+    travelCost: newTravelCost 
+  });
+}
 }
