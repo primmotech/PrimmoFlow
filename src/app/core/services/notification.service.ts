@@ -73,7 +73,7 @@ export class NotificationService {
  * Envoie la notification de paiement reçu
  */
 async sendPaymentNotification(to: string, technicianName: string, amount: number, city: string) {
-  const subject = `Paiement Reçu - ${city}`;
+  const subject = `Paiement Disponible - ${city}`;
   const html = `
     <div style="font-family: sans-serif; background-color: #111; padding: 20px; color: #fff;">
       <div style="max-width: 600px; margin: 0 auto; background: #1a1a1a; border-radius: 16px; overflow: hidden; border: 1px solid #333;">
