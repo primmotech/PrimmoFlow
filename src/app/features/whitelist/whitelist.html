@@ -11,7 +11,7 @@
       <h3>Autoriser un accès</h3>
       <div class="settings-card">
         <div class="add-user-form">
-          <input #emailInput type="email" placeholder="Email (ex: martin@mail.com)">
+          <input #emailInput type="email" placeholder="Email (ex: martin@mail.com)" (keydown.enter)="addEmail(emailInput, roleInput)">
           
           <div class="row">
             <div class="select-wrapper flex-1">
@@ -23,8 +23,8 @@
               </select>
             </div>
 
-            <button (click)="addEmail(emailInput, roleInput)" class="add-full-btn">
-              Ajouter
+            <button (click)="addEmail(emailInput, roleInput)" class="add-full-btn" [disabled]="loading()">
+              {{ loading() ? '...' : 'Ajouter' }}
             </button>
           </div>
         </div>
@@ -32,12 +32,12 @@
     </section>
 
     <section class="settings-group">
-      <h3>Accès configurés</h3>
+      <h3>Accès configurés ({{ authorizedUsers().length }})</h3>
       <div class="settings-card">
-        @if (loading()) {
+        @if (loading() && authorizedUsers().length === 0) {
           <div class="loader-inner">Chargement...</div>
         } @else {
-          @for (user of authorizedUsers(); track user.email) {
+          @for (user of authorizedUsers(); track user.$id) {
             <div class="setting-item-stack">
               
               <div class="user-email-header">
@@ -49,6 +49,7 @@
                   <select class="custom-select-small" 
                           [ngModel]="user.role" 
                           (change)="updateUserRole(user.email, $any($event.target).value)">
+                    <option value="Aucun">Aucun rôle</option>
                     @for (role of roles(); track role.id) {
                       <option [value]="role.id">{{ role.id }}</option>
                     }
@@ -72,7 +73,6 @@
                   </button>
                 </div>
               </div>
-
             </div>
           } @empty {
             <div class="empty-list-msg">Aucun accès configuré.</div>
@@ -84,21 +84,11 @@
 
   <nav class="bottom-nav">
     <a routerLink="/dashboard" class="nav-item">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"></line>
-        <line x1="8" y1="12" x2="21" y2="12"></line>
-        <line x1="8" y1="18" x2="21" y2="18"></line>
-        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
       <span>Accueil</span>
     </a>
     <a routerLink="/parameters" class="nav-item">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6v8H6" />
-        <path d="M10 10l-4 4 4 4" />
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6v8H6" /><path d="M10 10l-4 4 4 4" /></svg>
       <span>Retour</span>
     </a>
   </nav>

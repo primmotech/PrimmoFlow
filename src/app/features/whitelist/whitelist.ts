@@ -66,7 +66,7 @@ export class Whitelist implements OnInit, OnDestroy {
       });
 
       users.sort((a: any, b: any) => a.email.localeCompare(b.email));
-      //console.log("Loaded users:", users);
+      console.log("Loaded users:", users);
       this.authorizedUsers.set(users);
     } catch (e) {
       console.error("Erreur chargement users:", e);
@@ -119,22 +119,31 @@ export class Whitelist implements OnInit, OnDestroy {
     } catch (e) { console.error(e); }
   }
 
-
   async addEmail(emailInput: HTMLInputElement, roleInput: HTMLSelectElement) {
-    const rawEmail = emailInput.value.trim().toLowerCase();
-    const id = this.auth.formatId(rawEmail);
+    const email = emailInput.value.trim().toLowerCase();
+    const selectedRole = roleInput.value;
+    const id = this.auth.formatId(email);
 
-    //console.log("BOÎTE D'ENVOI :");
-    //console.log("ID généré:", id);
-    //console.log("Email envoyé:", rawEmail);
+    if (!email.includes('@')) return alert("Email invalide");
 
     try {
+      this.loading.set(true);
       await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
-        email: rawEmail, // <--- On force l'utilisation de la variable propre
-        addedAt: new Date().toISOString(), 
-        hasProfile: false 
+        email, addedAt: new Date().toISOString(), hasProfile: false 
       });
-      // ... reste du code
-    } catch (e) { console.error(e); }
-}
+      
+      await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
+        email, 
+        role: selectedRole,
+        assignable: false,
+        themePreference: 'dark', 
+        updatedAt: new Date().toISOString()
+      });
+
+      await this.notificationService.sendWelcomeEmail(email, email);
+      emailInput.value = ''; 
+      roleInput.value = 'Aucun'; 
+      await this.loadAuthorizedUsers();
+    } catch (error: any) { alert(error.message); } finally { this.loading.set(false); }
+  }
 }
