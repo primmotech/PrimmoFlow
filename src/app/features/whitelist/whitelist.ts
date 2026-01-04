@@ -135,47 +135,7 @@ async updateUserRole(email: string, newRole: string) {
     }
   }
 
-  async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement) {
-    const email = emailInput.value.trim().toLowerCase();
-    const nickName = nameInput.value.trim() || email.split('@')[0];
-    const id = this.auth.formatId(email);
 
-    if (!email.includes('@')) return alert("Email invalide");
-
-    try {
-      this.loading.set(true);
-      
-      // 1. Enregistrement BDD
-      await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
-        email, addedAt: new Date().toISOString(), hasProfile: false 
-      });
-      
-      await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
-        email, 
-        nickName, 
-        role: 'Aucun', 
-        assignable: false, // Ajout par défaut à false
-        themePreference: 'dark', 
-        updatedAt: new Date().toISOString()
-      });
-
-      // 2. Envoi Email stylé via le service
-      try {
-        await this.notificationService.sendWelcomeEmail(email, nickName);
-      } catch (mailError) {
-        console.warn("Utilisateur ajouté, mais échec mail:", mailError);
-      }
-
-      alert(`Utilisateur ${email} autorisé !`);
-      emailInput.value = ''; nameInput.value = '';
-      await this.loadAuthorizedUsers();
-
-    } catch (error: any) { 
-      alert("Erreur : " + error.message); 
-    } finally { 
-      this.loading.set(false); 
-    }
-  }
 
   async deleteEmail(user: any) {
     const email = user.email;
@@ -213,6 +173,53 @@ async updateUserRole(email: string, newRole: string) {
     this.roles.set(res.documents.map(d => ({ id: d.$id, ...d })));
   } catch (e) { 
     console.error("Erreur lors du chargement des rôles :", e); 
+  }
+}
+async addEmail(emailInput: HTMLInputElement, nameInput: HTMLInputElement, roleInput: HTMLSelectElement) {
+  const email = emailInput.value.trim().toLowerCase();
+  const nickName = nameInput.value.trim() || email.split('@')[0];
+  const selectedRole = roleInput.value; // Récupère le rôle choisi
+  const id = this.auth.formatId(email);
+
+  if (!email.includes('@')) return alert("Email invalide");
+
+  try {
+    this.loading.set(true);
+    
+    // 1. Inscription Whitelist
+    await this.auth.databases.createDocument(this.dbId, this.colWhitelist, id, { 
+      email, addedAt: new Date().toISOString(), hasProfile: false 
+    });
+    
+    // 2. Création du profil avec le rôle choisi directement
+    await this.auth.databases.createDocument(this.dbId, this.colProfiles, id, {
+      email, 
+      nickName, 
+      role: selectedRole, // Utilisation du rôle sélectionné
+      assignable: false,
+      themePreference: 'dark', 
+      updatedAt: new Date().toISOString()
+    });
+
+    try {
+      await this.notificationService.sendWelcomeEmail(email, nickName);
+    } catch (mailError) {
+      console.warn("Utilisateur ajouté, mais échec mail:", mailError);
+    }
+
+    alert(`Utilisateur ${email} autorisé avec le rôle ${selectedRole} !`);
+    
+    // Reset du formulaire
+    emailInput.value = ''; 
+    nameInput.value = '';
+    roleInput.value = 'Aucun'; 
+    
+    await this.loadAuthorizedUsers();
+
+  } catch (error: any) { 
+    alert("Erreur : " + error.message); 
+  } finally { 
+    this.loading.set(false); 
   }
 }
 }

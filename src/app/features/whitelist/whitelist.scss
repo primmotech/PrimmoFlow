@@ -213,3 +213,12 @@
     svg { stroke: var(--text-soft); width: 22px; height: 22px; }
   }
 }
+/* Ajustement spécifique pour le select dans le formulaire d'ajout */
+.create-select {
+  width: 100% !important;
+  max-width: none !important;
+  height: 42px; /* Pour l'aligner avec le bouton Ajouter */
+  font-size: 13px !important;
+}
+
+.flex-1 { flex: 1; }

@@ -12,9 +12,20 @@
       <div class="settings-card">
         <div class="add-user-form">
           <input #emailInput type="email" placeholder="Email (ex: martin@mail.com)">
+          
+          <input #nameInput type="text" placeholder="Pseudo (ex: Mich)">
+          
           <div class="row">
-            <input #nameInput type="text" placeholder="Pseudo (ex: Mich)">
-            <button (click)="addEmail(emailInput, nameInput)" class="add-full-btn">
+            <div class="select-wrapper flex-1">
+              <select #roleInput class="custom-select-small create-select">
+                <option value="Aucun">Attribuer un rôle...</option>
+                @for (role of roles(); track role.id) {
+                  <option [value]="role.id">{{ role.id }}</option>
+                }
+              </select>
+            </div>
+
+            <button (click)="addEmail(emailInput, nameInput, roleInput)" class="add-full-btn">
               Ajouter
             </button>
           </div>
