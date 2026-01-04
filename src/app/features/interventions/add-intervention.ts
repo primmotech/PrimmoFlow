@@ -6,11 +6,12 @@ import { ID, Query } from 'appwrite';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme';
 import { SafeUrlPipe } from '../../core/pipes/safe-url.pipe';
+import { PhoneFormatDirective } from '../../core/directives/phone-format.directive';
 
 @Component({
   selector: 'app-add-intervention',
   standalone: true,
-  imports: [CommonModule, FormsModule, SafeUrlPipe],
+  imports: [CommonModule, FormsModule, SafeUrlPipe, PhoneFormatDirective],
   templateUrl: './add-intervention.html',
   styleUrls: ['./add-intervention.scss']
 })
@@ -146,26 +147,13 @@ export class AddInterventionComponent implements OnInit {
 
   onValueChange() { if (!this.hasChanges()) this.hasChanges.set(true); }
 
-  copyToProprietaire(index: number = 0) {
-    const habitant = this.data.habitants[index];
-    if (habitant) {
-      this.data.proprietaire = { ...habitant };
-      this.onValueChange();
-    }
-  }
 
   addHabitant() { this.data.habitants.push({ nom: '', prenom: '', tel: '' }); this.onValueChange(); }
   removeHabitant(index: number) { if (this.data.habitants.length > 1) { this.data.habitants.splice(index, 1); this.onValueChange(); } }
 
   isHabitantComplete(h: any) { return h && h.nom?.trim() !== '' && h.tel?.trim() !== ''; }
   
-  isFormValid() {
-    const firstTask = this.tasks()[0];
-    return this.data.adresse.rue && 
-           this.data.assigned !== '' && 
-           firstTask && firstTask.text.trim() !== '' && 
-           this.isHabitantComplete(this.data.habitants[0]);
-  }
+
 
   private async compressImage(file: File): Promise<File> {
     return new Promise((resolve) => {
@@ -284,5 +272,62 @@ async loadTechnicians() {
   } catch (e) { 
     console.error("Erreur lors du chargement des techniciens assignables:", e); 
   }
+}
+// --- Formatage Téléphone (0612345678) ---
+formatPhone(event: any, target: 'proprietaire' | number) {
+  let val = event.target.value.replace(/\D/g, ''); // Garde uniquement les chiffres
+  if (val.length > 10) val = val.substring(0, 10); // Limite à 10 chiffres
+
+  if (target === 'proprietaire') {
+    this.data.proprietaire.tel = val;
+  } else {
+    // Si target est un index (pour les habitants)
+    this.data.habitants[target].tel = val;
+  }
+  this.onValueChange();
+}
+
+// Mise à jour de la copie pour inclure le formatage
+copyToProprietaire(index: number = 0) {
+  const habitant = this.data.habitants[index];
+  if (habitant) {
+    // On copie et on s'assure que c'est bien formaté
+    this.data.proprietaire.tel = habitant.tel.replace(/\D/g, '').substring(0, 10);
+    this.data.proprietaire.nom = habitant.nom;
+    this.data.proprietaire.prenom = habitant.prenom;
+    this.onValueChange();
+  }
+}
+
+
+
+  // --- VALIDATION DU FORMULAIRE MISE À JOUR ---
+  isFormValid() {
+    const firstTask = this.tasks()[0];
+    const isFirstHabitantValid = this.isHabitantComplete(this.data.habitants[0]) && this.phonesValid()['0'];
+    
+    return this.data.adresse.rue && 
+           this.data.assigned !== '' && 
+           firstTask && firstTask.text.trim() !== '' && 
+           isFirstHabitantValid;
+  }
+
+ // 1. Les signaux pour stocker les pays/validité par habitant
+detectedCountries = signal<Record<string, string>>({});
+phonesValid = signal<Record<string, boolean>>({});
+
+// 2. Les méthodes appelées par le HTML
+onCountryFound(event: { name: string, code: string }, key: string) {
+  this.detectedCountries.update(prev => ({ ...prev, [key]: event.name }));
+}
+
+setPhoneValidity(isValid: any, key: string) {
+  this.phonesValid.update(prev => ({ ...prev, [key]: !!isValid }));
+}
+
+scrollToInput(event: any) {
+  setTimeout(() => {
+    event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300);
 }
 }

@@ -69,15 +69,22 @@
   padding: 15px;
   border: 1px solid var(--border-color);
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .input-row {
   display: flex;
   gap: 10px;
   align-items: center;
+  width: 100%;
 }
 
-input, textarea, .custom-select {
+/* --- CHAMPS DE SAISIE (SYNCHRO LOGIN) --- */
+.input-field, input, textarea, .custom-select {
   padding: 12px;
   border-radius: 12px;
   border: none;
@@ -85,10 +92,41 @@ input, textarea, .custom-select {
   color: var(--text-primary);
   font-size: 1rem;
   width: 100%;
+  box-sizing: border-box;
   outline: none;
   transition: all 0.2s;
 
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  }
+
   &:disabled { opacity: 0.5; }
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* --- GESTION DU TÉLÉPHONE (EXACT LOGIN) --- */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.phone-helper {
+  font-size: 0.75rem;
+  margin-top: 6px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+
+  &.text-success {
+    color: #2ecc71 !important;
+  }
 }
 
 /* --- ALIGNEMENT DES TÂCHES --- */
@@ -104,7 +142,7 @@ input, textarea, .custom-select {
 
 .task-input {
   flex: 1;
-  min-width: 0; // Empêche le dépassement de largeur
+  min-width: 0;
 }
 
 /* --- TAILLES SPÉCIFIQUES & UTILITAIRES --- */
@@ -113,6 +151,7 @@ input, textarea, .custom-select {
 .flex-1 { flex: 1; }
 .mt-10 { margin-top: 10px; }
 .mb-10 { margin-bottom: 10px; }
+.ml-10 { margin-left: 10px; }
 .bg-highlight { border: 1.5px solid #3498db !important; }
 
 /* --- BOUTONS D'ACTION --- */
@@ -132,7 +171,7 @@ input, textarea, .custom-select {
 }
 
 .delete-btn-flat {
-  flex-shrink: 0; // Empêche l'icône de s'écraser
+  flex-shrink: 0;
   background: transparent !important;
   border: none !important;
   padding: 8px;
@@ -144,29 +183,97 @@ input, textarea, .custom-select {
   &:active { opacity: 0.6; }
 }
 
-/* --- SELECT (LISTE DÉROULANTE) --- */
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  color: #3498db;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    background: #3498db;
+    color: white;
+  }
+}
+
+/* --- SELECT & FILE INPUT --- */
 .select-wrapper {
   position: relative;
+  width: 100%;
   
   .custom-select {
     appearance: none;
+    padding-right: 40px;
     option {
       background: var(--card-bg);
       color: var(--text-primary);
     }
   }
+}
 
-  .select-arrow {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    opacity: 0.5;
+.file-input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px;
+  background: var(--input-bg);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* --- PHOTOS GRID --- */
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.photo-thumbnail {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 }
 
-/* --- BOTTOM NAV & BOUTONS --- */
+.remove-photo-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* --- BOTTOM NAV & ANIMATIONS --- */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -214,13 +321,8 @@ input, textarea, .custom-select {
     filter: grayscale(1);
     cursor: not-allowed;
   }
-
-  &:active:not(:disabled) {
-    transform: translateY(2px);
-  }
 }
 
-/* --- ANIMATIONS & LOADERS --- */
 .loader-small {
   width: 24px;
   height: 24px;
@@ -232,144 +334,4 @@ input, textarea, .custom-select {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.copy-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(52, 152, 219, 0.1);
-  border: 1px solid rgba(52, 152, 219, 0.3);
-  color: #3498db;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:active {
-    background: #3498db;
-    color: white;
-  }
-
-  svg { flex-shrink: 0; }
-}
-.file-input {
-  display: block; // Pour le rendre plus facile à styliser
-  margin-bottom: 15px;
-  // Stylisation personnalisée de l'input file par exemple:
-  // background: var(--input-bg);
-  // border: 1px solid var(--border-color);
-  // border-radius: 12px;
-  // padding: 10px;
-  // cursor: pointer;
-  // color: var(--text-primary);
-}
-
-.photo-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); // Rendre responsive
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.photo-thumbnail {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; // Pour que l'image remplisse bien le cadre
-    display: block;
-  }
-}
-
-.remove-photo-btn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: rgba(231, 76, 60, 0.8);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-/* --- CORRECTION DES CHAMPS LARGES --- */
-
-.glass-card {
-  background: var(--card-bg);
-  border-radius: 18px;
-  padding: 15px;
-  border: 1px solid var(--border-color);
-  position: relative;
-  /* Assure que la carte ne s'étire pas au-delà du parent */
-  width: 100%;
-  box-sizing: border-box; 
-  display: flex;
-  flex-direction: column;
-}
-
-textarea {
-  width: 100%;
-  box-sizing: border-box; /* Crucial : inclut le padding dans les 100% */
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: var(--input-bg);
-  color: var(--text-primary);
-  font-size: 1rem;
-  outline: none;
-  transition: all 0.2s;
-  resize: vertical; /* Permet d'agrandir en hauteur mais pas en largeur */
-  min-height: 80px;
-}
-
-.file-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px;
-  background: var(--input-bg);
-  border-radius: 10px;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-}
-
-/* Grille de photos responsive */
-.photo-preview-grid {
-  display: grid;
-  /* On réduit un peu la taille mini pour éviter que la grille force la largeur sur petit écran */
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
-  gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.photo-thumbnail {
-  position: relative;
-  aspect-ratio: 1 / 1; /* Carré parfait */
-  width: 100%; 
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 }
