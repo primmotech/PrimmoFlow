@@ -49,33 +49,35 @@ export class Whitelist implements OnInit, OnDestroy {
     this.loading.set(false);
   }
 
-  async loadRoles() {
-    try {
-      const res = await this.auth.databases.listDocuments(this.dbId, this.colRoles);
-      this.roles.set(res.documents.map(d => ({ id: d.$id, ...d })));
-    } catch (e) { console.error(e); }
-  }
+ 
 
-  async loadAuthorizedUsers() {
-    try {
-      const authSnap = await this.auth.databases.listDocuments(this.dbId, this.colWhitelist);
-      const authorizedIds = authSnap.documents.map(d => d.$id);
-      const profileSnap = await this.auth.databases.listDocuments(this.dbId, this.colProfiles);
+async loadAuthorizedUsers() {
+  try {
+    const authSnap = await this.auth.databases.listDocuments(this.dbId, this.colWhitelist);
+    const profileSnap = await this.auth.databases.listDocuments(this.dbId, this.colProfiles);
+    
+    const profiles = profileSnap.documents;
+
+    const users = authSnap.documents.map(authDoc => {
+      // On cherche le profil correspondant par ID
+      const profile = profiles.find(p => p.$id === authDoc.$id);
       
-      const users = profileSnap.documents
-        .filter(u => authorizedIds.includes(u.$id))
-        .map(d => ({ 
-          email: d['email'], 
-          nickName: d['nickName'], 
-          role: d['role'],
-          assignable: d['assignable'] ?? false, // Récupération du statut assignable
-          ...d 
-        }));
+      return {
+        email: authDoc['email'],
+        // Si le profil existe on prend ses data, sinon valeurs par défaut
+        nickName: profile?.['nickName'] || authDoc['email'].split('@')[0],
+        role: profile?.['role'] || 'Aucun',
+        assignable: profile?.['assignable'] ?? false,
+        $id: authDoc.$id
+      };
+    });
 
-      users.sort((a: any, b: any) => a.nickName?.localeCompare(b.nickName));
-      this.authorizedUsers.set(users);
-    } catch (e) { console.error(e); }
+    users.sort((a: any, b: any) => a.nickName?.localeCompare(b.nickName));
+    this.authorizedUsers.set(users);
+  } catch (e) {
+    console.error("Erreur chargement users:", e);
   }
+}
 
   async toggleAssignable(user: any) {
     try {
@@ -98,12 +100,29 @@ export class Whitelist implements OnInit, OnDestroy {
     }
   }
 
-  async updateUserRole(email: string, newRole: string) {
-    try {
-      await this.auth.databases.updateDocument(this.dbId, this.colProfiles, this.auth.formatId(email), { role: newRole });
-      if (email === this.auth.userEmail()) this.auth.userRole.set(newRole);
-    } catch (e) { console.error(e); }
+async updateUserRole(email: string, newRole: string) {
+  try {
+    const id = this.auth.formatId(email);
+    await this.auth.databases.updateDocument(this.dbId, this.colProfiles, id, { 
+      role: newRole 
+    });
+
+    // Mise à jour du signal local pour une interface fluide
+    this.authorizedUsers.update(users => 
+      users.map(u => u.email === email ? { ...u, role: newRole } : u)
+    );
+
+    // Si c'est mon propre rôle, je mets à jour mon AuthService
+    if (email === this.auth.userEmail()) {
+      this.auth.userRole.set(newRole);
+      // Optionnel: recharger les permissions pour voir les changements immédiatement
+      // await this.auth.loadPermissions(newRole);
+    }
+  } catch (e) {
+    console.error("Erreur update role:", e);
+    alert("Erreur lors de la mise à jour du rôle.");
   }
+}
 
   async editNickName(user: any) {
     const newName = prompt("Pseudo :", user.nickName);
@@ -187,4 +206,13 @@ export class Whitelist implements OnInit, OnDestroy {
       }
     }
   }
+  async loadRoles() {
+  try {
+    const res = await this.auth.databases.listDocuments(this.dbId, this.colRoles);
+    //console.log("Rôles récupérés :", res.documents); // <--- AJOUTE CECI
+    this.roles.set(res.documents.map(d => ({ id: d.$id, ...d })));
+  } catch (e) { 
+    console.error("Erreur lors du chargement des rôles :", e); 
+  }
+}
 }
