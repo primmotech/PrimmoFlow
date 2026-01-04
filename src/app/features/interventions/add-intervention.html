@@ -38,7 +38,6 @@
           </div>
 
           <div class="input-wrapper mt-10">
-            
             <input type="tel" [(ngModel)]="h.tel" 
                    appPhoneFormat 
                    (countryDetected)="onCountryFound($event, $index.toString())" 
@@ -79,7 +78,6 @@
         </div>
 
         <div class="input-wrapper mt-10">
-          
           <input type="tel" [(ngModel)]="data.proprietaire.tel" 
                  appPhoneFormat 
                  (countryDetected)="onCountryFound($event, 'proprio')" 
@@ -122,20 +120,35 @@
     </div>
 
     <div class="info-group">
-      <div class="group-header"><h3>Photos (Max 5)</h3></div>
-      <div class="glass-card">
-        <input type="file" (change)="onFileSelected($event)" accept="image/*" multiple class="file-input">
-        <div class="photo-preview-grid">
-          @for (photo of photosToUpload; track $index) {
-            <div class="photo-thumbnail">
-              <img [src]="photo | safeUrl">
-              <button (click)="removePhotoToUpload($index)" class="remove-photo-btn">X</button>
+      <div class="group-header">
+        <h3>Photos</h3>
+        <span class="photo-counter">{{ (data.photos || []).length }} / 5</span>
+      </div>
+      
+      <div class="glass-card photo-card-padding">
+        <div class="photo-grid">
+          @if (!uploading() && (data.photos || []).length < 5) {
+            <div class="photo-item upload-placeholder" (click)="photoInput.click()">
+              <input type="file" (change)="onFileSelected($event)" accept="image/*" #photoInput style="display: none;">
+              <div class="placeholder-content">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </div>
             </div>
           }
-          @for (photoId of existingPhotoIds; track photoId) {
-            <div class="photo-thumbnail">
-              <img [src]="getPhotoPreviewUrl(photoId)">
-              <button (click)="removeExistingPhoto(photoId)" class="remove-photo-btn">X</button>
+
+          @if (uploading()) {
+            <div class="photo-item upload-loading">
+              <span class="upload-loader"></span>
+            </div>
+          }
+
+          @for (pStr of data.photos; track $index) {
+            @let p = parseJson(pStr);
+            <div class="photo-item">
+              <img [src]="p.url" alt="Photo" (click)="scrollToInput($event)">
+              <button (click)="removePhoto(pStr)" class="delete-photo-btn">×</button>
             </div>
           }
         </div>
