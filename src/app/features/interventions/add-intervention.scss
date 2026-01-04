@@ -308,3 +308,68 @@ input, textarea, .custom-select {
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+/* --- CORRECTION DES CHAMPS LARGES --- */
+
+.glass-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  position: relative;
+  /* Assure que la carte ne s'étire pas au-delà du parent */
+  width: 100%;
+  box-sizing: border-box; 
+  display: flex;
+  flex-direction: column;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box; /* Crucial : inclut le padding dans les 100% */
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+  resize: vertical; /* Permet d'agrandir en hauteur mais pas en largeur */
+  min-height: 80px;
+}
+
+.file-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  background: var(--input-bg);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* Grille de photos responsive */
+.photo-preview-grid {
+  display: grid;
+  /* On réduit un peu la taille mini pour éviter que la grille force la largeur sur petit écran */
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.photo-thumbnail {
+  position: relative;
+  aspect-ratio: 1 / 1; /* Carré parfait */
+  width: 100%; 
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
