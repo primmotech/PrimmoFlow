@@ -177,3 +177,23 @@
     flex-direction: column;
   }
 }
+.phone-helper {
+  font-size: 11px;
+  margin-top: 5px;
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #a0a0a2; // Couleur discrète par défaut
+  transition: color 0.3s ease;
+
+  &.text-success {
+    color: #2ecc71; // Vert si valide
+    font-weight: 600;
+  }
+}
+
+.input-error {
+  border-color: #ff3b30 !important;
+  background-color: rgba(255, 59, 48, 0.05) !important;
+}
