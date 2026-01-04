@@ -96,7 +96,7 @@ async sendPaymentNotification(to: string, technicianName: string, amount: number
         </div>
       </div>
     </div>`;
-    console.log (this.executeMail(to, subject, html))
+   
   return this.executeMail(to, subject, html);
 }
 }
