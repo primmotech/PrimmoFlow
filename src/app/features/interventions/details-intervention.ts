@@ -6,6 +6,7 @@ import { ID } from 'appwrite';
 import { ThemeService } from '../../core/services/theme';
 import { AuthService } from '../../core/services/auth.service';
 import imageCompression from 'browser-image-compression';
+import { ImageService } from '../../core/services/image.service';
 
 @Component({
   selector: 'app-details-intervention',
@@ -24,6 +25,7 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COLL_INTERVENTIONS = 'interventions';
   private readonly BUCKET_PHOTOS = '69502be400074c6f43f5';
+  public imageService = inject(ImageService);
 
   // État de l'UI
   intervention = signal<any>(null);
@@ -244,18 +246,20 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
 
   // --- PHOTOS ---
 
-  async uploadPhoto(event: any) {
+async uploadPhoto(event: any) {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file || !this.imageService.isValid(file)) return;
+
     this.uploading.set(true);
     try {
-      const options = { maxSizeMB: 1, maxWidthOrHeight: 1280, useWebWorker: true };
-      const compressedBlob = await imageCompression(file, options);
-      const compressedFile = new File([compressedBlob], file.name, { type: file.type });
+      // 1. Compression via Web Worker (plus de freeze UI)
+      const compressedFile = await this.imageService.compress(file);
       
+      // 2. Upload
       const photoId = ID.unique();
       await this.authService.storage.createFile(this.BUCKET_PHOTOS, photoId, compressedFile);
       
+      // 3. Récupération URL et Update document
       const finalUrl = this.authService.storage.getFileView(this.BUCKET_PHOTOS, photoId).toString();
       const currentPhotos = this.intervention()?.photos || [];
       const photoData = JSON.stringify({ id: photoId, url: finalUrl, full: finalUrl });
@@ -263,7 +267,7 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
       await this.updateIntervention({ photos: [...currentPhotos, photoData] });
     } catch (e) {
       console.error(e);
-      alert("Erreur upload.");
+      alert("Erreur lors du traitement de l'image.");
     } finally {
       this.uploading.set(false);
       event.target.value = '';
