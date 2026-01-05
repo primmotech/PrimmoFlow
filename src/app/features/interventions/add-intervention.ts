@@ -51,31 +51,21 @@ export class AddInterventionComponent implements OnInit {
     proprietaire: { nom: '', prenom: '', tel: '' },
     assigned: '',
     photos: [] as string[],
-    owner: [] as string[] // Snapshot JSON du créateur
+    owner: [] as string[]
   };
 
   // Validation réactive via Signal
-isFormValid = computed(() => {
-  // 1. Vérifier TOUS les habitants présents dans le tableau
-  const allHabitantsValid = this.data.habitants.every((h, index) => 
-    this.isHabitantComplete(h, index)
-  );
+  isFormValid = computed(() => {
+    const allHabitantsValid = this.data.habitants.every((h, index) => 
+      this.isHabitantComplete(h, index)
+    );
+    const addressValid = !!this.data.adresse.rue && !!this.data.adresse.ville;
+    const taskValid = this.tasks().length > 0 && this.tasks()[0].text.trim() !== '';
+    const technicianValid = !!this.data.assigned;
+    const proprioValid = !this.data.proprietaire.tel || this.phonesValid()['proprio'];
 
-  // 2. Vérifier l'adresse
-  const addressValid = !!this.data.adresse.rue && !!this.data.adresse.ville;
-
-  // 3. Vérifier les tâches
-  const taskValid = this.tasks().length > 0 && this.tasks()[0].text.trim() !== '';
-
-  // 4. Vérifier le technicien assigné
-  const technicianValid = !!this.data.assigned;
-  
-  // 5. Vérifier le propriétaire (si tel saisi, il doit être valide)
-  const proprioValid = !this.data.proprietaire.tel || this.phonesValid()['proprio'];
-
-  // Le formulaire est valide seulement si TOUT est vrai
-  return allHabitantsValid && addressValid && taskValid && technicianValid && proprioValid;
-});
+    return allHabitantsValid && addressValid && taskValid && technicianValid && proprioValid;
+  });
 
   async ngOnInit() {
     this.themeService.initTheme();
@@ -91,64 +81,74 @@ isFormValid = computed(() => {
     }
   }
 
-  // --- RÉCUPÉRATION DU PROFIL CRÉATEUR (OWNER) ---
-private async fetchAndSetOwnerProfile() {
-  try {
-    const email = this.auth.userEmail();
-    if (!email) return;
+  private async fetchAndSetOwnerProfile() {
+    try {
+      const email = this.auth.userEmail();
+      if (!email) return;
 
-    const response = await this.auth.databases.listDocuments(
-      this.DB_ID,
-      'user_profiles',
-      [Query.equal('email', email), Query.limit(1)]
-    );
+      const response = await this.auth.databases.listDocuments(
+        this.DB_ID,
+        'user_profiles',
+        [Query.equal('email', email), Query.limit(1)]
+      );
 
-    if (response.documents.length > 0) {
-      const profile = response.documents[0];
-      
-      // On utilise les clés exactes vues dans ton console.log : firstname et lastname
-      const ownerInfo = {
-        prenom: profile['firstname'] || '', // Corrigé (tout en minuscule)
-        nom: profile['lastname'] || '',    // Corrigé (tout en minuscule)
-        tel: profile['phone'] || '',
-        email: email
-      };
-      
-      console.log("✅ Objet 'owner' maintenant complet :", ownerInfo);
-      this.data.owner = [JSON.stringify(ownerInfo)];
+      if (response.documents.length > 0) {
+        const profile = response.documents[0];
+        const ownerInfo = {
+          prenom: profile['firstname'] || '', 
+          nom: profile['lastname'] || '',    
+          tel: profile['phone'] || '',
+          email: email
+        };
+        this.data.owner = [JSON.stringify(ownerInfo)];
+      }
+    } catch (e) {
+      console.error("Erreur profil owner:", e);
     }
-  } catch (e) {
-    console.error("Erreur profil owner:", e);
   }
-}
-
-  // --- PERSISTENCE ---
 
   async loadInterventionData(id: string) {
     this.loading.set(true);
     try {
       const doc = await this.auth.databases.getDocument(this.DB_ID, this.COL_INTERVENTIONS, id);
       
+      const habitants = this.parseJson(doc['habitants']);
+      const proprio = this.parseJson(doc['proprietaire']);
+      const missionData = this.parseJson(doc['mission']);
+
       this.data = {
         ...this.data,
         ...doc as any,
         adresse: this.parseJson(doc['adresse']),
-        habitants: this.parseJson(doc['habitants']),
-        mission: this.parseJson(doc['mission']),
-        proprietaire: this.parseJson(doc['proprietaire']),
+        habitants: habitants,
+        mission: missionData,
+        proprietaire: proprio,
         photos: Array.isArray(doc['photos']) ? doc['photos'] : [],
         owner: Array.isArray(doc['owner']) ? doc['owner'] : []
       };
 
-      if (this.data.mission?.tasks) {
-        this.tasks.set(this.data.mission.tasks.map((t: any, i: number) => ({
+      // Initialisation des tâches dans le signal
+      if (missionData && missionData.tasks) {
+        this.tasks.set(missionData.tasks.map((t: any, i: number) => ({
           id: i,
           text: t.label,
-          done: t.done || false
+          done: t.done
         })));
       }
+
+      // Initialisation de la validité des téléphones chargés
+      const initialValids: Record<string, boolean> = {};
+      habitants.forEach((h: any, i: number) => {
+        if (h.tel) initialValids[i.toString()] = true; 
+      });
+      if (proprio.tel) initialValids['proprio'] = true;
+      this.phonesValid.set(initialValids);
+
+      // Reset du flag "hasChanges" car le chargement initial n'est pas une modification
+      setTimeout(() => this.hasChanges.set(false), 200);
+
     } catch (e) {
-      console.error("Erreur chargement document:", e);
+      console.error("Erreur chargement:", e);
     } finally {
       this.loading.set(false);
     }
@@ -171,8 +171,7 @@ private async fetchAndSetOwnerProfile() {
         remarques: this.data.remarques,
         assigned: this.data.assigned,
         photos: this.data.photos,
-        owner: this.data.owner,
-        $updatedAt: new Date().toISOString()
+        owner: this.data.owner
       };
 
       if (this.isEditMode() && this.interventionId) {
@@ -181,8 +180,7 @@ private async fetchAndSetOwnerProfile() {
         const createPayload = {
           ...payload,
           createdBy: this.auth.userEmail(),
-          status: 'OPEN',
-          $createdAt: new Date().toISOString()
+          status: 'OPEN'
         };
         await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), createPayload);
       }
@@ -195,8 +193,6 @@ private async fetchAndSetOwnerProfile() {
       this.loading.set(false);
     }
   }
-
-  // --- GESTION DES PHOTOS ---
 
   async onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -231,8 +227,6 @@ private async fetchAndSetOwnerProfile() {
     } catch (e) { console.warn("Déjà supprimé du storage"); }
   }
 
-  // --- UTILITAIRES ---
-
   onValueChange() { if (!this.hasChanges()) this.hasChanges.set(true); }
 
   addTask() { 
@@ -266,7 +260,6 @@ private async fetchAndSetOwnerProfile() {
     } 
   }
 
-  // Modifié pour inclure la validation du téléphone dans le "Complete"
   isHabitantComplete(h: any, index: number): boolean { 
     const textOk = h && h.nom?.trim() !== '' && h.tel?.trim() !== '';
     const phoneOk = !!this.phonesValid()[index.toString()];
@@ -277,14 +270,10 @@ private async fetchAndSetOwnerProfile() {
     const h = this.data.habitants[index];
     if (h && this.isHabitantComplete(h, index)) {
       this.data.proprietaire = { ...h };
-      
-      // Synchronisation immédiate des signaux de validation
       const isValid = this.phonesValid()[index.toString()];
       this.phonesValid.update(p => ({ ...p, ['proprio']: isValid }));
-      
       const country = this.detectedCountries()[index.toString()];
       this.detectedCountries.update(p => ({ ...p, ['proprio']: country }));
-
       this.onValueChange();
     }
   }
@@ -295,7 +284,9 @@ private async fetchAndSetOwnerProfile() {
   }
 
   onCountryFound(e: any, key: string) { this.detectedCountries.update(p => ({ ...p, [key]: e.name })); }
-  setPhoneValidity(v: any, key: string) { this.phonesValid.update(p => ({ ...p, [key]: !!v })); }
+  setPhoneValidity(v: any, key: string) { 
+    this.phonesValid.update(p => ({ ...p, [key]: !!v })); 
+  }
   
   scrollToInput(e: any, key: string) {
     this.touchedPhones.update(prev => ({ ...prev, [key]: true }));
@@ -340,5 +331,4 @@ private async fetchAndSetOwnerProfile() {
       };
     });
   }
-
 }
