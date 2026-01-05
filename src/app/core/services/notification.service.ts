@@ -19,7 +19,7 @@ export class NotificationService {
       <div style="font-family: sans-serif; background-color: #f9fafb; padding: 20px; color: #1f2937;">
         <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
           <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 30px; text-align: center; color: white;">
-            <span style="font-size: 24px; font-weight: bold;">Primmo<span style="color: #3b82f6;">Flow</span></span>
+            <span style="font-size: 24px; font-weight: bold;color: #3b82f6;">Primmo<span style="color: #3b82f6;">Flow</span></span>
           </div>
           <div style="padding: 30px;">
             <h2 style="color: #111827; margin-top: 0;">Bienvenue ${nickName} !</h2>
