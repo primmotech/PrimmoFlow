@@ -59,7 +59,7 @@ export class Whitelist implements OnInit, OnDestroy {
         const profile = profiles.find(p => p.$id === authDoc.$id);
         return {
           email: authDoc['email'],
-          role: profile?.['role'] || 'Aucun',
+          role: profile?.['role'] || 'Utilisateur',
           assignable: profile?.['assignable'] ?? false,
           $id: authDoc.$id
         };
@@ -142,7 +142,7 @@ export class Whitelist implements OnInit, OnDestroy {
 
       await this.notificationService.sendWelcomeEmail(email, email);
       emailInput.value = ''; 
-      roleInput.value = 'Aucun'; 
+      roleInput.value = 'Utilisateur'; 
       await this.loadAuthorizedUsers();
     } catch (error: any) { alert(error.message); } finally { this.loading.set(false); }
   }

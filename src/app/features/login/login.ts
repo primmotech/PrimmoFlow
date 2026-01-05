@@ -143,7 +143,7 @@ export class LoginComponent implements OnInit {
       const id = this.authService.formatId(this.email);
       const dbId = '694eba69001c97d55121';
 
-      let existingRole = 'Aucun';
+      let existingRole = 'Utilisateur';
       try {
         const existingProfile = await this.authService.databases.getDocument(dbId, 'user_profiles', id);
         if (existingProfile && existingProfile['role']) {
