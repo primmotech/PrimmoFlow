@@ -6,6 +6,7 @@ import { ID, Query } from 'appwrite';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme';
 import { PhoneFormatDirective } from '../../core/directives/phone-format.directive';
+import { ImageService } from '../../core/services/image.service';
 
 @Component({
   selector: 'app-add-intervention',
@@ -19,6 +20,7 @@ export class AddInterventionComponent implements OnInit {
   private route = inject(ActivatedRoute);
   public auth = inject(AuthService);
   public themeService = inject(ThemeService);
+  private imageService = inject(ImageService);
 
   // État de l'UI
   loading = signal(false);
@@ -194,28 +196,7 @@ export class AddInterventionComponent implements OnInit {
     }
   }
 
-  async onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    this.uploading.set(true);
-    try {
-      const compressedFile = await this.compressImage(file);
-      const photoId = ID.unique();
-      await this.auth.storage.createFile(this.BUCKET_ID, photoId, compressedFile);
-      
-      const finalUrl = this.auth.storage.getFileView(this.BUCKET_ID, photoId).toString();
-      const photoData = JSON.stringify({ id: photoId, url: finalUrl });
-      
-      this.data.photos = [...(this.data.photos || []), photoData];
-      this.onValueChange();
-    } catch (e) {
-      alert("Erreur upload");
-    } finally {
-      this.uploading.set(false);
-      event.target.value = '';
-    }
-  }
 
   async removePhoto(pStr: string) {
     const photoObj = this.parseJson(pStr);
@@ -331,4 +312,33 @@ export class AddInterventionComponent implements OnInit {
       };
     });
   }
+
+
+async onFileSelected(event: any) {
+  const file = event.target.files[0];
+  if (!file || !this.imageService.isValid(file)) {
+    alert("Fichier invalide (Max 10MB, JPG/PNG/WebP)");
+    return;
+  }
+
+  this.uploading.set(true);
+  try {
+    // Utilisation du nouveau service multi-threadé
+    const compressedFile = await this.imageService.compress(file);
+    
+    const photoId = ID.unique();
+    await this.auth.storage.createFile(this.BUCKET_ID, photoId, compressedFile);
+    
+    const finalUrl = this.auth.storage.getFileView(this.BUCKET_ID, photoId).toString();
+    const photoData = JSON.stringify({ id: photoId, url: finalUrl });
+    
+    this.data.photos = [...(this.data.photos || []), photoData];
+    this.onValueChange();
+  } catch (e) {
+    alert("Erreur lors de la compression ou de l'upload");
+  } finally {
+    this.uploading.set(false);
+    event.target.value = '';
+  }
+}
 }
