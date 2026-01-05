@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -31,6 +31,7 @@ export class AddInterventionComponent implements OnInit {
   technicians = signal<any[]>([]);
   detectedCountries = signal<Record<string, string>>({});
   phonesValid = signal<Record<string, boolean>>({});
+  touchedPhones = signal<Record<string, boolean>>({});
 
   // Configuration Appwrite
   private readonly DB_ID = '694eba69001c97d55121';
@@ -50,8 +51,31 @@ export class AddInterventionComponent implements OnInit {
     proprietaire: { nom: '', prenom: '', tel: '' },
     assigned: '',
     photos: [] as string[],
-    owner: [] as string[] // Donnée système (Profil du créateur)
+    owner: [] as string[] // Snapshot JSON du créateur
   };
+
+  // Validation réactive via Signal
+isFormValid = computed(() => {
+  // 1. Vérifier TOUS les habitants présents dans le tableau
+  const allHabitantsValid = this.data.habitants.every((h, index) => 
+    this.isHabitantComplete(h, index)
+  );
+
+  // 2. Vérifier l'adresse
+  const addressValid = !!this.data.adresse.rue && !!this.data.adresse.ville;
+
+  // 3. Vérifier les tâches
+  const taskValid = this.tasks().length > 0 && this.tasks()[0].text.trim() !== '';
+
+  // 4. Vérifier le technicien assigné
+  const technicianValid = !!this.data.assigned;
+  
+  // 5. Vérifier le propriétaire (si tel saisi, il doit être valide)
+  const proprioValid = !this.data.proprietaire.tel || this.phonesValid()['proprio'];
+
+  // Le formulaire est valide seulement si TOUT est vrai
+  return allHabitantsValid && addressValid && taskValid && technicianValid && proprioValid;
+});
 
   async ngOnInit() {
     this.themeService.initTheme();
@@ -63,41 +87,42 @@ export class AddInterventionComponent implements OnInit {
       await this.loadInterventionData(this.interventionId);
     } else {
       this.data.assigned = this.auth.userEmail() || '';
-      // Automatisme : on récupère le profil de celui qui crée la mission
       await this.fetchAndSetOwnerProfile();
     }
   }
 
   // --- RÉCUPÉRATION DU PROFIL CRÉATEUR (OWNER) ---
+private async fetchAndSetOwnerProfile() {
+  try {
+    const email = this.auth.userEmail();
+    if (!email) return;
 
-  private async fetchAndSetOwnerProfile() {
-    try {
-      const email = this.auth.userEmail();
-      if (!email) return;
+    const response = await this.auth.databases.listDocuments(
+      this.DB_ID,
+      'user_profiles',
+      [Query.equal('email', email), Query.limit(1)]
+    );
 
-      const response = await this.auth.databases.listDocuments(
-        this.DB_ID,
-        'user_profiles',
-        [Query.equal('email', email), Query.limit(1)]
-      );
-
-      if (response.documents.length > 0) {
-        const profile = response.documents[0];
-        const ownerInfo = {
-          prenom: profile['firstName'] || '',
-          nom: profile['lastName'] || '',
-          tel: profile['phone'] || '',
-          email: email
-        };
-        // On stocke l'objet stringifié dans le tableau owner pour Appwrite
-        this.data.owner = [JSON.stringify(ownerInfo)];
-      }
-    } catch (e) {
-      console.error("Erreur profil owner:", e);
+    if (response.documents.length > 0) {
+      const profile = response.documents[0];
+      
+      // On utilise les clés exactes vues dans ton console.log : firstname et lastname
+      const ownerInfo = {
+        prenom: profile['firstname'] || '', // Corrigé (tout en minuscule)
+        nom: profile['lastname'] || '',    // Corrigé (tout en minuscule)
+        tel: profile['phone'] || '',
+        email: email
+      };
+      
+      console.log("✅ Objet 'owner' maintenant complet :", ownerInfo);
+      this.data.owner = [JSON.stringify(ownerInfo)];
     }
+  } catch (e) {
+    console.error("Erreur profil owner:", e);
   }
+}
 
-  // --- CHARGEMENT DES DONNÉES EXISTANTES ---
+  // --- PERSISTENCE ---
 
   async loadInterventionData(id: string) {
     this.loading.set(true);
@@ -129,17 +154,46 @@ export class AddInterventionComponent implements OnInit {
     }
   }
 
-  async loadTechnicians() {
+  async save() {
+    if (!this.isFormValid()) return;
+    this.loading.set(true);
+
     try {
-      const response = await this.auth.databases.listDocuments(
-        this.DB_ID, 'user_profiles', 
-        [Query.limit(100), Query.equal('assignable', true)]
-      );
-      this.technicians.set(response.documents.map(d => ({
-        email: d['email'],
-        name: d['nickName'] || d['email']
-      })));
-    } catch (e) { console.error(e); }
+      const structuredTasks = this.tasks()
+        .filter(t => t.text.trim() !== '')
+        .map(t => ({ label: t.text.trim(), done: t.done || false }));
+
+      const payload = {
+        adresse: JSON.stringify(this.data.adresse),
+        mission: JSON.stringify({ tasks: structuredTasks }),
+        habitants: JSON.stringify(this.data.habitants),
+        proprietaire: JSON.stringify(this.data.proprietaire),
+        remarques: this.data.remarques,
+        assigned: this.data.assigned,
+        photos: this.data.photos,
+        owner: this.data.owner,
+        $updatedAt: new Date().toISOString()
+      };
+
+      if (this.isEditMode() && this.interventionId) {
+        await this.auth.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.interventionId, payload);
+      } else {
+        const createPayload = {
+          ...payload,
+          createdBy: this.auth.userEmail(),
+          status: 'OPEN',
+          $createdAt: new Date().toISOString()
+        };
+        await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), createPayload);
+      }
+
+      this.hasChanges.set(false);
+      this.router.navigate(['/dashboard']);
+    } catch (e) {
+      alert("Erreur lors de l'enregistrement.");
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   // --- GESTION DES PHOTOS ---
@@ -177,50 +231,6 @@ export class AddInterventionComponent implements OnInit {
     } catch (e) { console.warn("Déjà supprimé du storage"); }
   }
 
-  // --- ACTIONS FORMULAIRE ---
-
-  async save() {
-    if (!this.isFormValid()) return;
-    this.loading.set(true);
-
-    try {
-      const structuredTasks = this.tasks()
-        .filter(t => t.text.trim() !== '')
-        .map(t => ({ label: t.text.trim(), done: t.done || false }));
-
-      const payload = {
-        adresse: JSON.stringify(this.data.adresse),
-        mission: JSON.stringify({ tasks: structuredTasks }),
-        habitants: JSON.stringify(this.data.habitants),
-        proprietaire: JSON.stringify(this.data.proprietaire),
-        remarques: this.data.remarques,
-        assigned: this.data.assigned,
-        photos: this.data.photos,
-        owner: this.data.owner, // Enregistré silencieusement
-        $updatedAt: new Date().toISOString()
-      };
-
-      if (this.isEditMode() && this.interventionId) {
-        await this.auth.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.interventionId, payload);
-      } else {
-        const createPayload = {
-          ...payload,
-          createdBy: this.auth.userEmail(),
-          status: 'OPEN',
-          $createdAt: new Date().toISOString()
-        };
-        await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), createPayload);
-      }
-
-      this.hasChanges.set(false);
-      this.router.navigate(['/dashboard']);
-    } catch (e) {
-      alert("Erreur lors de l'enregistrement.");
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
   // --- UTILITAIRES ---
 
   onValueChange() { if (!this.hasChanges()) this.hasChanges.set(true); }
@@ -244,7 +254,11 @@ export class AddInterventionComponent implements OnInit {
     });
   }
 
-  addHabitant() { this.data.habitants.push({ nom: '', prenom: '', tel: '' }); this.onValueChange(); }
+  addHabitant() { 
+    this.data.habitants.push({ nom: '', prenom: '', tel: '' }); 
+    this.onValueChange(); 
+  }
+
   removeHabitant(index: number) { 
     if (this.data.habitants.length > 1) { 
       this.data.habitants.splice(index, 1); 
@@ -252,16 +266,27 @@ export class AddInterventionComponent implements OnInit {
     } 
   }
 
-  copyToProprietaire(index: number = 0) {
-    const h = this.data.habitants[index];
-    if (h) { this.data.proprietaire = { ...h }; this.onValueChange(); }
+  // Modifié pour inclure la validation du téléphone dans le "Complete"
+  isHabitantComplete(h: any, index: number): boolean { 
+    const textOk = h && h.nom?.trim() !== '' && h.tel?.trim() !== '';
+    const phoneOk = !!this.phonesValid()[index.toString()];
+    return textOk && phoneOk; 
   }
 
-  isHabitantComplete(h: any) { return h && h.nom?.trim() !== '' && h.tel?.trim() !== ''; }
+  copyToProprietaire(index: number = 0) {
+    const h = this.data.habitants[index];
+    if (h && this.isHabitantComplete(h, index)) {
+      this.data.proprietaire = { ...h };
+      
+      // Synchronisation immédiate des signaux de validation
+      const isValid = this.phonesValid()[index.toString()];
+      this.phonesValid.update(p => ({ ...p, ['proprio']: isValid }));
+      
+      const country = this.detectedCountries()[index.toString()];
+      this.detectedCountries.update(p => ({ ...p, ['proprio']: country }));
 
-  isFormValid() {
-    const habitantValid = this.isHabitantComplete(this.data.habitants[0]) && this.phonesValid()['0'];
-    return this.data.adresse.rue && this.data.assigned !== '' && this.tasks()[0]?.text.trim() !== '' && habitantValid;
+      this.onValueChange();
+    }
   }
 
   parseJson(data: any): any {
@@ -271,7 +296,28 @@ export class AddInterventionComponent implements OnInit {
 
   onCountryFound(e: any, key: string) { this.detectedCountries.update(p => ({ ...p, [key]: e.name })); }
   setPhoneValidity(v: any, key: string) { this.phonesValid.update(p => ({ ...p, [key]: !!v })); }
+  
+  scrollToInput(e: any, key: string) {
+    this.touchedPhones.update(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }
+
   goBack() { this.router.navigate(['/dashboard']); }
+
+  async loadTechnicians() {
+    try {
+      const response = await this.auth.databases.listDocuments(
+        this.DB_ID, 'user_profiles', 
+        [Query.limit(100), Query.equal('assignable', true)]
+      );
+      this.technicians.set(response.documents.map(d => ({
+        email: d['email'],
+        name: d['nickName'] || d['email']
+      })));
+    } catch (e) { console.error(e); }
+  }
 
   private async compressImage(file: File): Promise<File> {
     return new Promise((resolve) => {
@@ -294,18 +340,5 @@ export class AddInterventionComponent implements OnInit {
       };
     });
   }
-  // 1. Ajoutez ce signal avec vos autres données techniques
-touchedPhones = signal<Record<string, boolean>>({});
 
-// ... (reste du code)
-
-// 2. Modifiez la méthode scrollToInput pour accepter la "key" (index ou 'proprio')
-scrollToInput(e: any, key: string) {
-  // On marque le champ comme touché dès le focus
-  this.touchedPhones.update(prev => ({ ...prev, [key]: true }));
-  
-  setTimeout(() => {
-    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 300);
-}
 }

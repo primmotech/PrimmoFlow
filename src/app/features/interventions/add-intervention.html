@@ -22,12 +22,12 @@
     <div class="info-group">
       <div class="group-header">
         <h3>Habitant(s)</h3>
-        <button *ngIf="data.habitants.length < 2" 
-                (click)="addHabitant()" 
-                [disabled]="!isHabitantComplete(data.habitants[data.habitants.length - 1])"
-                class="small-add-btn">
-          + Ajouter
-        </button>
+<button *ngIf="data.habitants.length < 2" 
+        (click)="addHabitant()" 
+        [disabled]="!isHabitantComplete(data.habitants[data.habitants.length - 1], data.habitants.length - 1)"
+        class="small-add-btn">
+  + Ajouter
+</button>
       </div>
       
       @for (h of data.habitants; track $index) {
@@ -50,14 +50,19 @@
               <p class="phone-helper" [class.text-success]="phonesValid()[$index.toString()]">
                 @if (detectedCountries()[$index.toString()]) {
                   🌍 {{ detectedCountries()[$index.toString()] }} : 
+                  {{ phonesValid()[$index.toString()] ? 'Numéro valide' : 'Numéro invalide' }}
+                } @else {
+                  Utiliser le code pays (ex: +33)
                 }
-                {{ phonesValid()[$index.toString()] ? 'Numéro valide' : 'Utiliser le code pays (ex: +32)' }}
               </p>
             }
           </div>
 
           <div class="input-row mt-10">
-            <button *ngIf="isHabitantComplete(h)" (click)="copyToProprietaire($index)" class="copy-btn">
+            <button *ngIf="isHabitantComplete(h, $index)" 
+                    (click)="copyToProprietaire($index)" 
+                    [disabled]="!phonesValid()[$index.toString()]" 
+                    class="copy-btn">
               <span>Copier vers Proprio</span>
             </button>
             <div class="flex-1"></div>
@@ -93,8 +98,10 @@
             <p class="phone-helper" [class.text-success]="phonesValid()['proprio']">
               @if (detectedCountries()['proprio']) {
                 🌍 {{ detectedCountries()['proprio'] }} : 
+                {{ phonesValid()['proprio'] ? 'Numéro valide' : 'Numéro invalide' }}
+              } @else {
+                Utiliser le code pays (ex: +32)
               }
-              {{ phonesValid()['proprio'] ? 'Numéro valide' : 'Utiliser le code pays (ex: +32)' }}
             </p>
           }
         </div>
@@ -153,7 +160,7 @@
           @for (pStr of data.photos; track $index) {
             @let p = parseJson(pStr);
             <div class="photo-item">
-              <img [src]="p.url" alt="Photo" (click)="scrollToInput($event, 'photo-' + $index)">
+              <img [src]="p.url" alt="Photo">
               <button (click)="removePhoto(pStr)" class="delete-photo-btn">×</button>
             </div>
           }
@@ -189,7 +196,10 @@
       <svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
       <span>Accueil</span>
     </button>
-    <button class="nav-item" [class.is-dirty]="hasChanges() && isFormValid()" [disabled]="loading() || !isFormValid()" (click)="save()">
+    <button class="nav-item" 
+            [class.is-dirty]="hasChanges() && isFormValid()" 
+            [disabled]="loading() || !isFormValid()" 
+            (click)="save()">
       @if (loading()) { <div class="loader-small"></div> } @else {
         <svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
       }
