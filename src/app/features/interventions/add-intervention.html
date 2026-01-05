@@ -178,14 +178,13 @@
     <div class="info-group">
       <div class="group-header"><h3>Terrain</h3></div>
       <div class="glass-card bg-highlight">
-        <div class="select-wrapper">
-          <select [(ngModel)]="data.assigned" (ngModelChange)="onValueChange()" class="custom-select">
-            <option value="" disabled>Choisir un utilisateur...</option>
-            @for (tech of technicians(); track tech.email) {
-              <option [value]="tech.email">{{ tech.name }}</option>
-            }
-          </select>
-        </div>
+  <div class="select-wrapper">
+  <select [(ngModel)]="data.assigned" (ngModelChange)="onValueChange()" class="custom-select">
+    @for (tech of technicians(); track tech.email) {
+      <option [value]="tech.email">{{ tech.name }}</option>
+    }
+  </select>
+</div>
       </div>
     </div>
 

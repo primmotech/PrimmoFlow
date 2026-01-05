@@ -63,7 +63,7 @@ export class AddInterventionComponent implements OnInit {
     );
     const addressValid = !!this.data.adresse.rue && !!this.data.adresse.ville;
     const taskValid = this.tasks().length > 0 && this.tasks()[0].text.trim() !== '';
-    const technicianValid = !!this.data.assigned;
+        const technicianValid = !!this.data.assigned && this.data.assigned !== '';
     const proprioValid = !this.data.proprietaire.tel || this.phonesValid()['proprio'];
 
     return allHabitantsValid && addressValid && taskValid && technicianValid && proprioValid;
@@ -78,7 +78,7 @@ export class AddInterventionComponent implements OnInit {
       this.isEditMode.set(true);
       await this.loadInterventionData(this.interventionId);
     } else {
-      this.data.assigned = this.auth.userEmail() || '';
+      this.data.assigned =  '';
       await this.fetchAndSetOwnerProfile();
     }
   }
@@ -278,19 +278,33 @@ export class AddInterventionComponent implements OnInit {
 
   goBack() { this.router.navigate(['/dashboard']); }
 
-  async loadTechnicians() {
-    try {
-      const response = await this.auth.databases.listDocuments(
-        this.DB_ID, 'user_profiles', 
-        [Query.limit(100), Query.equal('assignable', true)]
-      );
-      this.technicians.set(response.documents.map(d => ({
-        email: d['email'],
-        name: d['nickName'] || d['email']
-      })));
-    } catch (e) { console.error(e); }
-  }
+async loadTechnicians() {
+  try {
+    const response = await this.auth.databases.listDocuments(
+      this.DB_ID, 'user_profiles', 
+      [Query.limit(100), Query.equal('assignable', true)]
+    );
+    
+    const techs = response.documents.map(d => ({
+      email: d['email'],
+      name: d['nickName'] || d['email']
+    }));
 
+    this.technicians.set(techs);
+
+    // Si nouvelle mission et rien n'est assigné
+    if (!this.isEditMode() && !this.data.assigned && techs.length > 0) {
+      // 1. On assigne le premier technicien
+      this.data.assigned = techs[0].email;
+      
+      // 2. TRÈS IMPORTANT : On appelle onValueChange() pour que 
+      // le signal hasChanges se mette à jour et que le computed soit réévalué
+      this.onValueChange();
+    }
+  } catch (e) { 
+    console.error(e); 
+  }
+}
   private async compressImage(file: File): Promise<File> {
     return new Promise((resolve) => {
       const reader = new FileReader();
