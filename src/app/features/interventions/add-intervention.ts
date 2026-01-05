@@ -271,7 +271,6 @@ export class AddInterventionComponent implements OnInit {
 
   onCountryFound(e: any, key: string) { this.detectedCountries.update(p => ({ ...p, [key]: e.name })); }
   setPhoneValidity(v: any, key: string) { this.phonesValid.update(p => ({ ...p, [key]: !!v })); }
-  scrollToInput(e: any) { setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300); }
   goBack() { this.router.navigate(['/dashboard']); }
 
   private async compressImage(file: File): Promise<File> {
@@ -295,4 +294,18 @@ export class AddInterventionComponent implements OnInit {
       };
     });
   }
+  // 1. Ajoutez ce signal avec vos autres données techniques
+touchedPhones = signal<Record<string, boolean>>({});
+
+// ... (reste du code)
+
+// 2. Modifiez la méthode scrollToInput pour accepter la "key" (index ou 'proprio')
+scrollToInput(e: any, key: string) {
+  // On marque le champ comme touché dès le focus
+  this.touchedPhones.update(prev => ({ ...prev, [key]: true }));
+  
+  setTimeout(() => {
+    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300);
+}
 }

@@ -42,13 +42,16 @@
                    appPhoneFormat 
                    (countryDetected)="onCountryFound($event, $index.toString())" 
                    (isValid)="setPhoneValidity($event, $index.toString())" 
-                   (focus)="scrollToInput($event)"
+                   (focus)="scrollToInput($event, $index.toString())"
                    placeholder="+33 6 00 00 00 00" 
                    class="input-field">
             
-            @if (h.tel && detectedCountries()[$index.toString()]) {
+            @if (touchedPhones()[$index.toString()] || h.tel) {
               <p class="phone-helper" [class.text-success]="phonesValid()[$index.toString()]">
-                🌍 {{ detectedCountries()[$index.toString()] }} : {{ phonesValid()[$index.toString()] ? 'Numéro valide' : 'Format incomplet' }}
+                @if (detectedCountries()[$index.toString()]) {
+                  🌍 {{ detectedCountries()[$index.toString()] }} : 
+                }
+                {{ phonesValid()[$index.toString()] ? 'Numéro valide' : 'Utiliser le code pays (ex: +32)' }}
               </p>
             }
           </div>
@@ -82,13 +85,16 @@
                  appPhoneFormat 
                  (countryDetected)="onCountryFound($event, 'proprio')" 
                  (isValid)="setPhoneValidity($event, 'proprio')" 
-                 (focus)="scrollToInput($event)"
+                 (focus)="scrollToInput($event, 'proprio')"
                  placeholder="+32 470 00 00 00" 
                  class="input-field">
           
-          @if (data.proprietaire.tel && detectedCountries()['proprio']) {
+          @if (touchedPhones()['proprio'] || data.proprietaire.tel) {
             <p class="phone-helper" [class.text-success]="phonesValid()['proprio']">
-              🌍 {{ detectedCountries()['proprio'] }} : {{ phonesValid()['proprio'] ? 'Numéro valide' : 'Format incomplet' }}
+              @if (detectedCountries()['proprio']) {
+                🌍 {{ detectedCountries()['proprio'] }} : 
+              }
+              {{ phonesValid()['proprio'] ? 'Numéro valide' : 'Utiliser le code pays (ex: +32)' }}
             </p>
           }
         </div>
@@ -147,7 +153,7 @@
           @for (pStr of data.photos; track $index) {
             @let p = parseJson(pStr);
             <div class="photo-item">
-              <img [src]="p.url" alt="Photo" (click)="scrollToInput($event)">
+              <img [src]="p.url" alt="Photo" (click)="scrollToInput($event, 'photo-' + $index)">
               <button (click)="removePhoto(pStr)" class="delete-photo-btn">×</button>
             </div>
           }
