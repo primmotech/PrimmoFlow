@@ -13,18 +13,15 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./dashboard.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  // Injection des services
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
   public router = inject(Router); 
 
-  // Signaux d'état
   interventions = signal<any[]>([]);
   loading = signal(true);
   isOffline = signal(!navigator.onLine);
   selectedIntervention = signal<any>(null);
 
-  // Propriétés privées et ID Appwrite
   private unsubscribeRealtime: (() => void) | null = null;
   private onlineHandler = () => this.isOffline.set(!navigator.onLine);
 
@@ -32,11 +29,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly COL_INTERVENTIONS = 'interventions';
   private readonly BUCKET_ID = '69502be400074c6f43f5';
 
-  // Gestion du clic long (Suppression)
   private longPressTimeout: any;
   public isLongPressing = false;
-
-  // --- FILTRES DE LISTES (Computed) ---
 
   pendingInterventions = computed(() => 
     this.interventions().filter(i => i.status === 'OPEN' || i.status === 'WAITING')
@@ -50,8 +44,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.interventions().filter(i => i.status === 'END' || i.status === 'BILLED')
   );
 
-  // --- CYCLE DE VIE ---
-
   ngOnInit() {
     this.themeService.initTheme();
     window.addEventListener('online', this.onlineHandler);
@@ -64,8 +56,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     window.removeEventListener('offline', this.onlineHandler);
     if (this.unsubscribeRealtime) this.unsubscribeRealtime();
   }
-
-  // --- LOGIQUE MÉTIER ET PERMISSIONS ---
 
   async initDashboard() {
     this.loading.set(true);
@@ -89,13 +79,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         Query.limit(100)
       ];
 
-      // Vérification de la permission de visibilité globale
       if (!this.authService.hasPerm('dash_view_all')) {
         const profile = await this.authService.loadUserProfile(userEmail);
         const userTeamId = profile?.['teamId'];
 
         if (this.authService.userRole() === 'Responsable' && userTeamId) {
-          // Un responsable sans "view_all" voit les membres de son équipe
           const members = await this.authService.databases.listDocuments(this.DB_ID, 'user_profiles', [Query.equal('teamId', userTeamId)]);
           const memberEmails = members.documents.map(d => d['email']);
           queries.push(Query.or([
@@ -103,7 +91,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             Query.equal('createdBy', userEmail)
           ]));
         } else {
-          // Un technicien ne voit que ses propres fiches
           queries.push(Query.or([
             Query.equal('assigned', userEmail), 
             Query.equal('createdBy', userEmail)
@@ -121,10 +108,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- ACTIONS UTILISATEUR ---
-
   onPressStart(inter: any) {
-    this.isLongPressing = false;
     if (this.authService.hasPerm('dash_act_delete')) {
       this.longPressTimeout = setTimeout(() => {
         this.isLongPressing = true;
@@ -135,6 +119,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onPressEnd() {
     if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+    // On ne reset pas isLongPressing ici car handleCardClick en a besoin pour bloquer le clic simple
+    setTimeout(() => this.isLongPressing = false, 100);
   }
 
   private async confirmDeletion(inter: any) {
@@ -152,7 +138,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.isLongPressing) return;
 
     if (type === 'details') {
-      if (this.authService.hasPerm('dash_nav_details')) {
+      // Si c'est une fiche en attente, le clic amène au planning, sinon aux détails
+      if (inter.status === 'OPEN' || inter.status === 'WAITING') {
+        if (this.authService.hasPerm('dash_act_plan')) {
+          this.goToPlanning(inter, { stopPropagation: () => {} } as Event);
+        }
+      } else if (this.authService.hasPerm('dash_nav_details')) {
         this.goToDetails(inter.id);
       }
     } else {
@@ -184,8 +175,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- NAVIGATION ---
-
   goToEdit(id: string) { this.router.navigate(['/edit-intervention', id]); }
   goToDetails(id: string) { if (id) this.router.navigate(['/intervention', id]); }
   goToPlanning(intervention: any, event: Event) {
@@ -196,19 +185,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
   goToAdd() { this.router.navigate(['/add-intervention']); }
 
-  // --- MODALE TÂCHES ET VISUALISATION ---
-
   openTasks(inter: any, event: Event) {
     event.stopPropagation();
     const tasks = Array.isArray(inter.mission) ? inter.mission : [];
     this.selectedIntervention.set({ ...inter, mission: tasks });
   }
 
-  closeTasks() {
-    this.selectedIntervention.set(null);
-  }
-
-  // --- REALTIME ET SANTIZATION ---
+  closeTasks() { this.selectedIntervention.set(null); }
 
   subscribeToChanges() {
     this.unsubscribeRealtime = this.authService.client.subscribe(

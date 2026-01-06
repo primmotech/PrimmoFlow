@@ -48,42 +48,44 @@
   h3 { font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 12px; }
 }
 
-/* --- STRUCTURE UNIFIÉE DES CARTES --- */
 .intervention-card {
   background: var(--card-bg);
   border: 1.5px solid var(--border-color);
   border-radius: 16px;
   padding: 15px;
   display: flex;
-  flex-direction: column; // Force l'empilement vertical par défaut
+  flex-direction: column;
   gap: 12px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, background 0.2s ease;
+  user-select: none; /* Empêche la sélection de texte durant le long press */
 
   &:active { transform: scale(0.98); }
 
-  /* Bordures d'état */
+  /* Feedback clic long */
+  &.pressing {
+    animation: pulse-press 0.8s infinite alternate;
+    background: rgba(231, 76, 60, 0.05);
+    border-color: #e74c3c;
+  }
+
   &.waiting-card { border-left: 6px solid #3498db !important; }
   &.started-card { border-left: 6px solid #2ecc71 !important; }
   &.paused-card  { border-left: 6px solid #f1c40f !important; }
   &.stopped-card { border-left: 6px solid #e74c3c !important; }
   &.billed-card  { border-left: 6px solid #d8132e !important; }
 
-  /* Zone Information (Haut) */
   .card-info {
     display: flex; 
     flex-direction: column; 
     gap: 2px;
     width: 100%;
-
     .city { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; color: var(--text-primary); }
     .street { font-size: 0.9rem; color: var(--text-secondary); }
-    
     .price-hintv { color: #2ecc71; font-weight: 800; font-size: 1.1rem; margin-top: 4px; }
     .price-hintr { color: #e74c3c; font-weight: 800; font-size: 1.1rem; margin-top: 4px; }
     
-    /* Ligne Habitant (Planifiées) */
     .habitant-row { 
       display: flex; 
       justify-content: space-between;
@@ -92,81 +94,40 @@
       padding: 8px;
       background: rgba(0,0,0,0.03);
       border-radius: 8px;
-
       .habitant-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        display: flex; align-items: center; gap: 8px;
         .habitant { font-size: 0.85rem; font-weight: 600; }
         .call-action { color: #2ecc71; font-weight: bold; text-decoration: none; font-size: 0.8rem; border: 1px solid #2ecc71; padding: 2px 8px; border-radius: 4px; }
       }
     }
   }
 
-  /* Zone Actions / Boutons (Bas) */
   .card-actions {
-    display: flex; 
-    align-items: center; 
-    gap: 10px;
-    width: 100%;
-    border-top: 1px dashed var(--border-color);
-    padding-top: 12px;
-
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    border-top: 1px dashed var(--border-color); padding-top: 12px;
     .icon-btn-edit { background: transparent; border: none; color: var(--text-secondary); padding: 5px; }
-    
     .btn-tasks {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: rgba(52, 152, 219, 0.1);
-      border: 1.5px solid rgba(52, 152, 219, 0.2);
-      color: #3498db;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: rgba(52, 152, 219, 0.1); border: 1.5px solid rgba(52, 152, 219, 0.2);
+      color: #3498db; padding: 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
       .date-text { margin-left: 4px; color: var(--text-primary); }
     }
   }
 
-  /* Zone Contacts Spécifique "Terminée" (Verticale) */
   .billed-contacts-aside {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
-
+    display: flex; flex-direction: column; width: 100%; gap: 8px;
+    padding-top: 12px; border-top: 1px solid var(--border-color);
     .contact-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: left;
-      background: rgba(0,0,0,0.02);
-      padding: 8px 12px;
-      border-radius: 8px;
-
-      .val {
-        font-weight: 700;
-        font-size: 0.9rem;
-        color: var(--text-primary);
-      }
-
-      .t {
-        color: #2ecc71;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 0.95rem;
-        background: rgba(46, 204, 113, 0.1);
-        padding: 4px 8px;
-        border-radius: 6px;
-      }
+      display: flex; justify-content: space-between; background: rgba(0,0,0,0.02); padding: 8px 12px; border-radius: 8px;
+      .val { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); }
+      .t { color: #2ecc71; text-decoration: none; font-weight: 700; font-size: 0.95rem; background: rgba(46, 204, 113, 0.1); padding: 4px 8px; border-radius: 6px; }
     }
   }
+}
+
+@keyframes pulse-press {
+  from { transform: scale(1); }
+  to { transform: scale(0.97); }
 }
 
 /* --- MODALE --- */
@@ -174,26 +135,18 @@
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px); z-index: 2000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
-
-  .modal-content {
-    background: var(--card-bg); width: 100%; max-width: 400px;
-    border-radius: 24px; overflow: hidden; border: 1px solid var(--border-color);
-  }
-
+  .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 24px; overflow: hidden; border: 1px solid var(--border-color); }
   .modal-header {
-    padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--border-color);
+    padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
     h4 { margin: 0; font-size: 0.95rem; color: var(--accent-color); text-transform: uppercase; }
     .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); }
   }
-
   .modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
 }
 
 /* --- TÂCHES & PHOTOS --- */
 .task-list {
-  list-style: none; padding: 0; margin: 0;
-  display: flex; flex-direction: column; gap: 12px;
+  list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;
   .task-item {
     display: flex; align-items: flex-start; gap: 10px;
     &.is-done { opacity: 0.5; .task-text { text-decoration: line-through; } }
@@ -204,33 +157,71 @@
 
 .photo-slider {
   display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px;
-  scrollbar-width: none;
-  .photo-slide {
-    flex: 0 0 250px; border-radius: 12px; overflow: hidden; aspect-ratio: 4/3;
-    img { width: 100%; height: 100%; object-fit: cover; }
-  }
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar { display: none; }
+  .photo-slide { flex: 0 0 250px; border-radius: 12px; overflow: hidden; aspect-ratio: 4/3; img { width: 100%; height: 100%; object-fit: cover; } }
 }
 
 /* --- NAVIGATION & FAB --- */
 .bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
-  background: var(--card-bg); border-top: 1px solid var(--border-color);
+  position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--card-bg); border-top: 1px solid var(--border-color);
   display: flex; justify-content: space-around; align-items: center; z-index: 1000;
   .nav-item {
-    text-decoration: none; display: flex; flex-direction: column; align-items: center;
-    color: var(--text-secondary); gap: 4px;
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); gap: 4px; cursor: pointer;
     span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
     &.active { color: var(--accent-color); }
   }
 }
 
 .fab-btn {
-  position: fixed; right: 20px; bottom: 95px; width: 56px; height: 56px;
-  border-radius: 28px; background: var(--accent-color); border: none;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-  display: flex; align-items: center; justify-content: center; z-index: 900;
+  position: fixed; right: 20px; bottom: 95px; width: 56px; height: 56px; border-radius: 28px; background: var(--accent-color); border: none;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4); display: flex; align-items: center; justify-content: center; z-index: 900;
 }
 
-.offline-indicator {
-  background: #e74c3c; color: white; text-align: center; padding: 5px; font-size: 0.8rem;
+.offline-indicator { background: #e74c3c; color: white; text-align: center; padding: 5px; font-size: 0.8rem; }
+/* --- STYLE SPÉCIFIQUE CARDE HORIZONTALE (PHOTO) --- */
+.intervention-card.pending-horizontal {
+  flex-direction: row; // Aligne info et actions sur la même ligne
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  gap: 10px;
+
+  .card-info {
+    border: none;
+    padding: 0;
+    gap: 0; // Plus compact
+    .city { font-size: 1.2rem; }
+    .street { font-size: 0.85rem; margin-top: -2px; }
+  }
+
+  .card-actions-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    .icon-btn-edit {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      display: flex;
+      padding: 0;
+      opacity: 0.8;
+    }
+
+    .btn-details-link {
+      background: rgba(52, 152, 219, 0.1);
+      border: none;
+      color: #3498db;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+  }
+
+  /* On supprime la bordure pointillée en bas car tout est sur une ligne */
+  .card-actions { display: none; } 
 }
