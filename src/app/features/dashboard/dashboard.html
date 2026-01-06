@@ -25,17 +25,17 @@
         <span class="city">{{ adr?.ville || 'VILLE INCONNUE' }}</span>
         <span class="street">{{ adr?.numero }} {{ adr?.rue }}</span>
 
-        @if (inter.owner && inter.owner.length > 0) {
-          @let ow = inter.owner[0];
-          <div class="creator-info">
-            <span class="creator-text">
-              {{ ow.prenom }} {{ ow.nom }}
-              <a [href]="'tel:' + ow.tel" (click)="$event.stopPropagation()" class="creator-tel">
-                {{ ow.tel }}
-              </a>
-            </span>
-          </div>
-        }
+@if (inter.owner && inter.owner.length > 0) {
+  @let ow = inter.owner[0];
+  <div class="creator-info">
+    <span class="creator-text">
+      Par 
+      <a [href]="'tel:' + ow.tel" (click)="$event.stopPropagation()" class="creator-link">
+        {{ ow.prenom }} {{ ow.nom }}
+      </a>
+    </span>
+  </div>
+}
       </div>
 
       <div class="card-actions-horizontal">

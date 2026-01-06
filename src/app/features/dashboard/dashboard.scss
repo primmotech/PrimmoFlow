@@ -113,24 +113,28 @@
     .street { font-size: 0.85rem; }
   }
 
-  .creator-info {
-    margin-top: 8px;
-    display: block;
-    .creator-text {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      line-height: 1.2;
-      word-break: break-word;
-    }
-    .creator-tel {
-      color: var(--success);
+.creator-info {
+  margin-top: 4px;
+  display: block;
+
+  .creator-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary); // Le "Par" reste discret
+    line-height: 1.2;
+    
+    .creator-link {
+      color: #2ecc71; // Vert identique à tes autres boutons d'appel
       text-decoration: none;
-      font-weight: 700;
-      margin-left: 4px;
-      white-space: nowrap;
+      font-weight: 700; // Un peu plus gras pour l'aspect cliquable
+      margin-left: 3px;
+      
+      &:active {
+        background: rgba(46, 204, 113, 0.1); // Petit flash au toucher
+        border-radius: 2px;
+      }
     }
   }
-
+}
   .card-actions-horizontal {
     display: flex;
     align-items: center;
