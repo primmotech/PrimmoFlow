@@ -204,21 +204,36 @@ handleCardClick(inter: any, type: 'details' | 'invoice') {
     );
   }
 
-  private sanitizeIntervention(payload: any) {
-    let missionData = payload['mission'];
-    if (typeof missionData === 'string') {
-      try { missionData = JSON.parse(missionData); } catch (e) { missionData = null; }
-    }
-    return {
-      ...payload,
-      id: payload.$id,
-      adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
-      habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
-      proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
-      mission: missionData?.tasks || [], 
-      photos: Array.isArray(payload['photos']) ? payload['photos'] : []
-    };
+private sanitizeIntervention(payload: any) {
+  // On récupère le champ owner (qui est un array de strings JSON selon tes logs)
+  const rawOwner = payload['owner'];
+  let parsedOwner = [];
+
+  if (Array.isArray(rawOwner)) {
+    parsedOwner = rawOwner.map(item => {
+      // Si l'item est une string, on le parse, sinon on le garde tel quel
+      return typeof item === 'string' ? JSON.parse(item) : item;
+    });
   }
+
+  console.log('Owner final (Tableau d\'objets):', parsedOwner);
+
+  const missionData = typeof payload['mission'] === 'string' 
+    ? JSON.parse(payload['mission']) 
+    : payload['mission'];
+
+  return {
+    ...payload,
+    id: payload.$id,
+    adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
+    // Maintenant owner est un tableau de vrais objets JS
+    owner: parsedOwner, 
+    habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
+    proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
+    mission: missionData?.tasks || [], 
+    photos: Array.isArray(payload['photos']) ? payload['photos'] : []
+  };
+}
 
   getStatusClass(status: string): string {
     const classes: any = { 'WAITING': 'waiting-card', 'OPEN': 'waiting-card', 'PAUSED': 'paused-card', 'STARTED': 'started-card', 'BILLED': 'billed-card', 'END': 'completed-card' };
