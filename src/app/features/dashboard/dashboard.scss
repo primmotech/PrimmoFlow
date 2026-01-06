@@ -25,7 +25,7 @@
     --text-secondary: #6b7280;
     --accent-color: #3498db;
     --success: #2ecc71;
-    --danger: #d8132e;
+    --danger: #e74c3c; // Harmonisé sur le rouge vif pour la bordure
   }
 }
 
@@ -76,20 +76,19 @@
 
   &:active { transform: scale(0.98); }
 
-  /* États & Bordures de Statut */
   &.pressing {
     animation: pulse-press 0.8s infinite alternate;
     background: rgba(231, 76, 60, 0.05);
     border-color: var(--danger);
   }
 
+  /* Bordures Dynamiques */
   &.waiting-card { border-left: 6px solid #3498db !important; }
-  &.started-card { border-left: 6px solid #2ecc71 !important; }
+  &.started-card { border-left: 6px solid var(--success) !important; }
   &.paused-card  { border-left: 6px solid #f1c40f !important; }
-  &.stopped-card { border-left: 6px solid var(--danger) !important; }
-  &.billed-card  { border-left: 6px solid var(--danger) !important; }
+  &.stopped-card { border-left: 6px solid var(--danger) !important; } // Rouge pour END
+  &.billed-card  { border-left: 6px solid var(--success) !important; } // Vert pour BILLED
 
-  /* Contenu Interne */
   .card-info {
     flex: 1;
     min-width: 0;
@@ -113,40 +112,28 @@
     .street { font-size: 0.85rem; }
   }
 
-.creator-info {
-  margin-top: 4px;
-  display: block;
-
-  .creator-text {
-    font-size: 0.8rem;
-    color: var(--text-secondary); // Le "Par" reste discret
-    line-height: 1.2;
-    
-    .creator-link {
-      color: #2ecc71; // Vert identique à tes autres boutons d'appel
-      text-decoration: none;
-      font-weight: 700; // Un peu plus gras pour l'aspect cliquable
-      margin-left: 3px;
-      
-      &:active {
-        background: rgba(46, 204, 113, 0.1); // Petit flash au toucher
-        border-radius: 2px;
+  .creator-info {
+    margin-top: 4px;
+    display: block;
+    .creator-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.2;
+      .creator-link {
+        color: var(--success);
+        text-decoration: none;
+        font-weight: 700;
+        margin-left: 3px;
+        &:active { background: rgba(46, 204, 113, 0.1); border-radius: 2px; }
       }
     }
   }
-}
+
   .card-actions-horizontal {
     display: flex;
     align-items: center;
     gap: 12px;
-
-    .icon-btn-edit {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      padding: 0;
-    }
-
+    .icon-btn-edit { background: transparent; border: none; color: var(--text-secondary); padding: 0; }
     .btn-details-link {
       background: rgba(52, 152, 219, 0.1);
       border: none;
@@ -199,21 +186,18 @@
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px); z-index: 2000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
-
   .modal-content {
     background: var(--card-bg);
     width: 100%; max-width: 400px;
     border-radius: 24px; overflow: hidden;
     border: 1px solid var(--border-color);
   }
-
   .modal-header {
     padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
     border-bottom: 1px solid var(--border-color);
     h4 { margin: 0; font-size: 0.95rem; color: var(--accent-color); text-transform: uppercase; }
     .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; }
   }
-
   .modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
 }
 
@@ -253,8 +237,4 @@
   display: flex; align-items: center; justify-content: center; z-index: 900;
 }
 
-/* --- ANIMATIONS --- */
-@keyframes pulse-press {
-  from { transform: scale(1); }
-  to { transform: scale(0.97); }
-}
+@keyframes pulse-press { from { transform: scale(1); } to { transform: scale(0.97); } }

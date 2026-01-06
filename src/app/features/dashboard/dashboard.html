@@ -98,43 +98,32 @@
       </div>
     </section>
 
-    <section class="recent-activity">
-      <h3>Terminées ({{ completedInterventions().length }})</h3>
-      <div class="intervention-list">
-        @for (inter of completedInterventions(); track inter.id) {
-        <div class="intervention-card" [class.billed-card]="inter.status === 'BILLED'" 
-          [class.pressing]="isLongPressing"
-          (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()" (mouseleave)="onPressEnd()"
-          (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()" (touchmove)="onPressEnd()"
-          (click)="handleCardClick(inter, 'invoice')">
+<section class="recent-activity">
+  <h3>Terminées ({{ completedInterventions().length }})</h3>
+  <div class="intervention-list">
+    @for (inter of completedInterventions(); track inter.id) {
+    <div class="intervention-card" 
+      [class.billed-card]="inter.status === 'BILLED'" 
+      [class.stopped-card]="inter.status === 'END'"
+      [class.pressing]="isLongPressing"
+      (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()" (mouseleave)="onPressEnd()"
+      (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()" (touchmove)="onPressEnd()"
+      (click)="handleCardClick(inter, 'invoice')">
 
-          <div class="card-info">
-            <span class="city">{{ inter.adresse?.ville }}</span>
-            <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
-            
-            @if (authService.hasPerm('dash_view_prices')) {
-              <div [class]="inter.status === 'END' ? 'price-hintr' : 'price-hintv'">
-                {{ inter.totalFinal || 0 | number:'1.2-2'}}€
-              </div>
-            }
+      <div class="card-info">
+        <span class="city">{{ inter.adresse?.ville }}</span>
+        <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
+        
+        @if (authService.hasPerm('dash_view_prices')) {
+          <div [class]="inter.status === 'END' ? 'price-hintr' : 'price-hintv'">
+            {{ inter.totalFinal || 0 | number:'1.2-2'}}€
           </div>
-
-          @if (inter.status === 'END' && authService.hasPerm('dash_view_contacts')) {
-          <div class="billed-contacts-aside">
-            @for (c of [inter.proprietaire, inter.habitants?.[0]]; track $index) {
-              @if (c) {
-                <div class="contact-line">
-                  <span class="val">{{ c.prenom }} {{ c.nom }}</span>
-                  <a [href]="'tel:' + c.tel" (click)="$event.stopPropagation()" class="t">{{ c.tel || 'N/C' }}</a>
-                </div>
-              }
-            }
-          </div>
-          }
-        </div>
         }
       </div>
-    </section>
+      </div>
+    }
+  </div>
+</section>
 
     @if (authService.hasPerm('dash_nav_add')) {
     <button class="fab-btn" (click)="goToAdd()">
