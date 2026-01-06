@@ -134,22 +134,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleCardClick(inter: any, type: 'details' | 'invoice') {
-    if (this.isLongPressing) return;
-
-    if (type === 'details') {
-      // Si c'est une fiche en attente, le clic amène au planning, sinon aux détails
-      if (inter.status === 'OPEN' || inter.status === 'WAITING') {
-        if (this.authService.hasPerm('dash_act_plan')) {
-          this.goToPlanning(inter, { stopPropagation: () => {} } as Event);
-        }
-      } else if (this.authService.hasPerm('dash_nav_details')) {
-        this.goToDetails(inter.id);
-      }
+// Cette fonction reste pour le clic sur le CORPS de la carte
+handleCardClick(inter: any, type: 'details' | 'invoice') {
+  if (this.isLongPressing) return;
+  
+  if (type === 'details') {
+    if (inter.status === 'OPEN' || inter.status === 'WAITING') {
+      this.goToPlanning(inter, { stopPropagation: () => {} } as Event);
     } else {
-      this.handleCompletedClick(inter);
+      this.goToDetails(inter.id);
     }
+  } else {
+    this.handleCompletedClick(inter);
   }
+}
+
+
 
   handleCompletedClick(inter: any) {
     if (inter.status === 'BILLED') {
@@ -185,11 +185,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
   goToAdd() { this.router.navigate(['/add-intervention']); }
 
-  openTasks(inter: any, event: Event) {
-    event.stopPropagation();
-    const tasks = Array.isArray(inter.mission) ? inter.mission : [];
-    this.selectedIntervention.set({ ...inter, mission: tasks });
-  }
+
 
   closeTasks() { this.selectedIntervention.set(null); }
 
@@ -238,4 +234,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   getFileView(fileId: string) {
     return this.authService.storage.getFileView(this.BUCKET_ID, fileId);
   }
+  openTasks(inter: any, event: Event) {
+  event.stopPropagation();
+  const tasks = Array.isArray(inter.mission) ? inter.mission : [];
+  this.selectedIntervention.set({ ...inter, mission: tasks });
+}
 }

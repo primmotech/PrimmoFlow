@@ -225,3 +225,46 @@
   /* On supprime la bordure pointillée en bas car tout est sur une ligne */
   .card-actions { display: none; } 
 }
+/* --- AJUSTEMENT BOUTON DÉTAILS MINIMALISTE --- */
+.intervention-card.pending-horizontal {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  gap: 10px;
+
+  .card-info {
+    flex: 1; // Prend toute la place restante à gauche
+    .city { font-size: 1.2rem; }
+    .street { font-size: 0.85rem; }
+  }
+
+  .card-actions-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .icon-btn-edit {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      display: flex;
+      padding: 0;
+    }
+
+    .btn-details-link {
+      background: rgba(52, 152, 219, 0.1);
+      border: none;
+      color: #3498db;
+      /* Padding minimal pour entourer le texte */
+      padding: 4px 8px; 
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      /* On s'assure qu'aucune transformation ou espacement ne prend de place inutile */
+      text-transform: none; 
+      letter-spacing: normal;
+      white-space: nowrap;
+    }
+  }
+}
