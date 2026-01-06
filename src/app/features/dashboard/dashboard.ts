@@ -15,7 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class DashboardComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
-  public router = inject(Router); 
+  public router = inject(Router);
 
   interventions = signal<any[]>([]);
   loading = signal(true);
@@ -32,6 +32,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private longPressTimeout: any;
   public isLongPressing = false;
 
+  // --- FILTRES COMPUTED ---
   pendingInterventions = computed(() => 
     this.interventions().filter(i => i.status === 'OPEN' || i.status === 'WAITING')
   );
@@ -108,20 +109,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPressStart(inter: any) {
-    if (this.authService.hasPerm('dash_act_delete')) {
-      this.longPressTimeout = setTimeout(() => {
-        this.isLongPressing = true;
-        this.confirmDeletion(inter);
-      }, 800);
-    }
-  }
 
-  onPressEnd() {
-    if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
-    // On ne reset pas isLongPressing ici car handleCardClick en a besoin pour bloquer le clic simple
-    setTimeout(() => this.isLongPressing = false, 100);
-  }
 
   private async confirmDeletion(inter: any) {
     const city = inter.adresse?.ville || 'cette intervention';
@@ -133,21 +121,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
   }
-
-// Cette fonction reste pour le clic sur le CORPS de la carte
-handleCardClick(inter: any, type: 'details' | 'invoice') {
-  if (this.isLongPressing) return;
-  
-  if (type === 'details') {
-    if (inter.status === 'OPEN' || inter.status === 'WAITING') {
-      this.goToPlanning(inter, { stopPropagation: () => {} } as Event);
-    } else {
-      this.goToDetails(inter.id);
-    }
-  } else {
-    this.handleCompletedClick(inter);
-  }
-}
 
 
 
@@ -163,6 +136,7 @@ handleCardClick(inter: any, type: 'details' | 'invoice') {
     }
   }
 
+  // --- NAVIGATION & ACTIONS ---
   async markAsPaid(intervention: any, event: Event) {
     event.stopPropagation();
     if (confirm(`Confirmer le paiement reçu ?`)) {
@@ -184,11 +158,11 @@ handleCardClick(inter: any, type: 'details' | 'invoice') {
   goToInvoice(id: string) { if (id) this.router.navigate(['/invoice', id]); }
   goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
   goToAdd() { this.router.navigate(['/add-intervention']); }
-
-
+  
 
   closeTasks() { this.selectedIntervention.set(null); }
 
+  // --- REALTIME ---
   subscribeToChanges() {
     this.unsubscribeRealtime = this.authService.client.subscribe(
       `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`, 
@@ -204,39 +178,42 @@ handleCardClick(inter: any, type: 'details' | 'invoice') {
     );
   }
 
-private sanitizeIntervention(payload: any) {
-  // On récupère le champ owner (qui est un array de strings JSON selon tes logs)
-  const rawOwner = payload['owner'];
-  let parsedOwner = [];
+  // --- DATA MAPPING (SANITIZATION) ---
+  private sanitizeIntervention(payload: any) {
+    const rawOwner = payload['owner'];
+    let parsedOwner = [];
 
-  if (Array.isArray(rawOwner)) {
-    parsedOwner = rawOwner.map(item => {
-      // Si l'item est une string, on le parse, sinon on le garde tel quel
-      return typeof item === 'string' ? JSON.parse(item) : item;
-    });
+    if (Array.isArray(rawOwner)) {
+      parsedOwner = rawOwner.map(item => typeof item === 'string' ? JSON.parse(item) : item);
+    }
+
+    const missionData = typeof payload['mission'] === 'string' 
+      ? JSON.parse(payload['mission']) 
+      : payload['mission'];
+
+    return {
+      ...payload,
+      id: payload.$id,
+      adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
+      owner: parsedOwner, 
+      habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
+      proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
+      mission: missionData?.tasks || [], 
+      photos: Array.isArray(payload['photos']) ? payload['photos'] : []
+    };
   }
 
-  console.log('Owner final (Tableau d\'objets):', parsedOwner);
-
-  const missionData = typeof payload['mission'] === 'string' 
-    ? JSON.parse(payload['mission']) 
-    : payload['mission'];
-
-  return {
-    ...payload,
-    id: payload.$id,
-    adresse: typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'],
-    // Maintenant owner est un tableau de vrais objets JS
-    owner: parsedOwner, 
-    habitants: typeof payload['habitants'] === 'string' ? JSON.parse(payload['habitants']) : payload['habitants'],
-    proprietaire: typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire'],
-    mission: missionData?.tasks || [], 
-    photos: Array.isArray(payload['photos']) ? payload['photos'] : []
-  };
-}
-
+  // --- STYLE HELPERS (MISE À JOUR COULEURS) ---
   getStatusClass(status: string): string {
-    const classes: any = { 'WAITING': 'waiting-card', 'OPEN': 'waiting-card', 'PAUSED': 'paused-card', 'STARTED': 'started-card', 'BILLED': 'billed-card', 'END': 'completed-card' };
+    const classes: any = { 
+      'WAITING': 'blue-card', 
+      'OPEN': 'green-card', 
+      'STARTED': 'green-card',
+      'PAUSED': 'yellow-card', 
+      'STOPPED': 'red-card', 
+      'END': 'red-card',
+      'BILLED': 'green-card' 
+    };
     return classes[status] || '';
   }
 
@@ -249,8 +226,57 @@ private sanitizeIntervention(payload: any) {
   getFileView(fileId: string) {
     return this.authService.storage.getFileView(this.BUCKET_ID, fileId);
   }
-  openTasks(inter: any, event: Event) {
+
+
+
+
+handleCardClick(inter: any, type: 'details' | 'invoice') {
+  // Si le timer est allé au bout (800ms), on bloque le clic simple
+  if (this.isLongPressing) return;
+  
+  // Sinon, on exécute le clic normalement
+  if (type === 'details') {
+    if (inter.status === 'OPEN' || inter.status === 'WAITING') {
+      this.goToPlanning(inter, { stopPropagation: () => {} } as Event);
+    } else {
+      this.goToDetails(inter.id);
+    }
+  } else {
+    this.handleCompletedClick(inter);
+  }
+}
+// Ajoute cette propriété en haut de ta classe
+pressedCardId = signal<string | null>(null);
+
+onPressStart(inter: any) {
+  this.isLongPressing = false;
+  this.pressedCardId.set(inter.id); // On mémorise quelle carte est pressée
+
+  if (this.authService.hasPerm('dash_act_delete')) {
+    this.longPressTimeout = setTimeout(() => {
+      this.isLongPressing = true;
+      this.confirmDeletion(inter);
+    }, 800);
+  }
+}
+
+onPressEnd() {
+  if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+  // On attend un tout petit peu avant de reset l'ID pour laisser le clic passer
+  setTimeout(() => {
+    this.pressedCardId.set(null);
+    this.isLongPressing = false;
+  }, 50);
+}
+
+openTasks(inter: any, event: Event) {
+  event.preventDefault();
   event.stopPropagation();
+  
+  // Si on est en train de supprimer (long press), on n'ouvre pas la modale
+  if (this.isLongPressing) return;
+
+  console.log("Ouverture des tâches pour :", inter.id); // Pour débugger
   const tasks = Array.isArray(inter.mission) ? inter.mission : [];
   this.selectedIntervention.set({ ...inter, mission: tasks });
 }
