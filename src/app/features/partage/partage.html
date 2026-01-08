@@ -1,0 +1,70 @@
+<div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+  
+  <header class="app-header-compact">
+    <div class="header-main">
+      <h1>Partage d'accès</h1>
+    </div>
+  </header>
+
+  <main class="sharing-layout">
+    <aside class="alphabet-sidebar">
+      @for (letter of alphabet; track letter) {
+        <span (click)="scrollToLetter(letter)">{{ letter }}</span>
+      }
+    </aside>
+
+    <div class="scroll-content">
+      @if (loading()) {
+        <div class="loader-container">
+          <div class="spinner"></div>
+        </div>
+      } @else {
+        @for (group of groupedColleagues(); track group.letter) {
+          <div class="group-section" [id]="'letter-' + group.letter">
+            <h2 class="letter-header">{{ group.letter }}</h2>
+            @for (col of group.members; track col.email) {
+              <div class="colleague-row" 
+                   [class.selected]="tempAllowedEmails().includes(col.email)"
+                   (click)="toggleTempPermission(col.email)">
+                <span class="status-dot"></span>
+                <span class="full-name">{{ col.name }}</span>
+                
+                <div class="checkbox-custom" *ngIf="tempAllowedEmails().includes(col.email)">
+                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3">
+                     <polyline points="20 6 9 17 4 12"></polyline>
+                   </svg>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    @if (isDirty() && !loading()) {
+      <button class="fab-save" (click)="saveChanges()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        Enregistrer
+      </button>
+    }
+  </main>
+
+  <nav class="bottom-nav">
+    <a (click)="goBack()" class="nav-item">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Accueil</span>
+    </a>
+    <a (click)="router.navigate(['/parameters'])" class="nav-item">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 6v8H6" /><path d="M10 10l-4 4 4 4" />
+      </svg>
+      <span>Retour</span>
+    </a>
+  </nav>
+
+</div>

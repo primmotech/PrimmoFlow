@@ -14,6 +14,8 @@ import { Whitelist } from './features/whitelist/whitelist';
 import { CompletedInterventionsComponent } from './features/interventions/completed-interventions';
 import { Roles } from './features/roles/roles'; 
 import { permissionGuard } from './core/guards/permissions.guard';
+import { Partage } from './features/partage/partage';
+
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -50,6 +52,12 @@ export const routes: Routes = [
     component: Parameters,
     canActivate: [permissionGuard('dash_nav_params')] 
   },
+    { 
+    path: 'partage', 
+    component: Partage,
+    canActivate: [permissionGuard('dash_nav_params')] 
+  },
+
 
   // --- ADMINISTRATION (param_panel) ---
   { 

@@ -39,7 +39,7 @@ export const PERMISSION_STRUCTURE: PageStructure[] = [
       { id: 'dash_nav_billed', label: 'Marquer comme payé' },
       { id: 'dash_nav_orders', label: 'Accès Menu Commandes' },
       { id: 'dash_nav_archives', label: 'Accès Menu Archives' },
-      { id: 'dash_nav_params', label: 'Accès Menu Paramètres' }
+      { id: 'dash_nav_params', label: 'Accès Menu Paramètres et Partages' }
     ]
   },
   {
