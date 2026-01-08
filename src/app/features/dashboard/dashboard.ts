@@ -70,45 +70,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadInterventions(userEmail: string) {
-    const activeStatuses = ['OPEN', 'WAITING', 'PLANNED', 'STOPPED', 'PAUSED', 'STARTED', 'END', 'BILLED'];
-    try {
-      this.loading.set(true);
-      let queries = [
-        Query.equal('status', activeStatuses),
-        Query.orderDesc('$createdAt'),
-        Query.limit(100)
-      ];
+async loadInterventions(userEmail: string) {
+  const activeStatuses = ['OPEN', 'WAITING', 'PLANNED', 'STOPPED', 'PAUSED', 'STARTED', 'END', 'BILLED'];
+  try {
+    this.loading.set(true);
 
-      if (!this.authService.hasPerm('dash_view_all')) {
-        const profile = await this.authService.loadUserProfile(userEmail);
-        const userTeamId = profile?.['teamId'];
+    // 1. On cherche qui partage ses données avec moi (système de partage)
+    // On regarde dans la collection 'shares' si mon email est dans 'allowed_emails'
+    const sharesResponse = await this.authService.databases.listDocuments(
+      this.DB_ID,
+      'shares', // Remplace par ton ID de collection partage si différent
+      [Query.contains('allowed_emails', [userEmail])]
+    );
 
-        if (this.authService.userRole() === 'Responsable' && userTeamId) {
-          const members = await this.authService.databases.listDocuments(this.DB_ID, 'user_profiles', [Query.equal('teamId', userTeamId)]);
-          const memberEmails = members.documents.map(d => d['email']);
-          queries.push(Query.or([
-            Query.equal('assigned', memberEmails), 
-            Query.equal('createdBy', userEmail)
-          ]));
-        } else {
-          queries.push(Query.or([
-            Query.equal('assigned', userEmail), 
-            Query.equal('createdBy', userEmail)
-          ]));
-        }
-      }
+    // 2. On construit la liste des emails dont je peux voir les données
+    // (Moi-même + les emails des collègues qui m'ont donné accès)
+    const authorizedEmails = [
+      userEmail, 
+      ...sharesResponse.documents.map(doc => doc['user_email'])
+    ];
 
-      const response = await this.authService.databases.listDocuments(this.DB_ID, this.COL_INTERVENTIONS, queries);
-      const sanitizedDocs = response.documents.map(d => this.sanitizeIntervention(d));
-      this.interventions.set(sanitizedDocs);
-    } catch (error) {
-      console.error("Erreur chargement Dashboard:", error);
-    } finally {
-      this.loading.set(false);
-    }
+    // 3. On prépare les requêtes pour les interventions
+    let queries = [
+      Query.equal('status', activeStatuses),
+      Query.orderDesc('$createdAt'),
+      Query.limit(100)
+    ];
+
+    // 4. Filtrage par emails autorisés (OR)
+    // On récupère les docs où je suis le créateur OU l'assigné 
+    // OU si ça appartient à un collègue autorisé
+    queries.push(
+      Query.or([
+        Query.equal('assigned', authorizedEmails),
+        Query.equal('createdBy', authorizedEmails),
+        
+      ])
+    );
+
+    // 5. Exécution de la requête Bullseye
+    const response = await this.authService.databases.listDocuments(
+      this.DB_ID, 
+      this.COL_INTERVENTIONS, 
+      queries
+    );
+
+    const sanitizedDocs = response.documents.map(d => this.sanitizeIntervention(d));
+    this.interventions.set(sanitizedDocs);
+
+  } catch (error) {
+    console.error("Erreur chargement Dashboard:", error);
+  } finally {
+    this.loading.set(false);
   }
-
+}
 
 
   private async confirmDeletion(inter: any) {
@@ -280,4 +295,5 @@ openTasks(inter: any, event: Event) {
   const tasks = Array.isArray(inter.mission) ? inter.mission : [];
   this.selectedIntervention.set({ ...inter, mission: tasks });
 }
+
 }
