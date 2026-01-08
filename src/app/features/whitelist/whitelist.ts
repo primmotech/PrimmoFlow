@@ -66,7 +66,7 @@ export class Whitelist implements OnInit, OnDestroy {
       });
 
       users.sort((a: any, b: any) => a.email.localeCompare(b.email));
-      console.log("Loaded users:", users);
+      //console.log("Loaded users:", users);
       this.authorizedUsers.set(users);
     } catch (e) {
       console.error("Erreur chargement users:", e);
