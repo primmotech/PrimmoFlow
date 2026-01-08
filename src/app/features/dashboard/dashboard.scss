@@ -217,3 +217,60 @@
 }
 
 @keyframes pulse-press { from { transform: scale(1); } to { transform: scale(0.97); } }
+/* --- SECTION PHOTOS DANS LA MODALE --- */
+.photos-section {
+  margin-top: 20px;
+  
+  h5 {
+    margin: 0 0 10px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.photo-slider {
+  display: flex;
+  overflow-x: auto; // Active le scroll horizontal
+  gap: 12px;
+  padding: 5px 2px 15px 2px;
+  
+  // Masquer la scrollbar pour un look plus "app"
+  &::-webkit-scrollbar { display: none; }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.photo-slide {
+  flex: 0 0 140px; // Chaque photo fera 140px de large précisément
+  height: 140px;   // Et 140px de haut
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; // L'image remplit le carré sans se déformer
+    display: block;
+    transition: transform 0.2s;
+
+    &:active {
+      transform: scale(0.95); // Petit effet au clic
+    }
+  }
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 20px 0;
+}
+
+.remarks-section {
+  margin-top: 15px;
+  h5 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; }
+  p { font-size: 0.9rem; line-height: 1.4; margin: 0; }
+}
