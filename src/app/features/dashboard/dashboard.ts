@@ -75,40 +75,40 @@ async loadInterventions(userEmail: string) {
   try {
     this.loading.set(true);
 
-    // 1. On cherche qui partage ses données avec moi (système de partage)
-    // On regarde dans la collection 'shares' si mon email est dans 'allowed_emails'
-    const sharesResponse = await this.authService.databases.listDocuments(
-      this.DB_ID,
-      'shares', // Remplace par ton ID de collection partage si différent
-      [Query.contains('allowed_emails', [userEmail])]
-    );
-
-    // 2. On construit la liste des emails dont je peux voir les données
-    // (Moi-même + les emails des collègues qui m'ont donné accès)
-    const authorizedEmails = [
-      userEmail, 
-      ...sharesResponse.documents.map(doc => doc['user_email'])
-    ];
-
-    // 3. On prépare les requêtes pour les interventions
+    // 1. Préparation des requêtes de base (Statuts + Tri)
     let queries = [
       Query.equal('status', activeStatuses),
       Query.orderDesc('$createdAt'),
       Query.limit(100)
     ];
 
-    // 4. Filtrage par emails autorisés (OR)
-    // On récupère les docs où je suis le créateur OU l'assigné 
-    // OU si ça appartient à un collègue autorisé
-    queries.push(
-      Query.or([
-        Query.equal('assigned', authorizedEmails),
-        Query.equal('createdBy', authorizedEmails),
-        
-      ])
-    );
+    // 2. CONDITION : Si l'utilisateur n'a PAS le droit de tout voir, on applique les restrictions
+    if (!this.authService.hasPerm('dash_view_all')) {
+      
+      // On cherche les partages
+      const sharesResponse = await this.authService.databases.listDocuments(
+        this.DB_ID,
+        'shares',
+        [Query.contains('allowed_emails', [userEmail])]
+      );
 
-    // 5. Exécution de la requête Bullseye
+      const authorizedEmails = [
+        userEmail, 
+        ...sharesResponse.documents.map(doc => doc['user_email'])
+      ];
+
+      // On restreint la vue à (Moi + Partages)
+      queries.push(
+        Query.or([
+          Query.equal('assigned', authorizedEmails),
+          Query.equal('createdBy', authorizedEmails)
+        ])
+      );
+    } 
+    // Sinon (si dash_view_all est vrai), on ne rajoute aucun filtre d'email 
+    // et Appwrite renverra tous les documents de la collection.
+
+    // 3. Exécution
     const response = await this.authService.databases.listDocuments(
       this.DB_ID, 
       this.COL_INTERVENTIONS, 

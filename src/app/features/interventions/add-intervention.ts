@@ -53,7 +53,9 @@ export class AddInterventionComponent implements OnInit {
     proprietaire: { nom: '', prenom: '', tel: '' },
     assigned: '',
     photos: [] as string[],
-    owner: [] as string[]
+    owner: [] as string[],
+    createdBy: '', 
+    status: 'OPEN'
   };
 
   // Validation réactive via Signal
@@ -69,25 +71,13 @@ export class AddInterventionComponent implements OnInit {
     return allHabitantsValid && addressValid && taskValid && technicianValid && proprioValid;
   });
 
-  async ngOnInit() {
-    this.themeService.initTheme();
-    this.loadTechnicians();
-    this.interventionId = this.route.snapshot.paramMap.get('id');
 
-    if (this.interventionId) {
-      this.isEditMode.set(true);
-      await this.loadInterventionData(this.interventionId);
-    } else {
-      this.data.assigned =  '';
-      await this.fetchAndSetOwnerProfile();
-    }
-  }
 
-  private async fetchAndSetOwnerProfile() {
+
+  // Fonctions de synchronisation de profil fusionnées
+  async fetchAndSetOwnerProfile(email: string) {
+    if (!email) return;
     try {
-      const email = this.auth.userEmail();
-      if (!email) return;
-
       const response = await this.auth.databases.listDocuments(
         this.DB_ID,
         'user_profiles',
@@ -109,6 +99,22 @@ export class AddInterventionComponent implements OnInit {
     }
   }
 
+  async onAdminUserChange(newEmail: string) {
+    this.onValueChange();
+    // Met à jour dynamiquement le owner quand l'admin change le créateur
+    await this.fetchAndSetOwnerProfile(newEmail);
+  }
+
+
+
+
+
+
+
+
+
+
+
   async loadInterventionData(id: string) {
     this.loading.set(true);
     try {
@@ -121,6 +127,8 @@ export class AddInterventionComponent implements OnInit {
       this.data = {
         ...this.data,
         ...doc as any,
+        createdBy: doc['createdBy'], // On récupère l'auteur réel
+  status: doc['status'],       // On récupère le statut réel
         adresse: this.parseJson(doc['adresse']),
         habitants: habitants,
         mission: missionData,
@@ -155,48 +163,6 @@ export class AddInterventionComponent implements OnInit {
       this.loading.set(false);
     }
   }
-
-  async save() {
-    if (!this.isFormValid()) return;
-    this.loading.set(true);
-
-    try {
-      const structuredTasks = this.tasks()
-        .filter(t => t.text.trim() !== '')
-        .map(t => ({ label: t.text.trim(), done: t.done || false }));
-
-      const payload = {
-        adresse: JSON.stringify(this.data.adresse),
-        mission: JSON.stringify({ tasks: structuredTasks }),
-        habitants: JSON.stringify(this.data.habitants),
-        proprietaire: JSON.stringify(this.data.proprietaire),
-        remarques: this.data.remarques,
-        assigned: this.data.assigned,
-        photos: this.data.photos,
-        owner: this.data.owner
-      };
-
-      if (this.isEditMode() && this.interventionId) {
-        await this.auth.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.interventionId, payload);
-      } else {
-        const createPayload = {
-          ...payload,
-          createdBy: this.auth.userEmail(),
-          status: 'OPEN'
-        };
-        await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), createPayload);
-      }
-
-      this.hasChanges.set(false);
-      this.router.navigate(['/dashboard']);
-    } catch (e) {
-      alert("Erreur lors de l'enregistrement.");
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-
 
   async removePhoto(pStr: string) {
     const photoObj = this.parseJson(pStr);
@@ -233,6 +199,51 @@ export class AddInterventionComponent implements OnInit {
     this.data.habitants.push({ nom: '', prenom: '', tel: '' }); 
     this.onValueChange(); 
   }
+  async save() {
+  if (!this.isFormValid()) return;
+  this.loading.set(true);
+
+  try {
+    const structuredTasks = this.tasks()
+      .filter(t => t.text.trim() !== '')
+      .map(t => ({ label: t.text.trim(), done: t.done || false }));
+
+    // Préparation du payload de base
+    const payload = {
+      adresse: JSON.stringify(this.data.adresse),
+      mission: JSON.stringify({ tasks: structuredTasks }),
+      habitants: JSON.stringify(this.data.habitants || []),
+      proprietaire: JSON.stringify(this.data.proprietaire),
+      remarques: this.data.remarques || '',
+      assigned: this.data.assigned,
+      // On utilise la valeur du formulaire ou l'utilisateur actuel par défaut
+      createdBy: this.data.createdBy || this.auth.userEmail(),
+      status: this.data.status || 'OPEN',
+      photos: this.data.photos || [],
+      owner: this.data.owner || []
+    };
+
+    if (this.isEditMode() && this.interventionId) {
+      // MODE EDITION
+      await this.auth.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.interventionId, payload);
+    } else {
+      // MODE CREATION : L'admin peut choisir l'auteur original
+      const createPayload = {
+        ...payload,
+        $createdAt: new Date().toISOString()
+      };
+      await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), createPayload);
+    }
+
+    this.hasChanges.set(false);
+    this.router.navigate(['/dashboard']);
+  } catch (e) {
+    console.error("Save Error:", e);
+    alert("Erreur lors de l'enregistrement.");
+  } finally {
+    this.loading.set(false);
+  }
+}
 
   removeHabitant(index: number) { 
     if (this.data.habitants.length > 1) { 
@@ -247,17 +258,6 @@ export class AddInterventionComponent implements OnInit {
     return textOk && phoneOk; 
   }
 
-  copyToProprietaire(index: number = 0) {
-    const h = this.data.habitants[index];
-    if (h && this.isHabitantComplete(h, index)) {
-      this.data.proprietaire = { ...h };
-      const isValid = this.phonesValid()[index.toString()];
-      this.phonesValid.update(p => ({ ...p, ['proprio']: isValid }));
-      const country = this.detectedCountries()[index.toString()];
-      this.detectedCountries.update(p => ({ ...p, ['proprio']: country }));
-      this.onValueChange();
-    }
-  }
 
   parseJson(data: any): any {
     if (typeof data !== 'string') return data;
@@ -278,33 +278,7 @@ export class AddInterventionComponent implements OnInit {
 
   goBack() { this.router.navigate(['/dashboard']); }
 
-async loadTechnicians() {
-  try {
-    const response = await this.auth.databases.listDocuments(
-      this.DB_ID, 'user_profiles', 
-      [Query.limit(100), Query.equal('assignable', true)]
-    );
-    
-    const techs = response.documents.map(d => ({
-      email: d['email'],
-      name: d['nickName'] || d['email']
-    }));
 
-    this.technicians.set(techs);
-
-    // Si nouvelle mission et rien n'est assigné
-    if (!this.isEditMode() && !this.data.assigned && techs.length > 0) {
-      // 1. On assigne le premier technicien
-      this.data.assigned = techs[0].email;
-      
-      // 2. TRÈS IMPORTANT : On appelle onValueChange() pour que 
-      // le signal hasChanges se mette à jour et que le computed soit réévalué
-      this.onValueChange();
-    }
-  } catch (e) { 
-    console.error(e); 
-  }
-}
   private async compressImage(file: File): Promise<File> {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -353,6 +327,65 @@ async onFileSelected(event: any) {
   } finally {
     this.uploading.set(false);
     event.target.value = '';
+  }
+}
+
+
+// --- OPTIMISATION DU COPY TO PROPRIETAIRE ---
+copyToProprietaire(index: number = 0) {
+  const h = this.data.habitants[index];
+  if (h && this.isHabitantComplete(h, index)) {
+    // Utilisation du spread pour casser la référence objet
+    this.data.proprietaire = { ...h };
+    
+    // On synchronise les états de validation pour le numéro de téléphone
+    const sourceKey = index.toString();
+    this.phonesValid.update(p => ({ ...p, 'proprio': p[sourceKey] }));
+    this.detectedCountries.update(c => ({ ...c, 'proprio': c[sourceKey] }));
+    
+    this.onValueChange();
+  }
+}
+
+async ngOnInit() {
+  this.themeService.initTheme();
+  this.loadTechnicians();
+  this.interventionId = this.route.snapshot.paramMap.get('id');
+
+  if (this.interventionId) {
+    this.isEditMode.set(true);
+    await this.loadInterventionData(this.interventionId);
+  } else {
+    // --- VALEUR PAR DEFAUT EN DUR ICI ---
+    this.data.assigned = 'john.derkinderen@gmail.com'; // <--- Remplace par l'email voulu
+    
+    this.data.status = 'OPEN';
+    this.data.createdBy = this.auth.userEmail() ?? '';
+    await this.fetchAndSetOwnerProfile(this.data.createdBy);
+  }
+}
+
+// Vérifie que ta fonction loadTechnicians ressemble bien à ceci 
+// pour avoir les noms disponibles :
+async loadTechnicians() {
+  try {
+    const response = await this.auth.databases.listDocuments(
+      this.DB_ID,
+      'user_profiles',
+      [Query.limit(100), Query.orderAsc('firstname')]
+    );
+
+    const list = response.documents.map(doc => ({
+      // On prépare le nom complet pour l'affichage
+      name: (doc['firstname'] && doc['lastname']) 
+            ? `${doc['firstname']} ${doc['lastname']}` 
+            : doc['email'],
+      email: doc['email']
+    }));
+
+    this.technicians.set(list);
+  } catch (e) {
+    console.error("Erreur technicians:", e);
   }
 }
 }

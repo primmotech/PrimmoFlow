@@ -34,6 +34,7 @@ export const PERMISSION_STRUCTURE: PageStructure[] = [
     label: 'Dashboard : Navigation',
     perms: [
       { id: 'dash_nav_add', label: 'Ajouter une intervention (Bouton +)' },
+      { id: 'dash_view_addAdmin', label: 'Voir la partie admin du bouton +' },
       { id: 'dash_nav_details', label: 'Accès Suivi Terrain (Détails)' },
       { id: 'dash_nav_invoice', label: 'Accès Facturation' },
       { id: 'dash_nav_billed', label: 'Marquer comme payé' },

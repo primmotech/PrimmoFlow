@@ -160,3 +160,18 @@ input[type="email"], input[type="tel"] { text-transform: none; }
 }
 .loader-small { width: 20px; height: 20px; border: 2px solid rgba(52, 152, 219, 0.2); border-top-color: #3498db; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* Force l'affichage en minuscules pour les emails */
+.email-select {
+  text-transform: none !important;
+  
+  option {
+    text-transform: none !important;
+  }
+}
+
+/* Optionnel : Si tu veux être sûr que rien n'est capitalisé dans la section admin */
+.admin-control {
+  .admin-select {
+    text-transform: none; 
+  }
+}
