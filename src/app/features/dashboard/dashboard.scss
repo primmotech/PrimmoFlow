@@ -274,3 +274,12 @@
   h5 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; }
   p { font-size: 0.9rem; line-height: 1.4; margin: 0; }
 }
+.photo-slider {
+  // ... tes autres styles ...
+  scroll-snap-type: x mandatory; // Active l'aimantage horizontal
+}
+
+.photo-slide {
+  // ... tes autres styles ...
+  scroll-snap-align: start; // La photo s'aligne au début du slider
+}
