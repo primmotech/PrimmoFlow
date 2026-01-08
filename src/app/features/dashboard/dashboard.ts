@@ -21,6 +21,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loading = signal(true);
   isOffline = signal(!navigator.onLine);
   selectedIntervention = signal<any>(null);
+  colleagueEmails = signal<string[]>([]);
 
   private unsubscribeRealtime: (() => void) | null = null;
   private onlineHandler = () => this.isOffline.set(!navigator.onLine);
@@ -74,52 +75,31 @@ async loadInterventions(userEmail: string) {
   const activeStatuses = ['OPEN', 'WAITING', 'PLANNED', 'STOPPED', 'PAUSED', 'STARTED', 'END', 'BILLED'];
   try {
     this.loading.set(true);
+    let queries = [Query.equal('status', activeStatuses), Query.orderDesc('$createdAt'), Query.limit(100)];
 
-    // 1. Préparation des requêtes de base (Statuts + Tri)
-    let queries = [
-      Query.equal('status', activeStatuses),
-      Query.orderDesc('$createdAt'),
-      Query.limit(100)
-    ];
-
-    // 2. CONDITION : Si l'utilisateur n'a PAS le droit de tout voir, on applique les restrictions
     if (!this.authService.hasPerm('dash_view_all')) {
-      
-      // On cherche les partages
       const sharesResponse = await this.authService.databases.listDocuments(
-        this.DB_ID,
-        'shares',
-        [Query.contains('allowed_emails', [userEmail])]
+        this.DB_ID, 'shares', [Query.contains('allowed_emails', [userEmail])]
       );
 
-      const authorizedEmails = [
-        userEmail, 
-        ...sharesResponse.documents.map(doc => doc['user_email'])
+      // On sauvegarde la liste pour le Realtime
+      const emails = sharesResponse.documents.map(doc => doc['user_email']);
+      this.colleagueEmails.set(emails);
+
+      const orConditions = [
+        Query.equal('assigned', [userEmail]),
+        Query.equal('createdBy', [userEmail])
       ];
+      if (emails.length > 0) {
+        orConditions.push(Query.equal('createdBy', emails));
+      }
+      queries.push(Query.or(orConditions));
+    }
 
-      // On restreint la vue à (Moi + Partages)
-      queries.push(
-        Query.or([
-          Query.equal('assigned', authorizedEmails),
-          Query.equal('createdBy', authorizedEmails)
-        ])
-      );
-    } 
-    // Sinon (si dash_view_all est vrai), on ne rajoute aucun filtre d'email 
-    // et Appwrite renverra tous les documents de la collection.
-
-    // 3. Exécution
-    const response = await this.authService.databases.listDocuments(
-      this.DB_ID, 
-      this.COL_INTERVENTIONS, 
-      queries
-    );
-
-    const sanitizedDocs = response.documents.map(d => this.sanitizeIntervention(d));
-    this.interventions.set(sanitizedDocs);
-
+    const response = await this.authService.databases.listDocuments(this.DB_ID, this.COL_INTERVENTIONS, queries);
+    this.interventions.set(response.documents.map(d => this.sanitizeIntervention(d)));
   } catch (error) {
-    console.error("Erreur chargement Dashboard:", error);
+    console.error("Erreur Dashboard:", error);
   } finally {
     this.loading.set(false);
   }
@@ -177,21 +157,39 @@ async loadInterventions(userEmail: string) {
 
   closeTasks() { this.selectedIntervention.set(null); }
 
-  // --- REALTIME ---
-  subscribeToChanges() {
-    this.unsubscribeRealtime = this.authService.client.subscribe(
-      `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`, 
-      response => {
-        const payload = response.payload as any;
+subscribeToChanges() {
+  this.unsubscribeRealtime = this.authService.client.subscribe(
+    `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`, 
+    response => {
+      const payload = response.payload as any;
+      const userEmail = this.authService.userEmail();
+      if (!userEmail) return;
+
+      // On récupère la liste depuis le Signal (pas de requête DB !)
+      const shares = this.colleagueEmails();
+      const canSeeAll = this.authService.hasPerm('dash_view_all');
+
+      // LOGIQUE DE FILTRAGE
+      const isMine = payload.assigned === userEmail || payload.createdBy === userEmail;
+      const isColleagueCreation = shares.includes(payload.createdBy);
+
+      if (canSeeAll || isMine || isColleagueCreation) {
         if (response.events[0].includes('.update')) {
           const cleanData = this.sanitizeIntervention(payload);
-          this.interventions.update(list => list.map(i => i.id === payload.$id ? cleanData : i));
+          const activeStatuses = ['OPEN', 'WAITING', 'PLANNED', 'STOPPED', 'PAUSED', 'STARTED', 'END', 'BILLED'];
+          
+          if (!activeStatuses.includes(payload.status)) {
+            this.interventions.update(list => list.filter(i => i.$id !== payload.$id));
+          } else {
+            this.interventions.update(list => list.map(i => i.id === payload.$id ? cleanData : i));
+          }
         } else if (response.events[0].includes('.create') || response.events[0].includes('.delete')) {
-          this.loadInterventions(this.authService.userEmail()!);
+          this.loadInterventions(userEmail);
         }
       }
-    );
-  }
+    }
+  );
+}
 
   // --- DATA MAPPING (SANITIZATION) ---
   private sanitizeIntervention(payload: any) {
@@ -291,7 +289,7 @@ openTasks(inter: any, event: Event) {
   // Si on est en train de supprimer (long press), on n'ouvre pas la modale
   if (this.isLongPressing) return;
 
-  console.log("Ouverture des tâches pour :", inter.id); // Pour débugger
+  //console.log("Ouverture des tâches pour :", inter.id); // Pour débugger
   const tasks = Array.isArray(inter.mission) ? inter.mission : [];
   this.selectedIntervention.set({ ...inter, mission: tasks });
 }
