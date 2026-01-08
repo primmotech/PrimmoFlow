@@ -2,142 +2,95 @@
   
   <header class="app-header-compact">
     <div class="header-main">
-      <h1>Gestion Équipes</h1>
-      <button class="add-circle-btn" (click)="showModal.set(true)">+</button>
+      <h1>Gestion Groupes</h1>
+      <button class="add-circle-btn" (click)="openCreateModal()">+</button>
     </div>
   </header>
 
   <main class="container">
-    @if (loading()) {
-      <div class="loader-container">
-        <div class="spinner"></div>
-        <p>Chargement des équipes...</p>
-      </div>
-    } @else {
-      <div class="team-grid">
-        @for (team of teams(); track team.id) {
-          <div class="team-card">
-            <div class="team-header">
+    <div class="team-grid">
+      @for (team of teams(); track team.id) {
+        <div class="team-card" [class.expanded]="expandedTeamId() === team.id">
+          <div class="team-card-content" (click)="toggleExpand(team.id)">
+            <div class="card-top">
               <h3>{{ team.name }}</h3>
-              <button (click)="deleteTeam(team)" class="del-btn" title="Supprimer l'équipe">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-              </button>
-            </div>
-            
-            <div class="team-body">
-              <div class="info-row">
-                <span class="label">Responsable :</span>
-                <span class="value leader-name">{{ getLeaderName(team.leader) }}</span>
-              </div>
-
-              <div class="info-row">
-                <span class="label">Membres :</span>
-                <span class="value">{{ team.members?.length || 0 }} tech(s)</span>
-              </div>
-
-              <div class="info-row">
-                <span class="label">Effectif total :</span>
-                <span class="value">{{ (team.members?.length || 0) + 1 }}</span>
+              <div class="card-actions">
+                <button class="btn-edit" (click)="openEditModal(team); $event.stopPropagation()">✎</button>
+                <button class="btn-del" (click)="deleteTeam(team); $event.stopPropagation()">✕</button>
               </div>
             </div>
+            <div class="card-meta">
+              <span>{{ team.members?.length || 0 }} membre(s)</span>
+              <span class="chevron" [class.up]="expandedTeamId() === team.id">▼</span>
+            </div>
           </div>
-        } @empty {
-          <div class="empty-state">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <p>Aucune équipe créée pour le moment.</p>
-          </div>
-        }
-      </div>
-    }
+
+          @if (expandedTeamId() === team.id) {
+            <div class="team-details animate-slide-down">
+              @for (m of team.members; track m) {
+                <div class="member-row"><span class="dot"></span> {{ m }}</div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
   </main>
 
   @if (showModal()) {
-    <div class="modal-overlay" (click)="showModal.set(false)">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <h2>Nouvelle Équipe</h2>
-        
-        <div class="form-group">
-          <label>Nom de l'équipe</label>
-          <input type="text" [(ngModel)]="newTeam.name" placeholder="Ex: Maintenance Centre">
-        </div>
+    <div class="modal-full">
+      <header class="modal-header-fixed">
+        <input type="text" [(ngModel)]="newTeam.name" placeholder="Nom du groupe..." class="ghost-input">
+        <button class="close-modal" (click)="showModal.set(false)">✕</button>
+      </header>
 
-        <div class="form-group">
-          <label>Responsable (Leader)</label>
-          <select [(ngModel)]="newTeam.leader">
-            <option value="">-- Choisir un responsable --</option>
-            @for (t of technicians(); track t.email) {
-              <option [value]="t.email">{{ t.name }}</option>
-            }
-          </select>
-        </div>
+      <div class="sharing-layout modal-body-sharing">
+        <aside class="alphabet-sidebar">
+          @for (letter of alphabet; track letter) {
+            <span (click)="scrollToLetter(letter)">{{ letter }}</span>
+          }
+        </aside>
 
-        <div class="form-group">
-          <label>Sélectionner les membres</label>
-<div class="members-selector">
-  @for (t of technicians(); track t.email) {
-    <div class="member-chip" 
-         [class.selected]="newTeam.members.includes(t.email)"
-         [class.is-leader]="newTeam.leader === t.email"
-         (click)="toggleMember(t.email)">
-      
-      <span class="chip-status">
-        @if (newTeam.members.includes(t.email)) {
-          <svg viewBox="0 0 24 24" width="12" height="12" stroke="white" stroke-width="4" fill="none">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        }
-      </span>
-      
-      {{ t.name }}
-      
-      @if (newTeam.leader === t.email) { 
-        <span class="leader-tag" title="Leader sélectionné">Leader</span> 
-      }
-    </div>
-  }
-</div>
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>
-          <button class="btn-primary" 
-                  (click)="createTeam()" 
-                  [disabled]="!newTeam.name || !newTeam.leader">
-            Créer
-          </button>
+        <div class="scroll-content" id="modalScrollContainer">
+          @for (group of groupedTechnicians(); track group.letter) {
+            <div class="group-section" [id]="'letter-' + group.letter">
+              <h2 class="letter-header">{{ group.letter }}</h2>
+              @for (t of group.members; track t.email) {
+                <div class="colleague-row" 
+                     [class.selected]="newTeam.members.includes(t.email)"
+                     (click)="toggleMember(t.email)">
+                  <span class="status-dot"></span>
+                  <span class="full-name">{{ t.name }}</span>
+                  
+                  @if (newTeam.members.includes(t.email)) {
+                    <div class="checkbox-custom">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
         </div>
       </div>
+
+      <button class="fab-save" 
+              [disabled]="!newTeam.name || newTeam.members.length === 0"
+              (click)="saveTeam()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        Enregistrer le groupe
+      </button>
     </div>
   }
 
   <nav class="bottom-nav">
-   <a routerLink="/dashboard" class="nav-item">
-       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"></line>
-        <line x1="8" y1="12" x2="21" y2="12"></line>
-        <line x1="8" y1="18" x2="21" y2="18"></line>
-        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-      </svg>
-      <span>Accueil</span>
-    </a>
-        <a routerLink="/parameters" class="nav-item">
-  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M18 6v8H6" />
-  <path d="M10 10l-4 4 4 4" />
-</svg>
+    <a (click)="goBack()" class="nav-item">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6v8H6"/><path d="M10 10l-4 4 4 4"/></svg>
       <span>Retour</span>
     </a>
- 
-
   </nav>
-
 </div>

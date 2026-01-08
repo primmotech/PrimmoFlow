@@ -1,10 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service'; // Service Appwrite
+import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme';
-import { ID, Query } from 'appwrite';
+import { ID } from 'appwrite';
 
 @Component({
   selector: 'app-equipes',
@@ -14,146 +14,154 @@ import { ID, Query } from 'appwrite';
   styleUrls: ['./equipes.scss']
 })
 export class Equipes implements OnInit {
-  private router = inject(Router);
+
   public auth = inject(AuthService);
   public themeService = inject(ThemeService);
+  private router = inject(Router);
 
-  // Configuration IDs Appwrite
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COL_TEAMS = 'teams';
   private readonly COL_PROFILES = 'user_profiles';
 
+  // Signaux pour les données
   teams = signal<any[]>([]);
   technicians = signal<any[]>([]); 
   loading = signal(true);
   showModal = signal(false);
+  
+  // Signaux pour l'UI (Les erreurs venaient d'ici !)
+  expandedTeamId = signal<string | null>(null);
+  isEditing = signal(false);
+  editingId = signal<string | null>(null);
 
-  newTeam = {
-    name: '',
-    leader: '', 
-    members: [] as string[]
-  };
+  newTeam = { name: '', members: [] as string[] };
 
-  ngOnInit() {
-    this.themeService.initTheme();
-    this.loadTechnicians();
-    this.loadTeams();
+  // Groupement alphabétique calculé pour le sélecteur
+  groupedTechnicians = computed(() => {
+    const groups: { letter: string, members: any[] }[] = [];
+    const sorted = [...this.technicians()].sort((a, b) => a.name.localeCompare(b.name));
+    
+    sorted.forEach(t => {
+      const letter = t.name.charAt(0).toUpperCase();
+      let group = groups.find(g => g.letter === letter);
+      if (!group) {
+        group = { letter, members: [] };
+        groups.push(group);
+      }
+      group.members.push(t);
+    });
+    return groups;
+  });
+  
+  alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  // Ajoute cette fonction pour le scroll dans la modal
+  scrollToLetter(letter: string) {
+    const element = document.getElementById('letter-' + letter);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
-  /**
-   * Appwrite n'a pas de onSnapshot natif simple comme Firestore sans le SDK Realtime.
-   * On utilise une récupération classique ici.
-   */
+  async ngOnInit() {
+    this.themeService.initTheme();
+    await this.loadTechnicians();
+    await this.loadTeams();
+  }
+
   async loadTechnicians() {
     try {
-      const response = await this.auth.databases.listDocuments(this.DB_ID, this.COL_PROFILES);
-      this.technicians.set(response.documents.map(d => ({ 
-        email: d['email'] || d.$id, 
-        name: d['nickName'] || d.$id 
+      const res = await this.auth.databases.listDocuments(this.DB_ID, this.COL_PROFILES);
+      this.technicians.set(res.documents.map(d => ({ 
+        email: d['email'], 
+        name: d['firstname'] ? `${d['lastname']?.toUpperCase()} ${d['firstname']}` : d['email']
       })));
-    } catch (e) {
-      console.error("Erreur chargement :", e);
-    }
+    } catch (e) { console.error("Erreur tech:", e); }
   }
 
   async loadTeams() {
+    this.loading.set(true);
     try {
-      const response = await this.auth.databases.listDocuments(this.DB_ID, this.COL_TEAMS);
-      this.teams.set(response.documents.map(d => ({ id: d.$id, ...d })));
-      this.loading.set(false);
-    } catch (e) {
-      console.error("Erreur chargement équipes:", e);
-    }
+      const res = await this.auth.databases.listDocuments(this.DB_ID, this.COL_TEAMS);
+      this.teams.set(res.documents.map(d => ({ id: d.$id, ...d })));
+    } catch (e) { console.error("Erreur teams:", e); }
+    finally { this.loading.set(false); }
   }
 
-  getLeaderName(leaderEmail: string): string {
-    const tech = this.technicians().find(t => t.email === leaderEmail);
-    return tech ? tech.name : leaderEmail;
+  // Fonctions de l'UI
+  toggleExpand(id: string) {
+    this.expandedTeamId.set(this.expandedTeamId() === id ? null : id);
   }
 
   toggleMember(email: string) {
-    const idx = this.newTeam.members.indexOf(email);
-    if (idx > -1) this.newTeam.members.splice(idx, 1);
-    else this.newTeam.members.push(email);
+    const current = [...this.newTeam.members];
+    const idx = current.indexOf(email);
+    idx > -1 ? current.splice(idx, 1) : current.push(email);
+    this.newTeam.members = current;
   }
 
-// ... imports et setup identiques ...
+  openCreateModal() {
+    this.isEditing.set(false);
+    this.editingId.set(null);
+    this.newTeam = { name: '', members: [] };
+    this.showModal.set(true);
+  }
 
-async createTeam() {
-  if (!this.newTeam.name || !this.newTeam.leader) return;
-  this.loading.set(true);
+  openEditModal(team: any) {
+    this.isEditing.set(true);
+    this.editingId.set(team.id);
+    this.newTeam = { name: team.name, members: [...team.members] };
+    this.showModal.set(true);
+  }
 
-  try {
-    // 1. Créer l'équipe
-    const teamDoc = await this.auth.databases.createDocument(
-      this.DB_ID, 
-      this.COL_TEAMS, 
-      ID.unique(), 
-      {
-        name: this.newTeam.name,
-        leader: this.newTeam.leader,
-        members: this.newTeam.members,
-        $createdAt: new Date().toISOString()
-      }
-    );
+  async saveTeam() {
+    if (!this.newTeam.name || this.newTeam.members.length === 0) return;
+    this.loading.set(true);
 
-    // 2. Préparer les emails uniques
-    const allEmails = [...new Set([...this.newTeam.members, this.newTeam.leader])];
-
-    // 3. Mises à jour des profils
-    await Promise.all(allEmails.map(async (email) => {
-      const docId = this.auth.formatId(email);
-      const isLeader = email === this.newTeam.leader;
-  
-      const profileData: any = { teamId: teamDoc.$id };
-
-
-      try {
-        // Appwrite ne mettra à jour QUE les champs présents dans profileData
-        await this.auth.databases.updateDocument(this.DB_ID, this.COL_PROFILES, docId, profileData);
-      } catch (e) {
-        // Fallback : Si le profil n'existe pas, on le crée avec un rôle par défaut
-        await this.auth.databases.createDocument(this.DB_ID, this.COL_PROFILES, docId, {
-          ...profileData,
-          role: profileData.role || 'Utilisateur', // Uniquement si création à zéro
-          email: email,
-          nickName: email.split('@')[0],
-          themePreference: 'dark'
+    try {
+      let teamId = this.editingId();
+      
+      if (this.isEditing() && teamId) {
+        // Mode Edition
+        await this.auth.databases.updateDocument(this.DB_ID, this.COL_TEAMS, teamId, {
+          name: this.newTeam.name,
+          members: this.newTeam.members
         });
+      } else {
+        // Mode Création
+        const doc = await this.auth.databases.createDocument(this.DB_ID, this.COL_TEAMS, ID.unique(), {
+          name: this.newTeam.name,
+          members: this.newTeam.members
+        });
+        teamId = doc.$id;
       }
-    }));
 
-    this.showModal.set(false);
-    this.newTeam = { name: '', leader: '', members: [] };
-    await this.loadTeams(); 
-  } catch (error) {
-    console.error('Erreur création équipe:', error);
-    alert("Erreur lors de la création.");
-  } finally {
-    this.loading.set(false);
+      // Optionnel : Lier les profils à la team
+      await this.updateProfilesTeamLink(this.newTeam.members, teamId!);
+
+      this.showModal.set(false);
+      await this.loadTeams();
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de l'enregistrement");
+    } finally { this.loading.set(false); }
   }
-}
+
+  private async updateProfilesTeamLink(emails: string[], teamId: string) {
+    await Promise.all(emails.map(async (email) => {
+      try {
+        await this.auth.databases.updateDocument(this.DB_ID, this.COL_PROFILES, this.auth.formatId(email), { teamId });
+      } catch (e) { /* Profil peut-être inexistant */ }
+    }));
+  }
 
   async deleteTeam(team: any) {
     if (!confirm(`Supprimer l'équipe ${team.name} ?`)) return;
-
     try {
-      const allEmails = [...new Set([...(team.members || []), team.leader])];
-      for (const email of allEmails) {
-        try {
-          const docId = this.auth.formatId(email);
-          await this.auth.databases.updateDocument(this.DB_ID, this.COL_PROFILES, docId, { 
-            teamId: '', // Appwrite n'aime pas null si l'attribut est requis, on met une chaîne vide
-           });
-        } catch (e) { }
-      }
-
       await this.auth.databases.deleteDocument(this.DB_ID, this.COL_TEAMS, team.id);
       await this.loadTeams();
-    } catch (error) {
-      console.error('Erreur suppression équipe:', error);
-    }
+    } catch (e) { console.error(e); }
   }
 
-  goBack() { this.router.navigate(['/dashboard']); }
+  goBack() { this.router.navigate(['/parameters']); }
 }
