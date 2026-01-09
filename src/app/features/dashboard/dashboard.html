@@ -75,14 +75,14 @@
 
 
 
-            <div class="creator-info">
-              <span class="creator-text">
-                Hab :
-                <a [href]="'tel:' + inter.habitants?.[0]" (click)="$event.stopPropagation()" class="creator-link">
-                  {{ inter.habitants?.[0].prenom }} {{ inter.habitants?.[0].nom ||inter.habitants?.[0].email}}
-                </a>
-              </span>
-            </div>
+   <div class="creator-info">
+  <span class="creator-text">
+    Hab :
+    <a [href]="'tel:' + inter.habitants[0].tel" (click)="$event.stopPropagation()" class="creator-link">
+      {{ inter.habitants[0].prenom }} {{ inter.habitants[0].nom || inter.habitants[0].email }}
+    </a>
+  </span>
+</div>
 
           </div>
 
@@ -111,27 +111,43 @@
 </div>
 </section>
 
-
-
-
 <section class="recent-activity">
   <h3>Terminées ({{ completedInterventions().length }})</h3>
   <div class="intervention-list">
     @for (inter of completedInterventions(); track inter.id) {
-    <div class="intervention-card" [ngClass]="getStatusClass(inter.status)" [class.pressing]="isLongPressing"
-      (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()" (mouseleave)="onPressEnd()"
-      (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()" (touchmove)="onPressEnd()"
-      (click)="handleCardClick(inter, 'invoice')">
+    @let adr = inter.adresse;
+    <div class="intervention-card pending-horizontal" [ngClass]="getStatusClass(inter.status)"
+      [class.pressing]="isLongPressing" (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()"
+      (mouseleave)="onPressEnd()" (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()"
+      (touchmove)="onPressEnd()" (click)="handleCardClick(inter, 'invoice')">
 
       <div class="card-info">
-        <span class="city">{{ inter.adresse?.ville }}</span>
-        <span class="street">{{ inter.adresse?.numero }} {{ inter.adresse?.rue }}</span>
+        <span class="city">{{ adr?.ville || 'VILLE INCONNUE' }}</span>
+        <span class="street">{{ adr?.numero }} {{ adr?.rue }}</span>
 
-        @if (authService.hasPerm('dash_view_prices')) {
-        <div [class]="inter.status === 'END' ? 'price-hintr' : 'price-hintv'">
-          {{ inter.totalFinal || 0 | number:'1.2-2'}}€
+        @if (inter.owner && inter.owner.length > 0) {
+        @let ow = inter.owner[0];
+        <div class="creator-info">
+          <span class="creator-text">
+            Par
+            <a [href]="'tel:' + ow.tel" (click)="$event.stopPropagation()" class="creator-link">
+              {{ ow.prenom }} {{ ow.nom || ow.email }}
+            </a>
+          </span>
         </div>
         }
+      </div>
+
+      <div class="card-actions-horizontal">
+        @if (authService.hasPerm('dash_view_prices')) {
+          <div [class]="inter.status === 'END' ? 'price-hintr' : 'price-hintv'">
+            {{ inter.totalFinal || 0 | number:'1.2-2' }}€
+          </div>
+        }
+
+        <button class="btn-details-link">
+          {{ inter.status === 'BILLED' ? 'Payé ?' : 'Facture' }}
+        </button>
       </div>
     </div>
     }
@@ -191,55 +207,55 @@
 </div>
 
 @if (selectedIntervention()) {
-@let sel = selectedIntervention();
-<div class="modal-overlay" (click)="closeTasks()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h4>{{ sel.adresse?.ville }} {{ sel.adresse?.rue }}</h4>
-      <button class="close-btn" (click)="closeTasks()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="tasks-section">
-        @if (sel.mission?.length > 0) {
-        <ul class="task-list">
-          @for (task of sel.mission; track $index) {
-          <li class="task-item" [class.is-done]="task.done">
-            <div class="task-status-icon">
-              @if (task.done) {
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              } @else { <div class="bullet"></div> }
-            </div>
-            <div class="task-text">{{ task.label }}</div>
-          </li>
-          }
-        </ul>
-        } @else { <p class="no-tasks">Aucune mission détaillée.</p> }
+  @let sel = selectedIntervention()!; <div class="modal-overlay" (click)="closeTasks()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4>{{ sel.adresse.ville }} {{ sel.adresse.rue }}</h4>
+        <button class="close-btn" (click)="closeTasks()">✕</button>
       </div>
-
-      @if (sel.photos?.length > 0) {
-      <hr class="modal-divider">
-      <div class="photos-section">
-        <h5>Photos d'intervention</h5>
-        <div class="photo-slider">
-          @for (pStr of sel.photos; track pStr) {
-          @let photo = parseJson(pStr);
-          <div class="photo-slide">
-            <img [src]="photo.url" alt="Photo" loading="lazy">
-          </div>
-          }
+      
+      <div class="modal-body">
+        <div class="tasks-section">
+          @if (sel.mission && sel.mission.length > 0) {
+            <ul class="task-list">
+              @for (task of sel.mission; track $index) {
+                <li class="task-item" [class.is-done]="task.done">
+                  <div class="task-status-icon">
+                    @if (task.done) {
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    } @else { <div class="bullet"></div> }
+                  </div>
+                  <div class="task-text">{{ task.label }}</div>
+                </li>
+              }
+            </ul>
+          } @else { <p class="no-tasks">Aucune mission détaillée.</p> }
         </div>
-      </div>
-      }
 
-      @if (sel.remarques) {
-      <div class="remarks-section">
-        <h5>Remarques :</h5>
-        <p>{{ sel.remarques }}</p>
+        @if (sel.photos && sel.photos.length > 0) {
+          <hr class="modal-divider">
+          <div class="photos-section">
+            <h5>Photos d'intervention</h5>
+            <div class="photo-slider">
+              @for (pStr of sel.photos; track pStr) {
+                @let photo = parseJson(pStr);
+                <div class="photo-slide">
+                  <img [src]="photo.url" alt="Photo" loading="lazy">
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (sel.remarques) {
+          <div class="remarks-section">
+            <h5>Remarques :</h5>
+            <p>{{ sel.remarques }}</p>
+          </div>
+        }
       </div>
-      }
     </div>
   </div>
-</div>
 }
