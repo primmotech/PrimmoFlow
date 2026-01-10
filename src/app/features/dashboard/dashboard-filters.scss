@@ -1,10 +1,16 @@
 :host {
   display: block;
   width: 100%;
+  // --- ACTIVATION DU STICKY SUR LE COMPOSANT ---
+  position: sticky;
+  top: 61px;          // Doit correspondre à la hauteur de ton header
+  z-index: 90;        // Pour passer au-dessus des cartes mais sous le header (100)
+  background: var(--bg-color); // Rend le bloc opaque pour cacher les cartes qui défilent derrière
 }
 
 .stats-header {
-  margin-top: 15px;
+  padding: 10px 0; // On réduit un peu les marges pour que ce soit plus fin quand c'est collé
+  
   .header-filter-row {
     display: flex;
     justify-content: space-between;

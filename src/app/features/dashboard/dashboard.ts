@@ -7,6 +7,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { InterventionCardComponent } from './intervention-card.component';
 import { TaskModalComponent } from './task-modal.component';
 import { DashboardFiltersComponent } from './dashboard-filters.component';
+import { BottomNavComponent } from './bottom-nav';
+import { AppHeaderComponent } from './app-header';
 
 export interface Task {
   label: string;
@@ -38,20 +40,27 @@ export interface Intervention {
 export type DashboardFilter = 'ALL' | 'WAITING' | 'PLANNED' | 'DONE';
 
 export const STATUS_CONFIG: Record<string, { label: string, color: string, category: 'pending' | 'planned' | 'completed' }> = {
-  'WAITING': { label: 'En attente', color: 'blue-card',   category: 'pending' },
-  'OPEN':    { label: 'Ouvert',     color: 'green-card',  category: 'pending' },
-  'STARTED': { label: 'En cours',   color: 'green-card',  category: 'planned' },
-  'PAUSED':  { label: 'En pause',   color: 'yellow-card', category: 'planned' },
-  'STOPPED': { label: 'Arrêté',     color: 'red-card',    category: 'planned' },
-  'PLANNED': { label: 'Planifié',   color: 'blue-card',   category: 'planned' },
-  'END':     { label: 'Terminé',    color: 'red-card',    category: 'completed' },
-  'BILLED':  { label: 'Facturé',    color: 'green-card',  category: 'completed' }
+  'WAITING': { label: 'En attente', color: 'blue-card', category: 'pending' },
+  'OPEN': { label: 'Ouvert', color: 'green-card', category: 'pending' },
+  'STARTED': { label: 'En cours', color: 'green-card', category: 'planned' },
+  'PAUSED': { label: 'En pause', color: 'yellow-card', category: 'planned' },
+  'STOPPED': { label: 'Arrêté', color: 'red-card', category: 'planned' },
+  'PLANNED': { label: 'Planifié', color: 'blue-card', category: 'planned' },
+  'END': { label: 'Terminé', color: 'red-card', category: 'completed' },
+  'BILLED': { label: 'Facturé', color: 'green-card', category: 'completed' }
 };
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
- imports: [CommonModule, RouterModule, InterventionCardComponent,TaskModalComponent,DashboardFiltersComponent], // <-- Ajouté ici
+  imports: [
+    CommonModule,
+    BottomNavComponent,
+    RouterModule, 
+    InterventionCardComponent, 
+    TaskModalComponent, 
+    DashboardFiltersComponent,
+    AppHeaderComponent  ], // <-- Ajouté ici
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
@@ -68,7 +77,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedIntervention = signal<Intervention | null>(null);
   colleagueEmails = signal<string[]>([]);
   pressedCardId = signal<string | null>(null);
-  
+
   // NOUVEAU : Signal de filtrage
   activeFilter = signal<DashboardFilter>('ALL');
 
@@ -82,15 +91,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly BUCKET_ID = '69502be400074c6f43f5';
 
   // --- COMPUTED FILTRÉS ---
-  pendingInterventions = computed(() => 
+  pendingInterventions = computed(() =>
     this.interventions().filter(i => STATUS_CONFIG[i.status]?.category === 'pending')
   );
 
-  plannedInterventions = computed(() => 
+  plannedInterventions = computed(() =>
     this.interventions().filter(i => STATUS_CONFIG[i.status]?.category === 'planned')
   );
 
-  completedInterventions = computed(() => 
+  completedInterventions = computed(() =>
     this.interventions().filter(i => STATUS_CONFIG[i.status]?.category === 'completed')
   );
 
@@ -150,14 +159,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loading.set(false);
     }
   }
-makePhoneCall(phone: string) {
-  if (phone) {
-    window.location.href = `tel:${phone}`;
+  makePhoneCall(phone: string) {
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    }
   }
-}
   subscribeToChanges() {
     this.unsubscribeRealtime = this.authService.client.subscribe(
-      `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`, 
+      `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`,
       response => {
         const payload = response.payload as any;
         const userEmail = this.authService.userEmail();
@@ -176,14 +185,14 @@ makePhoneCall(phone: string) {
 
           if (event.includes('.create') && activeStatuses.includes(payload.status)) {
             this.interventions.update(list => [cleanData, ...list]);
-          } 
+          }
           else if (event.includes('.update')) {
             if (!activeStatuses.includes(payload.status)) {
               this.interventions.update(list => list.filter(i => i.id !== payload.$id));
             } else {
               this.interventions.update(list => list.map(i => i.id === payload.$id ? cleanData : i));
             }
-          } 
+          }
           else if (event.includes('.delete')) {
             this.interventions.update(list => list.filter(i => i.id !== payload.$id));
           }
@@ -196,8 +205,8 @@ makePhoneCall(phone: string) {
     event.stopPropagation();
     if (confirm(`Confirmer le paiement reçu ?`)) {
       try {
-        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, { 
-          status: 'PAID', paidAt: new Date().toISOString() 
+        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, {
+          status: 'PAID', paidAt: new Date().toISOString()
         });
       } catch (error) { console.error(error); }
     }
@@ -207,7 +216,7 @@ makePhoneCall(phone: string) {
 
   handleCardClick(inter: Intervention, type: 'details' | 'invoice') {
     if (this.isLongPressing) return;
-    
+
     if (type === 'details') {
       if (inter.status === 'OPEN' || inter.status === 'WAITING') {
         if (this.authService.hasPerm('dash_act_plan')) {
@@ -225,7 +234,7 @@ makePhoneCall(phone: string) {
 
   handleCompletedClick(inter: Intervention) {
     if (inter.status === 'BILLED') {
-      if (this.authService.hasPerm('dash_nav_billed')) this.markAsPaid(inter, { stopPropagation: () => {} } as Event);
+      if (this.authService.hasPerm('dash_nav_billed')) this.markAsPaid(inter, { stopPropagation: () => { } } as Event);
     } else {
       if (this.authService.hasPerm('dash_nav_invoice')) this.goToInvoice(inter.id);
     }
@@ -282,19 +291,19 @@ makePhoneCall(phone: string) {
 
     const rawOwner = payload['owner'];
     const owner = hasViewContacts ? (Array.isArray(rawOwner) ? rawOwner.map(o => typeof o === 'string' ? JSON.parse(o) : o) : []) : [];
-    
+
     const rawHabitants = payload['habitants'];
-    let habitants = hasViewContacts ? (Array.isArray(rawHabitants) ? rawHabitants.map(h => typeof h === 'string' ? JSON.parse(h) : h) : 
-                        (typeof rawHabitants === 'string' ? JSON.parse(rawHabitants) : [])) : [];
+    let habitants = hasViewContacts ? (Array.isArray(rawHabitants) ? rawHabitants.map(h => typeof h === 'string' ? JSON.parse(h) : h) :
+      (typeof rawHabitants === 'string' ? JSON.parse(rawHabitants) : [])) : [];
 
     return {
       ...payload,
       id: payload.$id,
       adresse: adr,
-      owner: owner, 
+      owner: owner,
       habitants: Array.isArray(habitants) ? habitants : [habitants],
       proprietaire: hasViewContacts ? (typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire']) : null,
-      mission: tasks, 
+      mission: tasks,
       photos: Array.isArray(payload['photos']) ? payload['photos'] : [],
       totalFinal: hasViewPrices ? (payload['totalFinal'] || 0) : 0,
       plannedAt: payload['plannedAt'] || null,
@@ -308,37 +317,37 @@ makePhoneCall(phone: string) {
   parseJson(jsonString: any) {
     if (!jsonString) return { url: '' };
     if (typeof jsonString === 'object') return jsonString;
-    try { return JSON.parse(jsonString); } catch (e) { 
-      return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
+    try { return JSON.parse(jsonString); } catch (e) {
+      return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) };
     }
   }
   private async confirmDeletion(inter: Intervention) {
-  // 1. On arrête l'animation et le contour rouge tout de suite
-  const idToClear = inter.id;
-  this.pressedCardId.set(null);
-  this.isLongPressing = false;
+    // 1. On arrête l'animation et le contour rouge tout de suite
+    const idToClear = inter.id;
+    this.pressedCardId.set(null);
+    this.isLongPressing = false;
 
-  // 2. On lance la vibration
-  if ('vibrate' in navigator) navigator.vibrate(50);
+    // 2. On lance la vibration
+    if ('vibrate' in navigator) navigator.vibrate(50);
 
-  // 3. On demande confirmation
-  if (confirm(`⚠️ Supprimer l'intervention à ${inter.adresse?.ville} ?`)) {
-    try {
-      await this.authService.databases.deleteDocument(this.DB_ID, this.COL_INTERVENTIONS, idToClear);
-    } catch (error) { 
-      console.error(error); 
+    // 3. On demande confirmation
+    if (confirm(`⚠️ Supprimer l'intervention à ${inter.adresse?.ville} ?`)) {
+      try {
+        await this.authService.databases.deleteDocument(this.DB_ID, this.COL_INTERVENTIONS, idToClear);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
-}
-onPressEnd() {
-  if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
-  
-  // On ne remet à false que si on n'est PAS en train de confirmer une suppression
-  setTimeout(() => { 
-    if (this.pressedCardId() !== null) { // Si confirmDeletion ne l'a pas déjà fait
-      this.pressedCardId.set(null); 
-      this.isLongPressing = false; 
-    }
-  }, 150);
-}
+  onPressEnd() {
+    if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+
+    // On ne remet à false que si on n'est PAS en train de confirmer une suppression
+    setTimeout(() => {
+      if (this.pressedCardId() !== null) { // Si confirmDeletion ne l'a pas déjà fait
+        this.pressedCardId.set(null);
+        this.isLongPressing = false;
+      }
+    }, 150);
+  }
 }

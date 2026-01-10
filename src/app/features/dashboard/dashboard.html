@@ -1,3 +1,7 @@
+<div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+  <app-header></app-header>
+
+
 <app-dashboard-filters 
   [activeFilter]="activeFilter()" 
   [totalCount]="interventions().length" 
@@ -67,3 +71,6 @@
 @if (selectedIntervention()) {
   <app-task-modal [intervention]="selectedIntervention()!" (close)="closeTasks()"></app-task-modal>
 }
+
+  <app-bottom-nav></app-bottom-nav>
+</div>
