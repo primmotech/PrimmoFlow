@@ -1,0 +1,55 @@
+/* --- MODALE & PHOTOS --- */
+:host {
+  display: contents; // La modale doit pouvoir couvrir tout l'écran
+}
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px); z-index: 2000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+
+  .modal-content {
+    background: var(--card-bg); width: 100%; max-width: 400px;
+    border-radius: 28px; overflow: hidden; border: 1px solid var(--border-color);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+
+  .modal-header {
+    padding: 18px 20px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    h4 { margin: 0; font-size: 0.9rem; color: var(--accent-color); text-transform: uppercase; font-weight: 800; }
+    .close-btn { background: none; border: none; font-size: 1.4rem; color: var(--text-secondary); cursor: pointer; }
+  }
+  
+  .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+}
+
+/* TASKS LIST */
+.task-list {
+  list-style: none; padding: 0; margin: 0;
+  .task-item {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    &.is-done .task-text { text-decoration: line-through; opacity: 0.6; }
+    .bullet { width: 8px; height: 8px; border-radius: 50%; background: var(--border-color); margin-left: 5px; }
+  }
+}
+
+.modal-divider { border: 0; height: 1px; background: var(--border-color); margin: 20px 0; opacity: 0.5; }
+
+.photo-slider {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  &::-webkit-scrollbar { display: none; }
+  
+  .photo-slide {
+    flex: 0 0 140px; height: 140px; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border-color); scroll-snap-align: start;
+    img { width: 100%; height: 100%; object-fit: cover; }
+  }
+}
+
+.remarks-section {
+  margin-top: 15px;
+  h5 { color: var(--text-secondary); margin-bottom: 5px; font-size: 0.8rem; }
+  p { font-size: 0.9rem; margin: 0; line-height: 1.4; }
+}

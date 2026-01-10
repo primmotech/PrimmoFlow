@@ -4,6 +4,9 @@ import { Router, RouterModule } from '@angular/router';
 import { Query } from 'appwrite';
 import { ThemeService } from '../../core/services/theme';
 import { AuthService } from '../../core/services/auth.service';
+import { InterventionCardComponent } from './intervention-card.component';
+import { TaskModalComponent } from './task-modal.component';
+import { DashboardFiltersComponent } from './dashboard-filters.component';
 
 export interface Task {
   label: string;
@@ -48,7 +51,7 @@ export const STATUS_CONFIG: Record<string, { label: string, color: string, categ
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+ imports: [CommonModule, RouterModule, InterventionCardComponent,TaskModalComponent,DashboardFiltersComponent], // <-- Ajouté ici
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })

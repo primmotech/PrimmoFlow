@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.stats-header {
+  margin-top: 15px;
+  .header-filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .filter-pills {
+    display: flex;
+    background: var(--filter-pill-bg);
+    padding: 4px;
+    border-radius: 12px;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+
+    button {
+      border: none;
+      background: transparent;
+      padding: 7px 14px;
+      border-radius: 9px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      &.active {
+        background: var(--card-bg);
+        color: var(--accent-color);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      }
+    }
+  }
+  .total-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    background: var(--accent-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 10px;
+  }
+}
