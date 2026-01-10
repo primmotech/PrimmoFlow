@@ -174,4 +174,55 @@ filteredInterventions = computed(() => {
   subscribeToChanges() { /* Ta logique Realtime existante */ }
   goToAdd() { this.router.navigate(['/add-intervention']); }
   // ... autres méthodes de navigation ...
+  // Dans dashboard.ts
+makeCall(phone: string) {
+  if (phone) {
+    window.location.href = `tel:${phone}`;
+  }
+}
+// --- MÉTHODES DE NAVIGATION ET ACTIONS ---
+
+goToDetails(id: string) {
+  this.router.navigate(['/intervention-details', id]);
+}
+
+goToPlanning(inter: any, event?: Event) {
+  if (event) event.stopPropagation();
+  this.router.navigate(['/planning', inter.id]);
+}
+
+goToEdit(id: string) {
+  this.router.navigate(['/edit-intervention', id]);
+}
+
+goToInvoice(id: string) {
+  this.router.navigate(['/invoice', id]);
+}
+
+// --- GESTION DES TÂCHES ET MODALE ---
+
+openTasks(inter: any, event?: Event) {
+  if (event) event.stopPropagation();
+  this.selectedIntervention.set(inter);
+}
+
+async markAsPaid(inter: any, event: Event) {
+  event.stopPropagation();
+  // Logique pour marquer comme payé (à implémenter plus tard)
+  console.log('Marquer comme payé:', inter.id);
+}
+
+// --- LOGIQUE DE "LONG PRESS" (POUR LES ANIMATIONS) ---
+
+onPressStart(inter: any) {
+  this.pressedCardId.set(inter.id);
+}
+
+onPressEnd() {
+  this.pressedCardId.set(null);
+}
+
+// --- MÉTHODE APPEL (SI BESOIN) ---
+
+
 }

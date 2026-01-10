@@ -28,7 +28,7 @@ export const routes: Routes = [
     canActivate: [permissionGuard('dash_nav_add')] 
   },
   { 
-    path: 'intervention/:id', 
+    path: 'intervention-details/:id', 
     component: DetailsInterventionComponent,
     canActivate: [permissionGuard('dash_nav_details')] 
   },
