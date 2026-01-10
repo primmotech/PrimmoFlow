@@ -206,11 +206,17 @@ openTasks(inter: any, event?: Event) {
   this.selectedIntervention.set(inter);
 }
 
-async markAsPaid(inter: any, event: Event) {
-  event.stopPropagation();
-  // Logique pour marquer comme payé (à implémenter plus tard)
-  console.log('Marquer comme payé:', inter.id);
-}
+  async markAsPaid(intervention: Intervention, event: Event) {
+    event.stopPropagation();
+    if (confirm(`Confirmer le paiement reçu ?`)) {
+      try {
+        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, { 
+          status: 'PAID', paidAt: new Date().toISOString() 
+        });
+      } catch (error) { console.error(error); }
+    }
+  }
+
 
 // --- LOGIQUE DE "LONG PRESS" (POUR LES ANIMATIONS) ---
 

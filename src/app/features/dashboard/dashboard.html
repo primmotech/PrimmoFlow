@@ -31,6 +31,7 @@
           (mousedown)="onPressStart(inter)"
           (mouseup)="onPressEnd()"
           (touchstart)="onPressStart(inter)"
+          (callOwner)="makeCall($event)"
           (touchend)="onPressEnd()">
         </app-intervention-card>
         }
@@ -53,6 +54,7 @@
           (mousedown)="onPressStart(inter)"
           (mouseup)="onPressEnd()"
           (touchstart)="onPressStart(inter)"
+          (callOwner)="makeCall($event)"
           (touchend)="onPressEnd()">
         </app-intervention-card>
         }
@@ -75,7 +77,9 @@
           (mousedown)="onPressStart(inter)"
           (mouseup)="onPressEnd()"
           (touchstart)="onPressStart(inter)"
-          (touchend)="onPressEnd()">
+          (touchend)="onPressEnd()"
+           (callOwner)="makeCall($event)">
+          
         </app-intervention-card>
         }
       </div>
