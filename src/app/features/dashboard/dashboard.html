@@ -1,76 +1,77 @@
 <div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
+  
   <app-header></app-header>
 
+  <main class="container">
+    
+    <app-dashboard-filters 
+      [activeFilter]="activeFilter()" 
+      [totalCount]="filteredInterventions().length"
+      [owners]="owners()" 
+      [selectedOwnerId]="selectedOwnerId()"
+      (filterChange)="setFilter($event)"
+      (ownerChange)="setOwnerFilter($event)">
+    </app-dashboard-filters>
 
-<app-dashboard-filters 
-  [activeFilter]="activeFilter()" 
-  [totalCount]="interventions().length" 
-  (filterChange)="setFilter($event)">
-</app-dashboard-filters>
-
-@if (showPending()) {
-  <section class="recent-activity">
-    <h3>En attente ({{ pendingInterventions().length }})</h3>
-    <div class="intervention-list">
-      @for (inter of pendingInterventions(); track inter.id) {
-        <app-intervention-card 
-          [intervention]="inter" [statusConfig]="STATUS_CONFIG"
-          [canEdit]="true"
-          (callOwner)="makePhoneCall($event)"
-          [isPressing]="pressedCardId() === inter.id"
-          (cardClick)="goToPlanning(inter)" 
-          (actionClick)="openTasks(inter, $event)"
-          (editClick)="goToEdit($event)"
-          (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()"
-          (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()">
-        </app-intervention-card>
+    @if (loading()) {
+      <div class="loader-container">
+        <div class="spinner"></div>
+      </div>
+    } @else {
+      
+      @if (showPending() && pendingInterventions().length > 0) {
+        <section class="intervention-section">
+          <h2 class="section-title">En attente ({{ pendingInterventions().length }})</h2>
+          <div class="cards-grid">
+            @for (inter of pendingInterventions(); track inter.id) {
+             <app-intervention-card 
+          [intervention]="inter" 
+          [statusConfig]="STATUS_CONFIG"> </app-intervention-card>
+            }
+          </div>
+        </section>
       }
-    </div>
-  </section>
-}
 
-@if (showPlanned()) {
-  <section class="recent-activity">
-    <h3>Planifiées ({{ plannedInterventions().length }})</h3>
-    <div class="intervention-list">
-      @for (inter of plannedInterventions(); track inter.id) {
-        <app-intervention-card 
-          [intervention]="inter" [statusConfig]="STATUS_CONFIG"
-          [canEdit]="false"
-          [isPressing]="pressedCardId() === inter.id"
-          (cardClick)="goToDetails(inter.id)"
-          (actionClick)="goToPlanning(inter, $event)"
-          (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()"
-          (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()">
-        </app-intervention-card>
+      @if (showPlanned() && plannedInterventions().length > 0) {
+        <section class="intervention-section">
+          <h2 class="section-title">Planifiées ({{ plannedInterventions().length }})</h2>
+          <div class="cards-grid">
+            @for (inter of plannedInterventions(); track inter.id) {
+<app-intervention-card 
+          [intervention]="inter" 
+          [statusConfig]="STATUS_CONFIG"> </app-intervention-card>
+            }
+          </div>
+        </section>
       }
-    </div>
-  </section>
-}
 
-@if (showCompleted()) {
-  <section class="recent-activity">
-    <h3>Terminées ({{ completedInterventions().length }})</h3>
-    <div class="intervention-list">
-      @for (inter of completedInterventions(); track inter.id) {
-        <app-intervention-card 
-          [intervention]="inter" [statusConfig]="STATUS_CONFIG"
-          [canEdit]="false"
-          (callOwner)="makePhoneCall($event)"
-          [isPressing]="pressedCardId() === inter.id"
-          (cardClick)="inter.status === 'END' ? goToInvoice(inter.id) : (authService.hasPerm('dash_nav_billed') ? markAsPaid(inter, $event) : null)"
-          (actionClick)="inter.status === 'END' ? router.navigate(['/history', inter.id]) : null"
-          (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()"
-          (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()">
-        </app-intervention-card>
+      @if (showCompleted() && completedInterventions().length > 0) {
+        <section class="intervention-section">
+          <h2 class="section-title">Terminées ({{ completedInterventions().length }})</h2>
+          <div class="cards-grid">
+            @for (inter of completedInterventions(); track inter.id) {
+             <app-intervention-card 
+          [intervention]="inter" 
+          [statusConfig]="STATUS_CONFIG"> </app-intervention-card>
+            }
+          </div>
+        </section>
       }
-    </div>
-  </section>
-}
 
-@if (selectedIntervention()) {
-  <app-task-modal [intervention]="selectedIntervention()!" (close)="closeTasks()"></app-task-modal>
-}
+      @if (filteredInterventions().length === 0) {
+        <div class="empty-state">
+          <p>Aucune intervention trouvée</p>
+        </div>
+      }
+    }
+  </main>
 
   <app-bottom-nav></app-bottom-nav>
+
+  @if (selectedIntervention()) {
+    <app-task-modal 
+      [intervention]="selectedIntervention()!" 
+      (close)="selectedIntervention.set(null)">
+    </app-task-modal>
+  }
 </div>

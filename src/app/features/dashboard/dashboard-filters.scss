@@ -12,10 +12,18 @@
   .header-filter-row { display: flex; justify-content: space-between; align-items: center; }
 }
 
+.filters-group {
+  display: flex;
+  gap: 12px; // Espace entre les deux filtres
+}
+
+.dropdown-container {
+  position: relative;
+}
+
 .filter-trigger-group {
   position: relative;
   display: flex;
-  align-items: center;
 
   .filter-trigger {
     width: 46px;
@@ -27,33 +35,42 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    color: var(--text-secondary);
+    
     svg { width: 22px; height: 22px; }
+    
+    .initials {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--accent-color);
+    }
   }
 
-  // Couleurs du trigger selon l'état
+  // Couleurs pour le filtre statut
   &.all .filter-trigger { color: var(--accent-color); }
   &.waiting .filter-trigger { color: #f1c40f; }
   &.planned .filter-trigger { color: #3498db; }
   &.done .filter-trigger { color: var(--success); }
+  
+  // Style spécifique pour le trigger Owner quand actif
+  &.owner .filter-trigger {
+     // Optionnel: fond différent si un owner est choisi
+  }
 
   .clear-filter {
     position: absolute;
     top: -5px;
     right: -5px;
-    width: 22px;
-    height: 22px;
-    background: #e74c3c; // Rouge PrimmoFlow
+    width: 20px;
+    height: 20px;
+    background: #e74c3c;
     border-radius: 50%;
     border: 2px solid var(--bg-color);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     padding: 0;
-    
-    &:active { transform: scale(0.9); }
   }
 }
 
@@ -61,31 +78,35 @@
   position: absolute;
   top: 55px;
   left: 0;
-  width: 180px;
+  width: 200px;
   background: var(--card-bg);
   border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  overflow: hidden;
+  z-index: 2100;
+
+  &.right { left: auto; right: -50px; } // Décale le menu owner si besoin
 
   .menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     padding: 14px 16px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
 
-    &.selected { background: rgba(var(--accent-color), 0.05); }
+    &:active { background: var(--filter-pill-bg); }
+    &.selected { color: var(--accent-color); background: rgba(52, 152, 219, 0.05); }
 
     .item-icon {
       display: flex;
-      svg { width: 18px; height: 18px; }
+      svg { width: 16px; height: 16px; }
       &.waiting { color: #f1c40f; }
       &.planned { color: #3498db; }
       &.done { color: var(--success); }
     }
-
-    .item-label { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
   }
 }
 
@@ -96,4 +117,51 @@
   color: white;
   padding: 6px 14px;
   border-radius: 12px;
+}
+.dropdown-container {
+  position: relative; // C'est l'ancre du menu
+}
+
+.filters-group {
+  display: flex;
+  gap: 15px; // Plus d'espace entre les deux boutons triggers
+  padding-left: 5px; // Décolle légèrement le premier bouton du bord gauche
+}
+
+.filter-menu {
+  position: absolute;
+  top: 55px;
+  left: 0; // Aligné sur le bord gauche du bouton
+  width: 220px; // Un peu plus large pour le confort
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 3000; // Très haut pour passer devant tout
+  
+  // Sécurité anti-débordement
+  max-width: 80vw; 
+
+  // La version "Owner" (le deuxième bouton)
+  &.right {
+    left: -50px; // On le décale un peu vers la gauche pour qu'il ne sorte pas de l'écran à droite
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px; // Padding plus généreux pour les gros doigts sur mobile
+    border-bottom: 1px solid rgba(var(--text-primary-rgb), 0.05);
+
+    &:last-child { border-bottom: none; }
+
+    .item-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      white-space: nowrap; // Évite que le nom ne passe sur deux lignes
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
 }
