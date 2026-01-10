@@ -56,6 +56,7 @@ export const STATUS_CONFIG: Record<string, { label: string, color: string, categ
   styleUrls: ['./dashboard.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  public readonly STATUS_CONFIG = STATUS_CONFIG;
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
   public router = inject(Router);
@@ -149,7 +150,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loading.set(false);
     }
   }
-
+makePhoneCall(phone: string) {
+  if (phone) {
+    window.location.href = `tel:${phone}`;
+  }
+}
   subscribeToChanges() {
     this.unsubscribeRealtime = this.authService.client.subscribe(
       `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`, 
@@ -198,14 +203,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async confirmDeletion(inter: Intervention) {
-    if (confirm(`⚠️ Supprimer l'intervention à ${inter.adresse?.ville} ?`)) {
-      try {
-        if ('vibrate' in navigator) navigator.vibrate(50);
-        await this.authService.databases.deleteDocument(this.DB_ID, this.COL_INTERVENTIONS, inter.id);
-      } catch (error) { console.error(error); }
-    }
-  }
+
 
   handleCardClick(inter: Intervention, type: 'details' | 'invoice') {
     if (this.isLongPressing) return;
@@ -261,10 +259,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPressEnd() {
-    if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
-    setTimeout(() => { this.pressedCardId.set(null); this.isLongPressing = false; }, 50);
-  }
+
 
   openTasks(inter: Intervention, event: Event) {
     event.preventDefault();
@@ -317,4 +312,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
     }
   }
+  private async confirmDeletion(inter: Intervention) {
+  // 1. On arrête l'animation et le contour rouge tout de suite
+  const idToClear = inter.id;
+  this.pressedCardId.set(null);
+  this.isLongPressing = false;
+
+  // 2. On lance la vibration
+  if ('vibrate' in navigator) navigator.vibrate(50);
+
+  // 3. On demande confirmation
+  if (confirm(`⚠️ Supprimer l'intervention à ${inter.adresse?.ville} ?`)) {
+    try {
+      await this.authService.databases.deleteDocument(this.DB_ID, this.COL_INTERVENTIONS, idToClear);
+    } catch (error) { 
+      console.error(error); 
+    }
+  }
+}
+onPressEnd() {
+  if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+  
+  // On ne remet à false que si on n'est PAS en train de confirmer une suppression
+  setTimeout(() => { 
+    if (this.pressedCardId() !== null) { // Si confirmDeletion ne l'a pas déjà fait
+      this.pressedCardId.set(null); 
+      this.isLongPressing = false; 
+    }
+  }, 150);
+}
 }
