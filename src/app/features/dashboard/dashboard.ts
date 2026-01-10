@@ -5,10 +5,9 @@ import { Query } from 'appwrite';
 import { ThemeService } from '../../core/services/theme';
 import { AuthService } from '../../core/services/auth.service';
 
-// --- INTERFACES ALIGNÉES SUR LE HTML ---
 export interface Task {
   label: string;
-  done: boolean; // Correspond à [class.is-done]="task.done"
+  done: boolean;
 }
 
 export interface Intervention {
@@ -23,15 +22,17 @@ export interface Intervention {
   mission: Task[];
   assigned: string;
   createdBy: string;
-  owner: any[];      // Pour @let ow = inter.owner[0]
-  habitants: any[];  // Pour inter.habitants?.[0].prenom
+  owner: any[];
+  habitants: any[];
   proprietaire: any;
   photos: string[];
-  plannedAt?: string;  // Pour le pipe date dans le HTML
-  totalFinal?: number; // Pour l'affichage des prix
-  remarques?: string;  // Pour la modale
+  plannedAt?: string;
+  totalFinal?: number;
+  remarques?: string;
   $createdAt: string;
 }
+
+export type DashboardFilter = 'ALL' | 'WAITING' | 'PLANNED' | 'DONE';
 
 export const STATUS_CONFIG: Record<string, { label: string, color: string, category: 'pending' | 'planned' | 'completed' }> = {
   'WAITING': { label: 'En attente', color: 'blue-card',   category: 'pending' },
@@ -63,6 +64,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedIntervention = signal<Intervention | null>(null);
   colleagueEmails = signal<string[]>([]);
   pressedCardId = signal<string | null>(null);
+  
+  // NOUVEAU : Signal de filtrage
+  activeFilter = signal<DashboardFilter>('ALL');
 
   private unsubscribeRealtime: (() => void) | null = null;
   private onlineHandler = () => this.isOffline.set(!navigator.onLine);
@@ -73,7 +77,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly COL_INTERVENTIONS = 'interventions';
   private readonly BUCKET_ID = '69502be400074c6f43f5';
 
-  // --- FILTRES COMPUTED (Utilisés par les @for du HTML) ---
+  // --- COMPUTED FILTRÉS ---
   pendingInterventions = computed(() => 
     this.interventions().filter(i => STATUS_CONFIG[i.status]?.category === 'pending')
   );
@@ -85,6 +89,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   completedInterventions = computed(() => 
     this.interventions().filter(i => STATUS_CONFIG[i.status]?.category === 'completed')
   );
+
+  // Visibilité des sections
+  showPending = computed(() => this.activeFilter() === 'ALL' || this.activeFilter() === 'WAITING');
+  showPlanned = computed(() => this.activeFilter() === 'ALL' || this.activeFilter() === 'PLANNED');
+  showCompleted = computed(() => this.activeFilter() === 'ALL' || this.activeFilter() === 'DONE');
 
   ngOnInit() {
     this.themeService.initTheme();
@@ -99,6 +108,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.unsubscribeRealtime) this.unsubscribeRealtime();
     if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
   }
+
+  setFilter(f: DashboardFilter) { this.activeFilter.set(f); }
 
   async initDashboard() {
     this.loading.set(true);
@@ -173,7 +184,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  // --- ACTIONS ---
   async markAsPaid(intervention: Intervention, event: Event) {
     event.stopPropagation();
     if (confirm(`Confirmer le paiement reçu ?`)) {
@@ -194,28 +204,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- NAVIGATION (Synchronisée HTML) ---
-handleCardClick(inter: Intervention, type: 'details' | 'invoice') {
-  if (this.isLongPressing) return;
-  
-  if (type === 'details') {
-    // Si c'est une fiche à planifier (WAITING/OPEN)
-    if (inter.status === 'OPEN' || inter.status === 'WAITING') {
-      // ON AJOUTE LA SÉCURITÉ ICI :
-      if (this.authService.hasPerm('dash_act_plan')) {
-        this.goToPlanning(inter, { stopPropagation: () => {} } as Event);
+  handleCardClick(inter: Intervention, type: 'details' | 'invoice') {
+    if (this.isLongPressing) return;
+    
+    if (type === 'details') {
+      if (inter.status === 'OPEN' || inter.status === 'WAITING') {
+        if (this.authService.hasPerm('dash_act_plan')) {
+          this.goToPlanning(inter);
+        } else if (this.authService.hasPerm('dash_nav_details')) {
+          this.goToDetails(inter.id);
+        }
       } else {
-        // Optionnel : redirection vers les détails simples si pas de droit planning
-        this.goToDetails(inter.id);
+        if (this.authService.hasPerm('dash_nav_details')) this.goToDetails(inter.id);
       }
     } else {
-      // Pour les autres statuts (STARTED, etc.), on va aux détails terrain
-      this.goToDetails(inter.id);
+      this.handleCompletedClick(inter);
     }
-  } else {
-    this.handleCompletedClick(inter);
   }
-}
 
   handleCompletedClick(inter: Intervention) {
     if (inter.status === 'BILLED') {
@@ -227,24 +232,21 @@ handleCardClick(inter: Intervention, type: 'details' | 'invoice') {
 
   goToEdit(id: string) { this.router.navigate(['/edit-intervention', id]); }
   goToDetails(id: string) { this.router.navigate(['/intervention', id]); }
-goToPlanning(intervention: Intervention, event?: Event) {
-  // On vérifie si event existe ET si les fonctions existent avant de les lancer
-  if (event) {
-    if (typeof event.stopPropagation === 'function') event.stopPropagation();
-    if (typeof event.preventDefault === 'function') event.preventDefault();
+
+  goToPlanning(intervention: Intervention, event?: Event) {
+    if (event) {
+      if (typeof event.stopPropagation === 'function') event.stopPropagation();
+      if (typeof event.preventDefault === 'function') event.preventDefault();
+    }
+    if (this.authService.hasPerm('dash_act_plan')) {
+      this.router.navigate(['/planning', intervention.id], { state: { data: intervention } });
+    }
   }
 
-  if (this.authService.hasPerm('dash_act_plan')) {
-    this.router.navigate(['/planning', intervention.id], { 
-      state: { data: intervention } 
-    });
-  }
-}
   goToInvoice(id: string) { this.router.navigate(['/invoice', id]); }
   goToCompletedMissions() { this.router.navigate(['/completed-missions']); }
   goToAdd() { this.router.navigate(['/add-intervention']); }
 
-  // --- UX LONG PRESS ---
   onPressStart(inter: Intervention) {
     this.isLongPressing = false;
     this.pressedCardId.set(inter.id);
@@ -261,7 +263,6 @@ goToPlanning(intervention: Intervention, event?: Event) {
     setTimeout(() => { this.pressedCardId.set(null); this.isLongPressing = false; }, 50);
   }
 
-  // --- MODALE ---
   openTasks(inter: Intervention, event: Event) {
     event.preventDefault();
     event.stopPropagation();
@@ -270,35 +271,30 @@ goToPlanning(intervention: Intervention, event?: Event) {
   }
   closeTasks() { this.selectedIntervention.set(null); }
 
-  // --- DATA MAPPING (C'est ici que la synchro HTML se joue) ---
   private sanitizeIntervention(payload: any): Intervention {
     const hasViewContacts = this.authService.hasPerm('dash_view_contacts');
     const hasViewPrices = this.authService.hasPerm('dash_view_prices');
 
-    // Parse de l'adresse pour adr.ville, adr.rue, adr.numero
     const adr = typeof payload['adresse'] === 'string' ? JSON.parse(payload['adresse']) : payload['adresse'];
-
-    // Parse de la mission pour task.done
     const missionData = typeof payload['mission'] === 'string' ? JSON.parse(payload['mission']) : payload['mission'];
     const tasks = (missionData?.tasks || []).map((t: any) => ({
       label: t.label,
       done: t.done || t.completed || false
     }));
 
-    // Parse des propriétaires et habitants (crucial pour inter.habitants?.[0])
     const rawOwner = payload['owner'];
     const owner = hasViewContacts ? (Array.isArray(rawOwner) ? rawOwner.map(o => typeof o === 'string' ? JSON.parse(o) : o) : []) : [];
     
     const rawHabitants = payload['habitants'];
-    const habitants = hasViewContacts ? (Array.isArray(rawHabitants) ? rawHabitants.map(h => typeof h === 'string' ? JSON.parse(h) : h) : 
-                     (typeof rawHabitants === 'string' ? JSON.parse(rawHabitants) : [])) : [];
+    let habitants = hasViewContacts ? (Array.isArray(rawHabitants) ? rawHabitants.map(h => typeof h === 'string' ? JSON.parse(h) : h) : 
+                        (typeof rawHabitants === 'string' ? JSON.parse(rawHabitants) : [])) : [];
 
     return {
       ...payload,
       id: payload.$id,
       adresse: adr,
       owner: owner, 
-      habitants: Array.isArray(habitants) ? habitants : [habitants], // Force format tableau pour le HTML
+      habitants: Array.isArray(habitants) ? habitants : [habitants],
       proprietaire: hasViewContacts ? (typeof payload['proprietaire'] === 'string' ? JSON.parse(payload['proprietaire']) : payload['proprietaire']) : null,
       mission: tasks, 
       photos: Array.isArray(payload['photos']) ? payload['photos'] : [],
@@ -314,9 +310,7 @@ goToPlanning(intervention: Intervention, event?: Event) {
   parseJson(jsonString: any) {
     if (!jsonString) return { url: '' };
     if (typeof jsonString === 'object') return jsonString;
-    try { 
-      return JSON.parse(jsonString); 
-    } catch (e) { 
+    try { return JSON.parse(jsonString); } catch (e) { 
       return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
     }
   }

@@ -11,9 +11,20 @@
 
   <main class="container">
     <div class="stats-header">
-      <h3>Total : {{ interventions().length }}</h3>
+      <div class="header-filter-row">
+        <div class="filter-pills">
+          <button [class.active]="activeFilter() === 'ALL'" (click)="setFilter('ALL')">Tous</button>
+          <button [class.active]="activeFilter() === 'WAITING'" (click)="setFilter('WAITING')">Attente</button>
+          <button [class.active]="activeFilter() === 'PLANNED'" (click)="setFilter('PLANNED')">Plannif.</button>
+          <button [class.active]="activeFilter() === 'DONE'" (click)="setFilter('DONE')">Terminées</button>
+        </div>
+        <div class="total-badge">
+          {{ interventions().length }} fiches
+        </div>
+      </div>
     </div>
 
+    @if (showPending()) {
     <section class="recent-activity">
       <h3>En Attente ({{ pendingInterventions().length }})</h3>
       <div class="intervention-list">
@@ -34,7 +45,7 @@
               <span class="creator-text">
                 Par
                 <a [href]="'tel:' + ow.tel" (click)="$event.stopPropagation()" class="creator-link">
-                  {{ ow.prenom }} {{ ow.nom ||ow.email}}
+                  {{ ow.prenom }} {{ ow.nom || ow.email }}
                 </a>
               </span>
             </div>
@@ -50,15 +61,15 @@
               </svg>
             </button>
             }
-
-            <button class="btn-details-link" (click)="openTasks(inter, $event)">
-              Détails
-            </button>
+            <button class="btn-details-link" (click)="openTasks(inter, $event)">Détails</button>
           </div>
         </div>
         }
       </div>
     </section>
+    }
+
+    @if (showPlanned()) {
     <section class="recent-activity">
       <h3>Planifiées ({{ plannedInterventions().length }})</h3>
       <div class="intervention-list">
@@ -73,17 +84,16 @@
             <span class="city">{{ adr?.ville || 'VILLE INCONNUE' }}</span>
             <span class="street">{{ adr?.numero }} {{ adr?.rue }}</span>
 
-
-
-   <div class="creator-info">
-  <span class="creator-text">
-    Hab :
-    <a [href]="'tel:' + inter.habitants[0].tel" (click)="$event.stopPropagation()" class="creator-link">
-      {{ inter.habitants[0].prenom }} {{ inter.habitants[0].nom || inter.habitants[0].email }}
-    </a>
-  </span>
-</div>
-
+            @if (inter.habitants && inter.habitants.length > 0) {
+            <div class="creator-info">
+              <span class="creator-text">
+                Hab :
+                <a [href]="'tel:' + inter.habitants[0].tel" (click)="$event.stopPropagation()" class="creator-link">
+                  {{ inter.habitants[0].prenom }} {{ inter.habitants[0].nom || inter.habitants[0].email }}
+                </a>
+              </span>
+            </div>
+            }
           </div>
 
           <div class="card-actions-horizontal">
@@ -95,125 +105,121 @@
               </svg>
             </button>
             }
-            
-              <button class="btn-details-link"
-                (click)="authService.hasPerm('dash_act_plan') ? goToPlanning(inter, $event) : $event.stopPropagation()">
-                @if (inter.plannedAt) {
-
+            <button class="btn-details-link" 
+              (click)="authService.hasPerm('dash_act_plan') ? goToPlanning(inter, $event) : $event.stopPropagation()">
+              @if (inter.plannedAt) {
                 <span class="date-text">{{ inter.plannedAt | date:'EEE dd/MM HH:mm' }}</span>
-                }
-              </button>
-
-
-        </div>
-      </div>
-      }
-</div>
-</section>
-
-<section class="recent-activity">
-  <h3>Terminées ({{ completedInterventions().length }})</h3>
-  <div class="intervention-list">
-    @for (inter of completedInterventions(); track inter.id) {
-    @let adr = inter.adresse;
-    <div class="intervention-card pending-horizontal" [ngClass]="getStatusClass(inter.status)"
-      [class.pressing]="isLongPressing" (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()"
-      (mouseleave)="onPressEnd()" (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()"
-      (touchmove)="onPressEnd()" (click)="handleCardClick(inter, 'invoice')">
-
-      <div class="card-info">
-        <span class="city">{{ adr?.ville || 'VILLE INCONNUE' }}</span>
-        <span class="street">{{ adr?.numero }} {{ adr?.rue }}</span>
-
-        @if (inter.owner && inter.owner.length > 0) {
-        @let ow = inter.owner[0];
-        <div class="creator-info">
-          <span class="creator-text">
-            Par
-            <a [href]="'tel:' + ow.tel" (click)="$event.stopPropagation()" class="creator-link">
-              {{ ow.prenom }} {{ ow.nom || ow.email }}
-            </a>
-          </span>
-        </div>
-        }
-      </div>
-
-      <div class="card-actions-horizontal">
-        @if (authService.hasPerm('dash_view_prices')) {
-          <div [class]="inter.status === 'END' ? 'price-hintr' : 'price-hintv'">
-            {{ inter.totalFinal || 0 | number:'1.2-2' }}€
+              }
+            </button>
           </div>
+        </div>
         }
-
-        <button class="btn-details-link">
-          {{ inter.status === 'BILLED' ? 'Payé ?' : 'Facture' }}
-        </button>
       </div>
-    </div>
+    </section>
     }
-  </div>
-</section>
 
-@if (authService.hasPerm('dash_nav_add')) {
-<button class="fab-btn" (click)="goToAdd()">
-  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="white" stroke-width="3">
-    <line x1="12" y1="5" x2="12" y2="19"></line>
-    <line x1="5" y1="12" x2="19" y2="12"></line>
-  </svg>
-</button>
-}
-</main>
+    @if (showCompleted()) {
+    <section class="recent-activity">
+      <h3>Terminées ({{ completedInterventions().length }})</h3>
+      <div class="intervention-list">
+        @for (inter of completedInterventions(); track inter.id) {
+        @let adr = inter.adresse;
+        <div class="intervention-card pending-horizontal" [ngClass]="getStatusClass(inter.status)"
+          [class.pressing]="isLongPressing" (mousedown)="onPressStart(inter)" (mouseup)="onPressEnd()"
+          (mouseleave)="onPressEnd()" (touchstart)="onPressStart(inter)" (touchend)="onPressEnd()"
+          (touchmove)="onPressEnd()" (click)="handleCardClick(inter, 'invoice')">
 
-<nav class="bottom-nav">
-  @if (authService.hasPerm('dash_nav_orders')) {
-  <a (click)="router.navigate(['/commandes'])" class="nav-item">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <path d="M16 10a4 4 0 0 1-8 0"></path>
-    </svg>
-    <span>Commandes</span>
-  </a>
-  }
-  @if (authService.hasPerm('dash_nav_archives')) {
-  <a (click)="goToCompletedMissions()" class="nav-item">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-    </svg>
-    <span>Archives</span>
-  </a>
-  }
-  @if (authService.hasPerm('dash_nav_params')) {
-  <a (click)="router.navigate(['/parameters'])" class="nav-item">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="3"></circle>
-      <path
-        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-      </path>
-    </svg>
-    <span>Paramètres</span>
-  </a>
-  }
-  <a class="nav-item" (click)="authService.logout()">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#e74c3c" stroke-width="2">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-      <polyline points="16 17 21 12 16 7"></polyline>
-      <line x1="21" y1="12" x2="9" y2="12"></line>
-    </svg>
-    <span style="color: #e74c3c;">Sortie</span>
-  </a>
-</nav>
+          <div class="card-info">
+            <span class="city">{{ adr?.ville || 'VILLE INCONNUE' }}</span>
+            <span class="street">{{ adr?.numero }} {{ adr?.rue }}</span>
+
+            @if (inter.owner && inter.owner.length > 0) {
+            @let ow = inter.owner[0];
+            <div class="creator-info">
+              <span class="creator-text">
+                Par
+                <a [href]="'tel:' + ow.tel" (click)="$event.stopPropagation()" class="creator-link">
+                  {{ ow.prenom }} {{ ow.nom || ow.email }}
+                </a>
+              </span>
+            </div>
+            }
+          </div>
+
+          <div class="card-actions-horizontal">
+            @if (authService.hasPerm('dash_view_prices')) {
+              <div [class]="inter.status === 'END' ? 'price-hintr' : 'price-hintv'">
+                {{ inter.totalFinal || 0 | number:'1.2-2' }}€
+              </div>
+            }
+            <button class="btn-details-link">
+              {{ inter.status === 'BILLED' ? 'Payé ?' : 'Facture' }}
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+    </section>
+    }
+
+    @if (authService.hasPerm('dash_nav_add')) {
+    <button class="fab-btn" (click)="goToAdd()">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="white" stroke-width="3">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
+    }
+  </main>
+
+  <nav class="bottom-nav">
+    @if (authService.hasPerm('dash_nav_orders')) {
+    <a (click)="router.navigate(['/commandes'])" class="nav-item">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+      <span>Commandes</span>
+    </a>
+    }
+    @if (authService.hasPerm('dash_nav_archives')) {
+    <a (click)="goToCompletedMissions()" class="nav-item">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+      </svg>
+      <span>Archives</span>
+    </a>
+    }
+    @if (authService.hasPerm('dash_nav_params')) {
+    <a (click)="router.navigate(['/parameters'])" class="nav-item">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>Paramètres</span>
+    </a>
+    }
+    <a class="nav-item" (click)="authService.logout()">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#e74c3c" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      <span style="color: #e74c3c;">Sortie</span>
+    </a>
+  </nav>
 </div>
 
 @if (selectedIntervention()) {
-  @let sel = selectedIntervention()!; <div class="modal-overlay" (click)="closeTasks()">
+  @let sel = selectedIntervention()!; 
+  <div class="modal-overlay" (click)="closeTasks()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h4>{{ sel.adresse.ville }} {{ sel.adresse.rue }}</h4>
         <button class="close-btn" (click)="closeTasks()">✕</button>
       </div>
-      
       <div class="modal-body">
         <div class="tasks-section">
           @if (sel.mission && sel.mission.length > 0) {
@@ -233,7 +239,6 @@
             </ul>
           } @else { <p class="no-tasks">Aucune mission détaillée.</p> }
         </div>
-
         @if (sel.photos && sel.photos.length > 0) {
           <hr class="modal-divider">
           <div class="photos-section">
@@ -248,7 +253,6 @@
             </div>
           </div>
         }
-
         @if (sel.remarques) {
           <div class="remarks-section">
             <h5>Remarques :</h5>

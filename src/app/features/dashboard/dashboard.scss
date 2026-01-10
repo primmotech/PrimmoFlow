@@ -15,6 +15,7 @@
     --accent-color: #3498db;
     --success: #2ecc71;
     --danger: #e74c3c;
+    --filter-pill-bg: #2a2a2a; // Spécifique Dark Mode
   }
 
   &:not(.dark-mode) {
@@ -25,7 +26,8 @@
     --text-secondary: #6b7280;
     --accent-color: #3498db;
     --success: #2ecc71;
-    --danger: #e74c3c; 
+    --danger: #e74c3c;
+    --filter-pill-bg: #e5e7eb; // Spécifique Light Mode
   }
 }
 
@@ -47,20 +49,90 @@
 
 .container { padding: 0 15px; }
 
+/* --- SECTION FILTRES (Harmonisée) --- */
+.stats-header {
+  margin-top: 15px;
+
+  .header-filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .filter-pills {
+    display: flex;
+    background: var(--filter-pill-bg);
+    padding: 4px;
+    border-radius: 12px;
+    gap: 2px;
+    overflow-x: auto;
+    white-space: nowrap;
+    
+    // Masquer scrollbar filtres
+    &::-webkit-scrollbar { display: none; }
+    scrollbar-width: none;
+
+    button {
+      border: none;
+      background: transparent;
+      padding: 7px 14px;
+      border-radius: 9px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+
+      &.active {
+        background: var(--card-bg);
+        color: var(--accent-color);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      }
+
+      &:active:not(.active) {
+        transform: translateY(1px);
+        background: rgba(var(--accent-color), 0.1);
+      }
+    }
+  }
+
+  .total-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    background: var(--accent-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 10px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+  }
+}
+
 .recent-activity {
-  margin-top: 20px;
-  h3 { font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 12px; }
+  margin-top: 25px;
+  h3 { 
+    font-size: 0.85rem; 
+    color: var(--text-secondary); 
+    text-transform: uppercase; 
+    font-weight: 800; 
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+      opacity: 0.5;
+    }
+  }
 }
 
-.offline-indicator { 
-  background: var(--danger); 
-  color: white; 
-  text-align: center; 
-  padding: 5px; 
-  font-size: 0.8rem; 
-}
-
-/* --- COMPOSANT CARTE (BASE) --- */
+/* --- COMPOSANT CARTE --- */
 .intervention-card {
   background: var(--card-bg);
   border: 1.5px solid var(--border-color);
@@ -71,7 +143,7 @@
   gap: 12px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, border-color 0.2s;
   user-select: none;
 
   &:active { transform: scale(0.98); }
@@ -82,7 +154,7 @@
     border-color: var(--danger);
   }
 
-  /* --- LOGIQUE DES COULEURS (Synchronisée avec getStatusClass) --- */
+  /* Couleurs de statut */
   &.blue-card   { border-left: 6px solid #3498db !important; }
   &.green-card  { border-left: 6px solid var(--success) !important; }
   &.yellow-card { border-left: 6px solid #f1c40f !important; }
@@ -91,39 +163,31 @@
   .card-info {
     flex: 1;
     min-width: 0;
-    .city { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; color: var(--text-primary); display: block; }
-    .street { font-size: 0.9rem; color: var(--text-secondary); display: block; }
+    .city { font-weight: 800; font-size: 1.05rem; text-transform: uppercase; color: var(--text-primary); display: block; }
+    .street { font-size: 0.85rem; color: var(--text-secondary); display: block; margin-top: 2px; }
     
     .price-hintv { color: var(--success); font-weight: 800; font-size: 1.1rem; margin-top: 4px; }
     .price-hintr { color: var(--danger); font-weight: 800; font-size: 1.1rem; margin-top: 4px; }
   }
 }
 
-/* --- VARIANTE CARTE HORIZONTALE (EN ATTENTE) --- */
+/* --- VARIANTE HORIZONTALE --- */
 .intervention-card.pending-horizontal {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
 
-  .card-info {
-    .city { font-size: 1.2rem; }
-    .street { font-size: 0.85rem; }
-  }
-
   .creator-info {
-    margin-top: 4px;
-    display: block;
+    margin-top: 6px;
     .creator-text {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-secondary);
-      line-height: 1.2;
       .creator-link {
         color: var(--success);
         text-decoration: none;
         font-weight: 700;
-        margin-left: 3px;
-        &:active { background: rgba(46, 204, 113, 0.1); border-radius: 2px; }
+        margin-left: 2px;
       }
     }
   }
@@ -131,155 +195,89 @@
   .card-actions-horizontal {
     display: flex;
     align-items: center;
-    gap: 12px;
-    .icon-btn-edit { background: transparent; border: none; color: var(--text-secondary); padding: 0; }
+    gap: 10px;
+    
+    .icon-btn-edit { 
+      background: transparent; 
+      border: none; 
+      color: var(--text-secondary); 
+      padding: 5px;
+      display: flex;
+      align-items: center;
+    }
+
     .btn-details-link {
-      background: rgba(52, 152, 219, 0.1);
+      background: rgba(var(--accent-color), 0.1);
+      background-color: var(--filter-pill-bg);
       border: none;
       color: var(--accent-color);
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 800;
       white-space: nowrap;
+      
+      .date-text { font-size: 0.75rem; }
     }
   }
 }
 
-/* --- ELEMENTS SECONDAIRES DES CARTES --- */
-.habitant-row {
-  margin-top: 8px;
-  padding: 8px;
-  background: rgba(0,0,0,0.03);
-  border-radius: 8px;
-  .habitant-info {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    .habitant { font-size: 0.85rem; font-weight: 600; }
-    .call-action { color: var(--success); font-weight: bold; font-size: 0.8rem; border: 1px solid var(--success); padding: 2px 8px; border-radius: 4px; text-decoration: none; }
-  }
-}
-
-.card-actions {
-  display: flex; align-items: center; gap: 10px;
-  border-top: 1px dashed var(--border-color); padding-top: 12px;
-  .btn-tasks {
-    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-    background: rgba(52, 152, 219, 0.1); border: 1.5px solid rgba(52, 152, 219, 0.2);
-    color: var(--accent-color); padding: 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
-    .date-text { margin-left: 4px; color: var(--text-primary); }
-  }
-}
-
-/* --- MODALE, NAVIGATION & FAB (Inchangés) --- */
+/* --- MODALE & PHOTOS --- */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px); z-index: 2000;
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px); z-index: 2000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
+
   .modal-content {
     background: var(--card-bg); width: 100%; max-width: 400px;
-    border-radius: 24px; overflow: hidden; border: 1px solid var(--border-color);
+    border-radius: 28px; overflow: hidden; border: 1px solid var(--border-color);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   }
+
   .modal-header {
-    padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 20px; display: flex; justify-content: space-between; align-items: center;
     border-bottom: 1px solid var(--border-color);
-    h4 { margin: 0; font-size: 0.95rem; color: var(--accent-color); text-transform: uppercase; }
-    .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; }
+    h4 { margin: 0; font-size: 0.9rem; color: var(--accent-color); text-transform: uppercase; font-weight: 800; }
+    .close-btn { background: none; border: none; font-size: 1.4rem; color: var(--text-secondary); }
   }
-  .modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
+  
+  .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
 }
 
-.task-list {
-  list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;
-  .task-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    &.is-done { opacity: 0.5; .task-text { text-decoration: line-through; } }
-    .bullet { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; margin-top: 6px; }
-    .task-text { font-size: 0.95rem; }
+.photo-slider {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  &::-webkit-scrollbar { display: none; }
+  
+  .photo-slide {
+    flex: 0 0 140px; height: 140px; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border-color); scroll-snap-align: start;
+    img { width: 100%; height: 100%; object-fit: cover; }
   }
 }
 
+/* --- NAVIGATION & FAB --- */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
   background: var(--card-bg); border-top: 1px solid var(--border-color);
   display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom); // Support iPhone Notch
+
   .nav-item {
-    text-decoration: none; display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); gap: 4px;
-    span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; 
+    color: var(--text-secondary); gap: 5px;
+    span { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
     &.active { color: var(--accent-color); }
   }
 }
 
 .fab-btn {
-  position: fixed; right: 20px; bottom: 95px; width: 56px; height: 56px;
-  border-radius: 28px; background: var(--accent-color); border: none;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+  position: fixed; right: 20px; bottom: 95px; width: 60px; height: 60px;
+  border-radius: 30px; background: var(--accent-color); border: none;
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
   display: flex; align-items: center; justify-content: center; z-index: 900;
+  transition: transform 0.2s;
+  &:active { transform: scale(0.9); }
 }
 
 @keyframes pulse-press { from { transform: scale(1); } to { transform: scale(0.97); } }
-/* --- SECTION PHOTOS DANS LA MODALE --- */
-.photos-section {
-  margin-top: 20px;
-  
-  h5 {
-    margin: 0 0 10px 0;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-}
-
-.photo-slider {
-  display: flex;
-  overflow-x: auto; // Active le scroll horizontal
-  gap: 12px;
-  padding: 5px 2px 15px 2px;
-  
-  // Masquer la scrollbar pour un look plus "app"
-  &::-webkit-scrollbar { display: none; }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.photo-slide {
-  flex: 0 0 140px; // Chaque photo fera 140px de large précisément
-  height: 140px;   // Et 140px de haut
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; // L'image remplit le carré sans se déformer
-    display: block;
-    transition: transform 0.2s;
-
-    &:active {
-      transform: scale(0.95); // Petit effet au clic
-    }
-  }
-}
-
-.modal-divider {
-  border: none;
-  border-top: 1px solid var(--border-color);
-  margin: 20px 0;
-}
-
-.remarks-section {
-  margin-top: 15px;
-  h5 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; }
-  p { font-size: 0.9rem; line-height: 1.4; margin: 0; }
-}
-.photo-slider {
-  // ... tes autres styles ...
-  scroll-snap-type: x mandatory; // Active l'aimantage horizontal
-}
-
-.photo-slide {
-  // ... tes autres styles ...
-  scroll-snap-align: start; // La photo s'aligne au début du slider
-}
