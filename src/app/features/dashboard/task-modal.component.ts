@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Intervention } from './dashboard';
 import { AuthService } from '../../core/services/auth.service';
 
+
 @Component({
   selector: 'app-task-modal',
   standalone: true,
@@ -81,11 +82,11 @@ import { AuthService } from '../../core/services/auth.service';
           <p class="remarks-text">{{ intervention.remarques }}</p>
         </div>
       }
-
+ @if (authService.hasPerm('dash_nav_orders')) {
       <button class="action-btn secondary" >
         Plannifer
       </button>
-
+ }
     </div>
   </div>
 </div>
@@ -94,10 +95,11 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./task-modal.scss'] // On va créer ce fichier juste après
 })
 export class TaskModalComponent {
+  
   @Input({ required: true }) intervention!: Intervention;
   @Output() close = new EventEmitter<void>();
 
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   private readonly BUCKET_ID = '69502be400074c6f43f5';
 
  parseJson(jsonString: any) {
