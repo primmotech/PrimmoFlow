@@ -13,6 +13,13 @@ import { Intervention } from './dashboard';
       [ngClass]="statusConfig[intervention.status]?.color || ''"
       (click)="cardClick.emit($event)"
     >
+      <button class="btn-delete" (click)="onDelete($event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
       <div class="card-info">
         <span class="city">{{ intervention.adresse.ville || 'VILLE INCONNUE' }}</span>
         <span class="street">{{ intervention.adresse.numero }} {{ intervention.adresse.rue }}</span>
@@ -32,20 +39,20 @@ import { Intervention } from './dashboard';
               </span>
             </span>
           }
-        }    @if (
+        }
+
+        @if (
           intervention.status == 'PLANNED' ||
           intervention.status == 'STOPPED' ||
           intervention.status == 'STARTED' ||
-           intervention.status == 'PAUSED' ||
+          intervention.status == 'PAUSED' ||
           intervention.status == 'PAID' ||
           intervention.status == 'END'
         ) {
           @let occupants = parseJson(intervention.habitants);
           @for (habitant of occupants; track $index) {
             <div class="habitant-row">
-              <span class="habitant-name"></span>
               @if (habitant.tel) {
-                <a [href]="'tel:' + habitant.tel" class="habitant-tel"></a>
                 <span class="created-by">
                   Pour 
                   <span class="author-name" (click)="onCall($event, habitant.tel)">
@@ -64,7 +71,7 @@ import { Intervention } from './dashboard';
             @switch (intervention.status) {
               @case ('WAITING') { Détails }
               @case ('OPEN') { Détails }
-              @case ('END') { Histo}
+              @case ('END') { Histo }
               @default {
                 @if (intervention.plannedAt) {
                   <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM':'':'fr' }}</span>
@@ -96,6 +103,7 @@ export class InterventionCardComponent {
   @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
   @Output() editClick = new EventEmitter<string>();
+  @Output() deleteClick = new EventEmitter<string>(); // Nouvel Output
   @Output() callOwner = new EventEmitter<string>();
 
   onAction(event: Event) {
@@ -106,6 +114,13 @@ export class InterventionCardComponent {
   onEdit(event: Event) {
     event.stopPropagation();
     this.editClick.emit(this.intervention.id);
+  }
+
+  onDelete(event: Event) {
+    event.stopPropagation(); // Empêche d'ouvrir les détails en cliquant sur la croix
+    if (confirm('Voulez-vous vraiment supprimer cette intervention ?')) {
+      this.deleteClick.emit(this.intervention.id);
+    }
   }
 
   onCall(event: Event, phone: string | undefined) {
