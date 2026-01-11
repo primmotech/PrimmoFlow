@@ -20,19 +20,21 @@ import { AuthService } from '../../core/services/auth.service';
     </div>
 
     <div class="modal-body">
-      
       @if (intervention.habitants) {
         @let occupants = parseJson(intervention.habitants);
         @if (occupants && occupants.length > 0) {
           <div class="section-card">
-            <h5 class="section-title">Habitant(s)</h5>
+            <h5 class="section-label">Habitant(s)</h5>
             <div class="occupants-list">
               @for (habitant of occupants; track $index) {
                 <div class="habitant-row">
-                  <span class="habitant-name">{{ habitant.prenom }} {{ habitant.nom }}</span>
+                 
                   @if (habitant.tel) {
-                    <a [href]="'tel:' + habitant.tel" class="habitant-tel">{{ habitant.tel }}</a>
+                    <a [href]="'tel:' + habitant.tel" class="habitant-tel">
+                      <span class="icon">📞</span> {{ habitant.prenom }} {{ habitant.nom }}
+                    </a>
                   }
+                  @else { <span class="habitant-name">{{ habitant.prenom }} {{ habitant.nom }}</span>}
                 </div>
               }
             </div>
@@ -41,26 +43,27 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       <div class="section-card">
-        <h5 class="section-title">Missions d'intervention</h5>
+        <h5 class="section-label">Missions</h5>
         @if (intervention.mission && intervention.mission.length > 0) {
           <ul class="task-list">
             @for (task of intervention.mission; track $index) {
               <li class="task-item" [class.is-done]="task.done">
-                <div class="task-icon">
-                  @if (task.done) { <span class="check">✓</span> } @else { <span class="bullet"></span> }
+                <div class="task-status">
+                  @if (task.done) { <span class="check-icon">✓</span> }
+                  @else { <span class="bullet"></span> }
                 </div>
-                <span class="task-label">{{ task.label }}</span>
+                <span class="task-text">{{ task.label }}</span>
               </li>
             }
           </ul>
         } @else {
-          <p class="empty-msg">Aucune mission renseignée.</p>
+          <p class="empty-msg">Aucune mission détaillée.</p>
         }
       </div>
 
       @if (intervention.photos && intervention.photos.length > 0) {
         <div class="section-card">
-          <h5 class="section-title">Photos</h5>
+          <h5 class="section-label">Photos</h5>
           <div class="photo-slider">
             @for (pStr of intervention.photos; track pStr) {
               @let photo = parseJson(pStr);
@@ -73,15 +76,20 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       @if (intervention.remarques) {
-        <div class="section-card remarks-theme">
-          <h5 class="section-title">Remarques</h5>
-          <p class="remarks-content">{{ intervention.remarques }}</p>
+        <div class="section-card remarks-card">
+          <h5 class="section-label">Remarques</h5>
+          <p class="remarks-text">{{ intervention.remarques }}</p>
         </div>
       }
+
+      <button class="action-btn secondary" >
+        Plannifer
+      </button>
 
     </div>
   </div>
 </div>
+
   `,
   styleUrls: ['./task-modal.scss'] // On va créer ce fichier juste après
 })

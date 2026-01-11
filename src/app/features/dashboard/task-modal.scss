@@ -1,75 +1,115 @@
-.modal-content {
-  background: #f4f7f6; // Fond de modale légèrement grisé pour faire ressortir les cartes blanches
-  border-radius: 16px;
-  overflow: hidden;
+/* --- MODAL OVERLAY --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end; // Apparaît du bas sur mobile
 }
 
+.modal-content {
+  width: 100%;
+  max-height: 90vh;
+  background: var(--bg-color);
+  border-radius: 20px 20px 0 0;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  color: var(--text-primary);
+}
+
+/* --- HEADER --- */
 .modal-header {
-  background: white;
+  padding: 20px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky; top: 0; z-index: 10;
+
+  .city-title { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--accent-color); text-transform: uppercase; }
+  .street-subtitle { font-size: 0.85rem; color: var(--text-secondary); }
+  .close-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; }
+}
+
+/* --- BODY & CARDS --- */
+.modal-body {
   padding: 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-
-  .city-title { margin: 0; color: #3498db; font-weight: 800; text-transform: uppercase; }
-  .street-subtitle { color: #7f8c8d; font-size: 0.9rem; }
-}
-
-.modal-body {
-  padding: 16px;
-  display: flex;
   flex-direction: column;
-  gap: 16px; // Espace entre les "Cards" de section
+  gap: 15px;
 }
 
-// LA STRUCTURE "CARD" POUR CHAQUE SECTION
 .section-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  border: 1px solid #e0e6ed;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  padding: 15px;
 
-  .section-title {
-    margin: 0 0 12px 0;
-    font-size: 0.85rem;
-    color: #95a5a6;
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid #f9f9f9;
-    padding-bottom: 8px;
+    margin-bottom: 12px;
+    display: flex; align-items: center;
+    &::after { content: ""; flex: 1; height: 1px; background: var(--border-color); margin-left: 10px; opacity: 0.3; }
   }
 }
 
-// Style spécifique pour les lignes d'habitants
+/* --- HABITANTS --- */
 .habitant-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  &:not(:last-child) { border-bottom: 1px dashed #f0f0f0; }
-  .habitant-name { font-weight: 600; color: #2c3e50; }
-  .habitant-tel { color: #3498db; text-decoration: none; font-size: 0.9rem; }
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0;
+  &:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+  .habitant-name { font-weight: 600; font-size: 0.95rem; }
+  .habitant-tel { color: var(--accent-color); text-decoration: none; font-size: 0.85rem; font-weight: 700; }
 }
 
-// Style pour les tâches
+/* --- MISSIONS --- */
 .task-list { list-style: none; padding: 0; margin: 0; }
 .task-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
   &.is-done {
-    .task-label { text-decoration: line-through; color: #bdc3c7; }
-    .check { color: #2ecc71; font-weight: bold; }
+    .task-text { text-decoration: line-through; color: var(--text-secondary); }
+    .check-icon { color: var(--success); }
   }
-  .bullet { width: 8px; height: 8px; background: #dcdde1; border-radius: 50%; }
+  .bullet { width: 8px; height: 8px; border: 2px solid var(--border-color); border-radius: 50%; }
 }
 
-// Thème spécial pour les remarques
-.remarks-theme {
-  background: #fff9e6;
-  border-color: #ffeaa7;
-  .section-title { color: #d35400; border-color: #f39c1222; }
-  .remarks-content { margin: 0; font-size: 0.95rem; color: #7f8c8d; line-height: 1.5; }
+/* --- BOUTON ACTION --- */
+.action-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 10px;
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  
+  &:active { transform: scale(0.98); }
+}
+
+/* --- ANIMATIONS --- */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.photo-slider {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  &::-webkit-scrollbar { display: none; }
+  
+  .photo-slide {
+    flex: 0 0 140px; height: 140px; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border-color); scroll-snap-align: start;
+    img { width: 100%; height: 100%; object-fit: cover; }
+  }
 }
