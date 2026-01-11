@@ -8,7 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule],
   template: `
- <div class="modal-overlay" (click)="close.emit()">
+<div class="modal-overlay" (click)="close.emit()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         
         <div class="modal-header">
@@ -18,8 +18,28 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
           <button class="close-btn" (click)="close.emit()">✕</button>
         </div>
+<div class="modal-body">
+  @if (intervention.habitants) {
+    @let occupants = parseJson(intervention.habitants);
+    
+    @if (occupants && occupants.length > 0) {
+      <div class="occupants-section">
+        <div class="occupants-label">Habitant(s) :</div>
+        <div class="occupants-list">
+          @for (habitant of occupants; track $index) {
+            <div class="habitant-item">
+              <span class="name">{{ habitant.prenom }} {{ habitant.nom }}</span>
+              @if (habitant.tel) {
+                <a [href]="'tel:' + habitant.tel" class="phone">{{ habitant.tel }}</a>
+              }
+            </div>
+          }
+        </div>
+      </div>
+      <hr class="modal-divider-light">
+    }
+  }
 
-        <div class="modal-body">
           <div class="tasks-section">
             @if (intervention.mission && intervention.mission.length > 0) {
               <ul class="task-list">
@@ -73,13 +93,14 @@ export class TaskModalComponent {
   private authService = inject(AuthService);
   private readonly BUCKET_ID = '69502be400074c6f43f5';
 
-  parseJson(jsonString: any) {
-    if (!jsonString) return { url: '' };
-    if (typeof jsonString === 'object') return jsonString;
-    try { 
-      return JSON.parse(jsonString); 
-    } catch (e) { 
-      return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
-    }
+ parseJson(jsonString: any) {
+  if (!jsonString) return []; // Retourne un tableau vide par défaut pour les habitants
+  if (Array.isArray(jsonString) || typeof jsonString === 'object') return jsonString;
+  try { 
+    return JSON.parse(jsonString); 
+  } catch (e) { 
+    // Si c'est un ID d'image (cas de tes photos)
+    return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
   }
+}
 }
