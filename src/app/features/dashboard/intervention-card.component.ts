@@ -64,7 +64,7 @@ import { Intervention } from './dashboard';
               @case ('END') { Histo }
               @default {
                 @if (intervention.plannedAt) {
-                  <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM HH:MM':'':'fr' }}</span>
+                  <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}</span>
                 } @else { DÉTAILS }
               }
             }

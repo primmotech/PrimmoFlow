@@ -86,7 +86,11 @@
   <app-bottom-nav></app-bottom-nav>
 
   @if (selectedIntervention()) {
-  <app-task-modal [intervention]="selectedIntervention()!" (close)="selectedIntervention.set(null)">
+  <app-task-modal 
+  [intervention]="selectedIntervention()!" 
+  (close)="selectedIntervention.set(null)"
+  (callRequest)="makeCall($event)">
+
   </app-task-modal>
   }
 </div>

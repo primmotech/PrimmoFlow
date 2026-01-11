@@ -106,8 +106,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   pendingInterventions = computed(() => this.filteredInterventions().filter(i => STATUS_CONFIG[i.status]?.category === 'pending'));
-  plannedInterventions = computed(() => this.filteredInterventions().filter(i => STATUS_CONFIG[i.status]?.category === 'planned'));
-  completedInterventions = computed(() => this.filteredInterventions().filter(i => STATUS_CONFIG[i.status]?.category === 'completed'));
+  // Tri des interventions planifiées par date (la plus récente en haut)
+plannedInterventions = computed(() => {
+  return this.filteredInterventions()
+    .filter(i => STATUS_CONFIG[i.status]?.category === 'planned')
+    .sort((a, b) => {
+      // On gère les cas où plannedAt pourrait être absent
+      const dateA = a.plannedAt ? new Date(a.plannedAt).getTime() : 0;
+      const dateB = b.plannedAt ? new Date(b.plannedAt).getTime() : 0;
+      
+      // Tri décroissant : le plus grand (récent) en premier
+      return dateA - dateB;
+    });
+}); completedInterventions = computed(() => this.filteredInterventions().filter(i => STATUS_CONFIG[i.status]?.category === 'completed'));
 
   showPending = computed(() => this.activeFilter() === 'ALL' || this.activeFilter() === 'WAITING');
   showPlanned = computed(() => this.activeFilter() === 'ALL' || this.activeFilter() === 'PLANNED');

@@ -28,15 +28,16 @@ import { AuthService } from '../../core/services/auth.service';
             <h5 class="section-label">Habitant(s)</h5>
             <div class="occupants-list">
               @for (habitant of occupants; track $index) {
-                <div class="habitant-row">
-                 
-                  @if (habitant.tel) {
-                    <a [href]="'tel:' + habitant.tel" class="habitant-tel">
-                      <span class="icon">📞</span> {{ habitant.prenom }} {{ habitant.nom }}
-                    </a>
-                  }
-                  @else { <span class="habitant-name">{{ habitant.prenom }} {{ habitant.nom }}</span>}
-                </div>
+<div class="habitant-row">
+  @if (habitant.tel) {
+    <div class="habitant-tel-btn" (click)="callRequest.emit(habitant.tel)">
+      <span class="icon">📞</span> {{ habitant.prenom }} {{ habitant.nom }}
+    </div>
+  }
+  @else { 
+    <span class="habitant-name">{{ habitant.prenom }} {{ habitant.nom }}</span>
+  }
+</div>
               }
             </div>
           </div>
@@ -98,6 +99,7 @@ export class TaskModalComponent {
   
   @Input({ required: true }) intervention!: Intervention;
   @Output() close = new EventEmitter<void>();
+@Output() callRequest = new EventEmitter<string>();
 
   public authService = inject(AuthService);
   private readonly BUCKET_ID = '69502be400074c6f43f5';
