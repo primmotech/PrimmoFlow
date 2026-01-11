@@ -7,29 +7,64 @@ import { Intervention } from './dashboard';
   standalone: true,
   imports: [CommonModule, DatePipe],
   template: `
-    <div class="intervention-card" 
-         [class.pressing]="isPressing"
-         [ngClass]="statusConfig[intervention.status]?.color || ''"
-         (click)="cardClick.emit($event)"> <div class="card-info">
+    <div 
+      class="intervention-card" 
+      [class.pressing]="isPressing"
+      [ngClass]="statusConfig[intervention.status]?.color || ''"
+      (click)="cardClick.emit($event)"
+    >
+      <div class="card-info">
         <span class="city">{{ intervention.adresse.ville || 'VILLE INCONNUE' }}</span>
         <span class="street">{{ intervention.adresse.numero }} {{ intervention.adresse.rue }}</span>
-        
-    @if (intervention.owner && intervention.owner[0]) {
-  <span class="created-by">
-    Par <span class="author-name" (click)="onCall($event, intervention.owner[0].tel)">
-      {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
-    </span>
-  </span>
-}
+
+        @if (
+          intervention.status == 'OPEN' ||
+          intervention.status == 'WAITING' ||
+          intervention.status == 'BILLED' ||
+          intervention.status == 'PAID' ||
+          intervention.status == 'END'
+        ) {
+          @if (intervention.owner && intervention.owner[0]) {
+            <span class="created-by">
+              Par 
+              <span class="author-name" (click)="onCall($event, intervention.owner[0].tel)">
+                {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
+              </span>
+            </span>
+          }
+        }    @if (
+          intervention.status == 'PLANNED' ||
+          intervention.status == 'STOPPED' ||
+          intervention.status == 'STARTED' ||
+           intervention.status == 'PAUSED' ||
+          intervention.status == 'PAID' ||
+          intervention.status == 'END'
+        ) {
+          @let occupants = parseJson(intervention.habitants);
+          @for (habitant of occupants; track $index) {
+            <div class="habitant-row">
+              <span class="habitant-name"></span>
+              @if (habitant.tel) {
+                <a [href]="'tel:' + habitant.tel" class="habitant-tel"></a>
+                <span class="created-by">
+                  Pour 
+                  <span class="author-name" (click)="onCall($event, habitant.tel)">
+                    {{ habitant.prenom }} {{ habitant.nom }}
+                  </span>
+                </span>
+              }
+            </div>
+          }
+        }
       </div>
 
       <div class="card-actions">
         @if (intervention.status !== 'BILLED') {
           <button class="btn-details" (click)="onAction($event)">
             @switch (intervention.status) {
-              @case ('WAITING') { DÉTAILS }
-              @case ('OPEN') { DÉTAILS }
-              @case ('END') { HISTO }
+              @case ('WAITING') { Détails }
+              @case ('OPEN') { Détails }
+              @case ('END') { Histo}
               @default {
                 @if (intervention.plannedAt) {
                   <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM':'':'fr' }}</span>
@@ -58,10 +93,10 @@ export class InterventionCardComponent {
   @Input() isPressing = false;
   @Input() canEdit = false;
 
-  @Output() cardClick = new EventEmitter<Event>(); // Type Event pour corriger l'erreur TS
+  @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
   @Output() editClick = new EventEmitter<string>();
-@Output() callOwner = new EventEmitter<string>();
+  @Output() callOwner = new EventEmitter<string>();
 
   onAction(event: Event) {
     event.stopPropagation();
@@ -72,10 +107,21 @@ export class InterventionCardComponent {
     event.stopPropagation();
     this.editClick.emit(this.intervention.id);
   }
+
   onCall(event: Event, phone: string | undefined) {
-  event.stopPropagation(); // Pour ne pas déclencher le clic de la carte
-  if (phone) {
-    this.callOwner.emit(phone);
+    event.stopPropagation();
+    if (phone) {
+      this.callOwner.emit(phone);
+    }
   }
-}
+
+  parseJson(jsonString: any) {
+    if (!jsonString) return [];
+    if (typeof jsonString === 'object') return jsonString;
+    try {
+      return JSON.parse(jsonString);
+    } catch (e) {
+      return [];
+    }
+  }
 }

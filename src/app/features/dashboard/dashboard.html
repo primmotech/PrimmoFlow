@@ -47,7 +47,7 @@
 <app-intervention-card 
           [intervention]="inter"
           [statusConfig]="STATUS_CONFIG"
-          [canEdit]="false"
+          [canEdit]= "true"
            (editClick)="goToEdit(inter)"
           [isPressing]="pressedCardId() === inter.id"
           (cardClick)="goToDetails(inter)"
@@ -71,7 +71,7 @@
 <app-intervention-card 
           [intervention]="inter"
           [statusConfig]="STATUS_CONFIG"
-          [canEdit]="false"
+          [canEdit]="true"
            (editClick)="goToEdit(inter)"
           [isPressing]="pressedCardId() === inter.id"
           (cardClick)="inter.status === 'END' ? goToInvoice(inter.id) : (authService.hasPerm('dash_nav_billed') ? markAsPaid(inter, $event) : null)"
