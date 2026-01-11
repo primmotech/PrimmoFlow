@@ -9,6 +9,7 @@ import { TaskModalComponent } from './task-modal.component';
 import { DashboardFiltersComponent, Owner } from './dashboard-filters.component';
 import { BottomNavComponent } from './bottom-nav';
 import { AppHeaderComponent } from './app-header';
+import { DashboardService } from '../../core/services/dashboard.service';
 
 export interface Task { label: string; done: boolean; }
 
@@ -40,7 +41,8 @@ export const STATUS_CONFIG: Record<string, { label: string, color: string, categ
   'STOPPED': { label: 'Arrêté', color: 'red-card', category: 'planned' },
   'PLANNED': { label: 'Planifié', color: 'blue-card', category: 'planned' },
   'END': { label: 'Terminé', color: 'red-card', category: 'completed' },
-  'BILLED': { label: 'Facturé', color: 'green-card', category: 'completed' }
+  'BILLED': { label: 'Facturé', color: 'green-card', category: 'completed' },
+  
 };
 
 @Component({
@@ -59,12 +61,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public themeService = inject(ThemeService);
   public router = inject(Router);
 public readonly STATUS_CONFIG = STATUS_CONFIG; // Doi
-
+private dashService = inject(DashboardService);
+activeFilter = this.dashService.activeFilter;
+selectedOwnerId = this.dashService.selectedOwnerId;
   interventions = signal<Intervention[]>([]);
   loading = signal(true);
   isOffline = signal(!navigator.onLine);
-  activeFilter = signal<DashboardFilter>('ALL');
-  selectedOwnerId = signal<string | null>(null);
+  //activeFilter = signal<DashboardFilter>('ALL');
+  //selectedOwnerId = signal<string | null>(null);
   selectedIntervention = signal<Intervention | null>(null);
   pressedCardId = signal<string | null>(null);
   colleagueEmails = signal<string[]>([]);
@@ -128,8 +132,8 @@ filteredInterventions = computed(() => {
 
   ngOnDestroy() { if (this.unsubscribeRealtime) this.unsubscribeRealtime(); }
 
-  setFilter(f: DashboardFilter) { this.activeFilter.set(f); }
-  setOwnerFilter(id: string | null) { this.selectedOwnerId.set(id); }
+setFilter(f: DashboardFilter) { this.dashService.activeFilter.set(f); }
+setOwnerFilter(id: string | null) { this.dashService.selectedOwnerId.set(id); }
 
   async initDashboard() {
     this.loading.set(true);
@@ -171,32 +175,67 @@ filteredInterventions = computed(() => {
     };
   }
 
-  subscribeToChanges() { /* Ta logique Realtime existante */ }
+  subscribeToChanges() {
+  // On s'abonne à la collection des interventions
+  this.unsubscribeRealtime = this.authService.client.subscribe(
+    `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`,
+    (response) => {
+      const eventType = response.events[0]; // 'databases.*.create' ou 'update' ou 'delete'
+      const payload = response.payload as any;
+
+      if (eventType.includes('create')) {
+        // Ajout d'une nouvelle intervention en haut de la liste
+        const newInter = this.sanitizeIntervention(payload);
+        this.interventions.update(list => [newInter, ...list]);
+      } 
+      
+      else if (eventType.includes('update')) {
+        // Mise à jour d'une intervention existante
+        const updatedInter = this.sanitizeIntervention(payload);
+        this.interventions.update(list => 
+          list.map(i => i.id === updatedInter.id ? updatedInter : i)
+        );
+      } 
+      
+      else if (eventType.includes('delete')) {
+        // Suppression d'une intervention
+        this.interventions.update(list => 
+          list.filter(i => i.id === payload.$id)
+        );
+      }
+    }
+  );
+}
   goToAdd() { this.router.navigate(['/add-intervention']); }
   // ... autres méthodes de navigation ...
   // Dans dashboard.ts
-makeCall(phone: string) {
-  if (phone) {
-    window.location.href = `tel:${phone}`;
+
+  makeCall(phone: string) {
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      console.warn("Numéro non disponible");
+    }
   }
-}
 // --- MÉTHODES DE NAVIGATION ET ACTIONS ---
 
-goToDetails(id: string) {
-  this.router.navigate(['/intervention-details', id]);
+goToDetails(inter: any) { // On passe l'objet complet au lieu de juste l'ID
+  this.router.navigate(['/intervention-details', inter.id], { state: { data: inter } });
 }
 
 goToPlanning(inter: any, event?: Event) {
   if (event) event.stopPropagation();
-  this.router.navigate(['/planning', inter.id]);
+  this.router.navigate(['/planning', inter.id],{ state: { data: inter } });
 }
 
-goToEdit(id: string) {
-  this.router.navigate(['/edit-intervention', id]);
+
+
+goToEdit(inter: any) {
+  this.router.navigate(['/edit-intervention', inter.id], { state: { data: inter } });
 }
 
-goToInvoice(id: string) {
-  this.router.navigate(['/invoice', id]);
+goToInvoice(inter: any) {
+  this.router.navigate(['/invoice', inter.id], { state: { data: inter } });
 }
 
 // --- GESTION DES TÂCHES ET MODALE ---
@@ -228,7 +267,7 @@ onPressEnd() {
   this.pressedCardId.set(null);
 }
 
-// --- MÉTHODE APPEL (SI BESOIN) ---
+
 
 
 }

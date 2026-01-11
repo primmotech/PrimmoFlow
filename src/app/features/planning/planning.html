@@ -92,13 +92,14 @@
     </section>
 
     @if (selectedDate() && targetIntervention()) {
-      <section class="planning-action">
+      <section >
         <button class="btn-plan" (click)="confirmPlanning()" [disabled]="isSubmitting()">
           @if (isSubmitting()) { <span>Enregistrement...</span> }
           @else { 
             Planifier le {{ selectedDate() | date:'dd' }} 
             <span class="capitalize">{{ selectedDate() | date:'MMMM':'':'fr' }}</span>
           }
+          
         </button>
       </section>
     }

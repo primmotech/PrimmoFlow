@@ -33,7 +33,7 @@
   flex: 1;
   
   .city { 
-    font-weight: 800; 
+    font-weight: 600; 
     font-size: 1.1rem; 
     color: #ffffff; 
     text-transform: uppercase;
@@ -41,7 +41,7 @@
   }
   
   .street { 
-    font-size: 0.95rem; 
+    font-size: 1rem; 
     color: #9ca3af; 
   }
   
@@ -65,15 +65,15 @@
 }
 
 .btn-details {
-  background: #ffffff;
-  color: #000000;
-  border: none;
-  padding: 8px 16px;
+  background: transparent;
+  color: #10b981;
+  border:1.5px solid #374151;
+  padding: 8px 8px;
   border-radius: 6px;
   font-weight: 900;
   font-size: 0.75rem;
   cursor: pointer;
-  min-width: 90px;
+  //min-width: 90px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 

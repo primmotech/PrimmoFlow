@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { ThemeService } from '../../core/services/theme';
 import { MissionStore } from '../../core/services/missions';
 import { AuthService } from '../../core/services/auth.service';
+import { Location } from '@angular/common';
 
 registerLocaleData(localeFr);
 
@@ -37,6 +38,7 @@ export class Planning implements OnInit {
 
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COL_INTERVENTIONS = 'interventions';
+  private location = inject(Location);
 
   // Filtrage des missions pour le calendrier
   allPlannedMissions = computed(() => {
@@ -45,6 +47,7 @@ export class Planning implements OnInit {
       ['PLANNED', 'STOPPED', 'PAUSED', 'STARTED'].includes(m.status)
     ) : [];
   });
+ 
 
   constructor() {
     const stateData = history.state?.data;
@@ -245,9 +248,11 @@ export class Planning implements OnInit {
     this.showTimePicker.set(true);
   }
 
-  goBack() {
-    this.router.navigate(['/dashboard']);
-  }
+
+
+goBack() {
+  this.location.back();
+}
 
   daysInMonth = computed(() => {
     const date = this.viewDate();
