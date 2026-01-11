@@ -8,11 +8,14 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="modal-overlay" (click)="close.emit()">
+ <div class="modal-overlay" (click)="close.emit()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         
         <div class="modal-header">
-          <h4>{{ intervention.adresse.ville }} {{ intervention.adresse.rue }}</h4>
+          <div class="header-titles">
+            <h4>{{ intervention.adresse.ville }}</h4>
+            <span class="subtitle">{{ intervention.adresse.numero }} {{ intervention.adresse.rue }}</span>
+          </div>
           <button class="close-btn" (click)="close.emit()">✕</button>
         </div>
 
