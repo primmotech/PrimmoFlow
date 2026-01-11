@@ -9,7 +9,6 @@ import { Intervention } from './dashboard';
   template: `
     <div 
       class="intervention-card" 
-      [class.pressing]="isPressing"
       [ngClass]="statusConfig[intervention.status]?.color || ''"
       (click)="cardClick.emit($event)"
     >
@@ -25,11 +24,7 @@ import { Intervention } from './dashboard';
         <span class="street">{{ intervention.adresse.numero }} {{ intervention.adresse.rue }}</span>
 
         @if (
-          intervention.status == 'OPEN' ||
-          intervention.status == 'WAITING' ||
-          intervention.status == 'BILLED' ||
-          intervention.status == 'PAID' ||
-          intervention.status == 'END'
+        true
         ) {
           @if (intervention.owner && intervention.owner[0]) {
             <span class="created-by">
@@ -42,12 +37,7 @@ import { Intervention } from './dashboard';
         }
 
         @if (
-          intervention.status == 'PLANNED' ||
-          intervention.status == 'STOPPED' ||
-          intervention.status == 'STARTED' ||
-          intervention.status == 'PAUSED' ||
-          intervention.status == 'PAID' ||
-          intervention.status == 'END'
+          true
         ) {
           @let occupants = parseJson(intervention.habitants);
           @for (habitant of occupants; track $index) {
@@ -74,7 +64,7 @@ import { Intervention } from './dashboard';
               @case ('END') { Histo }
               @default {
                 @if (intervention.plannedAt) {
-                  <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM':'':'fr' }}</span>
+                  <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM HH:MM':'':'fr' }}</span>
                 } @else { DÉTAILS }
               }
             }
@@ -97,13 +87,12 @@ import { Intervention } from './dashboard';
 export class InterventionCardComponent {
   @Input({ required: true }) intervention!: Intervention;
   @Input({ required: true }) statusConfig: any;
-  @Input() isPressing = false;
   @Input() canEdit = false;
 
   @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
   @Output() editClick = new EventEmitter<string>();
-  @Output() deleteClick = new EventEmitter<string>(); // Nouvel Output
+  @Output() deleteClick = new EventEmitter<string>();
   @Output() callOwner = new EventEmitter<string>();
 
   onAction(event: Event) {
@@ -117,7 +106,7 @@ export class InterventionCardComponent {
   }
 
   onDelete(event: Event) {
-    event.stopPropagation(); // Empêche d'ouvrir les détails en cliquant sur la croix
+    event.stopPropagation();
     if (confirm('Voulez-vous vraiment supprimer cette intervention ?')) {
       this.deleteClick.emit(this.intervention.id);
     }

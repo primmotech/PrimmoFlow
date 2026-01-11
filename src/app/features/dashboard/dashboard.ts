@@ -42,7 +42,6 @@ export const STATUS_CONFIG: Record<string, { label: string, color: string, categ
   'PLANNED': { label: 'Planifié', color: 'blue-card', category: 'planned' },
   'END': { label: 'Terminé', color: 'red-card', category: 'completed' },
   'BILLED': { label: 'Facturé', color: 'green-card', category: 'completed' },
-  
 };
 
 @Component({
@@ -60,17 +59,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
   public router = inject(Router);
-public readonly STATUS_CONFIG = STATUS_CONFIG; // Doi
-private dashService = inject(DashboardService);
-activeFilter = this.dashService.activeFilter;
-selectedOwnerId = this.dashService.selectedOwnerId;
+  public readonly STATUS_CONFIG = STATUS_CONFIG;
+  private dashService = inject(DashboardService);
+
+  activeFilter = this.dashService.activeFilter;
+  selectedOwnerId = this.dashService.selectedOwnerId;
   interventions = signal<Intervention[]>([]);
   loading = signal(true);
   isOffline = signal(!navigator.onLine);
-  //activeFilter = signal<DashboardFilter>('ALL');
-  //selectedOwnerId = signal<string | null>(null);
   selectedIntervention = signal<Intervention | null>(null);
-  pressedCardId = signal<string | null>(null);
   colleagueEmails = signal<string[]>([]);
 
   private unsubscribeRealtime: (() => void) | null = null;
@@ -78,42 +75,35 @@ selectedOwnerId = this.dashService.selectedOwnerId;
   private readonly COL_INTERVENTIONS = 'interventions';
 
   // --- LOGIQUE FILTRAGE ET OWNERS ---
-// --- COMPUTED : Extraction des owners uniques ---
-owners = computed(() => {
-  const list: Owner[] = [];
-  const seen = new Set();
-  
-  this.interventions().forEach(inter => {
-    // Dans ton cas, inter.owner est un tableau d'objets JSON
-    inter.owner?.forEach(o => {
-      // Comme il n'y a pas d'ID, on utilise l'email comme identifiant unique
-      const uid = o.email;
-      
-      if (uid && !seen.has(uid)) {
-        seen.add(uid);
-        list.push({ 
-          id: uid, // On utilise l'email comme ID pour le filtrage
-          firstName: o.prenom || '', 
-          lastName: o.nom || '', 
-          email: o.email || '' 
-        });
-      }
+  owners = computed(() => {
+    const list: Owner[] = [];
+    const seen = new Set();
+    
+    this.interventions().forEach(inter => {
+      inter.owner?.forEach(o => {
+        const uid = o.email;
+        if (uid && !seen.has(uid)) {
+          seen.add(uid);
+          list.push({ 
+            id: uid, 
+            firstName: o.prenom || '', 
+            lastName: o.nom || '', 
+            email: o.email || '' 
+          });
+        }
+      });
     });
+    return list;
   });
-  return list;
-});
 
-// --- LOGIQUE FILTRAGE ---
-filteredInterventions = computed(() => {
-  let list = this.interventions();
-  const ownerId = this.selectedOwnerId(); // C'est l'email ici
-
-  if (ownerId) {
-    // On cherche si l'un des owners de l'intervention a cet email
-    list = list.filter(i => i.owner?.some(o => o.email === ownerId));
-  }
-  return list;
-});
+  filteredInterventions = computed(() => {
+    let list = this.interventions();
+    const ownerId = this.selectedOwnerId();
+    if (ownerId) {
+      list = list.filter(i => i.owner?.some(o => o.email === ownerId));
+    }
+    return list;
+  });
 
   pendingInterventions = computed(() => this.filteredInterventions().filter(i => STATUS_CONFIG[i.status]?.category === 'pending'));
   plannedInterventions = computed(() => this.filteredInterventions().filter(i => STATUS_CONFIG[i.status]?.category === 'planned'));
@@ -132,9 +122,23 @@ filteredInterventions = computed(() => {
 
   ngOnDestroy() { if (this.unsubscribeRealtime) this.unsubscribeRealtime(); }
 
-setFilter(f: DashboardFilter) { this.dashService.activeFilter.set(f); }
-setOwnerFilter(id: string | null) { this.dashService.selectedOwnerId.set(id); }
-
+  setFilter(f: DashboardFilter) { this.dashService.activeFilter.set(f); }
+  setOwnerFilter(id: string | null) { this.dashService.selectedOwnerId.set(id); }
+async deleteIntervention(id: string) {
+  try {
+    // Suppression dans la base de données Appwrite
+    await this.authService.databases.deleteDocument(
+      this.DB_ID, 
+      this.COL_INTERVENTIONS, 
+      id
+    );
+    // Note: Le signal "interventions" se mettra à jour automatiquement 
+    // grâce à votre méthode subscribeToChanges() déjà présente.
+  } catch (error) {
+    console.error("Erreur lors de la suppression :", error);
+    alert("Impossible de supprimer l'intervention.");
+  }
+}
   async initDashboard() {
     this.loading.set(true);
     await this.authService.checkSession();
@@ -176,74 +180,72 @@ setOwnerFilter(id: string | null) { this.dashService.selectedOwnerId.set(id); }
   }
 
   subscribeToChanges() {
-  // On s'abonne à la collection des interventions
-  this.unsubscribeRealtime = this.authService.client.subscribe(
-    `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`,
-    (response) => {
-      const eventType = response.events[0]; // 'databases.*.create' ou 'update' ou 'delete'
-      const payload = response.payload as any;
+    this.unsubscribeRealtime = this.authService.client.subscribe(
+      `databases.${this.DB_ID}.collections.${this.COL_INTERVENTIONS}.documents`,
+      (response) => {
+        const eventType = response.events[0];
+        const payload = response.payload as any;
 
-      if (eventType.includes('create')) {
-        // Ajout d'une nouvelle intervention en haut de la liste
-        const newInter = this.sanitizeIntervention(payload);
-        this.interventions.update(list => [newInter, ...list]);
-      } 
-      
-      else if (eventType.includes('update')) {
-        // Mise à jour d'une intervention existante
-        const updatedInter = this.sanitizeIntervention(payload);
-        this.interventions.update(list => 
-          list.map(i => i.id === updatedInter.id ? updatedInter : i)
-        );
-      } 
-      
-      else if (eventType.includes('delete')) {
-        // Suppression d'une intervention
-        this.interventions.update(list => 
-          list.filter(i => i.id === payload.$id)
-        );
+        if (eventType.includes('create')) {
+          const newInter = this.sanitizeIntervention(payload);
+          this.interventions.update(list => [newInter, ...list]);
+        } 
+        else if (eventType.includes('update')) {
+          const updatedInter = this.sanitizeIntervention(payload);
+          this.interventions.update(list => 
+            list.map(i => i.id === updatedInter.id ? updatedInter : i)
+          );
+        } 
+        else if (eventType.includes('delete')) {
+          this.interventions.update(list => 
+            list.filter(i => i.id !== payload.$id)
+          );
+        }
       }
-    }
-  );
-}
-  goToAdd() { this.router.navigate(['/add-intervention']); }
-  // ... autres méthodes de navigation ...
-  // Dans dashboard.ts
-
-  makeCall(phone: string) {
-    if (phone) {
-      window.location.href = `tel:${phone}`;
-    } else {
-      console.warn("Numéro non disponible");
-    }
+    );
   }
-// --- MÉTHODES DE NAVIGATION ET ACTIONS ---
 
-goToDetails(inter: any) { // On passe l'objet complet au lieu de juste l'ID
-  this.router.navigate(['/intervention-details', inter.id], { state: { data: inter } });
+  // --- MÉTHODES DE NAVIGATION ET ACTIONS ---
+
+  goToAdd() { this.router.navigate(['/add-intervention']); }
+
+makeCall(phone: string) {
+  if (phone) {
+    // La fenêtre de confirmation s'ouvre d'abord
+    const confirmCall = confirm(`Voulez-vous appeler le ${phone} ?`);
+    
+    // Si l'utilisateur clique sur OK (true), on lance l'appel
+    if (confirmCall) {
+      window.location.href = `tel:${phone}`;
+    }
+  } else {
+    console.warn("Numéro non disponible");
+  }
 }
 
-goToPlanning(inter: any, event?: Event) {
-  if (event) event.stopPropagation();
-  this.router.navigate(['/planning', inter.id],{ state: { data: inter } });
-}
+  goToDetails(inter: any) {
+    this.router.navigate(['/intervention-details', inter.id], { state: { data: inter } });
+  }
 
+  goToPlanning(inter: any, event?: Event) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/planning', inter.id], { state: { data: inter } });
+  }
 
+  goToEdit(inter: any, event?: Event) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/edit-intervention', inter.id], { state: { data: inter } });
+  }
 
-goToEdit(inter: any) {
-  this.router.navigate(['/edit-intervention', inter.id], { state: { data: inter } });
-}
+  goToInvoice(inter: any, event?: Event) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/invoice', inter.id], { state: { data: inter } });
+  }
 
-goToInvoice(inter: any) {
-  this.router.navigate(['/invoice', inter.id], { state: { data: inter } });
-}
-
-// --- GESTION DES TÂCHES ET MODALE ---
-
-openTasks(inter: any, event?: Event) {
-  if (event) event.stopPropagation();
-  this.selectedIntervention.set(inter);
-}
+  openTasks(inter: any, event?: Event) {
+    if (event) event.stopPropagation();
+    this.selectedIntervention.set(inter);
+  }
 
   async markAsPaid(intervention: Intervention, event: Event) {
     event.stopPropagation();
@@ -255,19 +257,4 @@ openTasks(inter: any, event?: Event) {
       } catch (error) { console.error(error); }
     }
   }
-
-
-// --- LOGIQUE DE "LONG PRESS" (POUR LES ANIMATIONS) ---
-
-onPressStart(inter: any) {
-  this.pressedCardId.set(inter.id);
-}
-
-onPressEnd() {
-  this.pressedCardId.set(null);
-}
-
-
-
-
 }

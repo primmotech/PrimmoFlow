@@ -20,19 +20,15 @@
       <h2 class="section-title">En attente ({{ pendingInterventions().length }})</h2>
       <div class="cards-grid">
         @for (inter of pendingInterventions(); track inter.id) {
-<app-intervention-card 
+        <app-intervention-card 
           [intervention]="inter"
+          (deleteClick)="deleteIntervention($event)" 
           [statusConfig]="STATUS_CONFIG"
           [canEdit]="true"
-          [isPressing]="pressedCardId() === inter.id"
           (cardClick)="goToPlanning(inter, $event)" 
           (actionClick)="openTasks(inter, $event)"
           (editClick)="goToEdit(inter)"
-          (mousedown)="onPressStart(inter)"
-          (mouseup)="onPressEnd()"
-          (touchstart)="onPressStart(inter)"
-          (callOwner)="makeCall($event)"
-          (touchend)="onPressEnd()">
+          (callOwner)="makeCall($event)">
         </app-intervention-card>
         }
       </div>
@@ -44,19 +40,15 @@
       <h2 class="section-title">Planifiées ({{ plannedInterventions().length }})</h2>
       <div class="cards-grid">
         @for (inter of plannedInterventions(); track inter.id) {
-<app-intervention-card 
+        <app-intervention-card 
           [intervention]="inter"
+          (deleteClick)="deleteIntervention($event)"
           [statusConfig]="STATUS_CONFIG"
           [canEdit]= "true"
-           (editClick)="goToEdit(inter)"
-          [isPressing]="pressedCardId() === inter.id"
+          (editClick)="goToEdit(inter)"
           (cardClick)="goToDetails(inter)"
           (actionClick)="goToPlanning(inter, $event)"
-          (mousedown)="onPressStart(inter)"
-          (mouseup)="onPressEnd()"
-          (touchstart)="onPressStart(inter)"
-          (callOwner)="makeCall($event)"
-          (touchend)="onPressEnd()">
+          (callOwner)="makeCall($event)">
         </app-intervention-card>
         }
       </div>
@@ -68,20 +60,15 @@
       <h2 class="section-title">Terminées ({{ completedInterventions().length }})</h2>
       <div class="cards-grid">
         @for (inter of completedInterventions(); track inter.id) {
-<app-intervention-card 
+        <app-intervention-card 
           [intervention]="inter"
           [statusConfig]="STATUS_CONFIG"
+          (deleteClick)="deleteIntervention($event)"
           [canEdit]="true"
-           (editClick)="goToEdit(inter)"
-          [isPressing]="pressedCardId() === inter.id"
+          (editClick)="goToEdit(inter)"
           (cardClick)="inter.status === 'END' ? goToInvoice(inter.id) : (authService.hasPerm('dash_nav_billed') ? markAsPaid(inter, $event) : null)"
           (actionClick)="inter.status === 'END' ? router.navigate(['/history', inter.id]) : null"
-          (mousedown)="onPressStart(inter)"
-          (mouseup)="onPressEnd()"
-          (touchstart)="onPressStart(inter)"
-          (touchend)="onPressEnd()"
-           (callOwner)="makeCall($event)">
-          
+          (callOwner)="makeCall($event)">
         </app-intervention-card>
         }
       </div>

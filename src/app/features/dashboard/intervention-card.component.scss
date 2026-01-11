@@ -1,5 +1,5 @@
 .intervention-card {
-  position: relative; // INDISPENSABLE pour positionner la croix à l'intérieur
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -15,12 +15,7 @@
     background: #222;
   }
 
-  &.pressing { 
-    transform: scale(0.96); 
-    border-left-color: #ef4444 !important; 
-  }
-  
-  // Couleurs de bordure selon le statut
+  // Styles de bordure conservés
   &.blue-card { border-left-color: #3b82f6; }
   &.green-card { border-left-color: #10b981; }
   &.yellow-card { border-left-color: #f59e0b; }
@@ -29,8 +24,8 @@
   // --- BOUTON SUPPRIMER (CROIX ROUGE) ---
   .btn-delete {
     position: absolute;
-    top: -6px;    // Légèrement au dessus
-    right: -6px;  // Légèrement à droite pour un look "badge"
+    top: -6px;
+    right: -6px;
     background: #ef4444; 
     color: #ffffff;
     border: none;
@@ -62,7 +57,7 @@
   flex-direction: column;
   gap: 2px;
   flex: 1;
-  padding-right: 10px; // Espace pour ne pas chevaucher la croix si le texte est long
+  padding-right: 10px;
   
   .city { 
     font-weight: 600; 
@@ -85,24 +80,28 @@
     .author-name {
       color: #10b981;
       font-weight: 700;
-      cursor: pointer; // Pour indiquer que le nom est cliquable (appel)
+      cursor: pointer;
     }
   }
 }
 
+// --- ACTIONS ALIGNÉES VERTICALEMENT ---
 .card-actions {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column; // Aligne btn-details et btn-edit l'un sous l'autre
+  gap: 8px;               // Espace entre les deux boutons
+  align-items: stretch;   // Étire les boutons pour une largeur uniforme
+  justify-content: center;
   margin-left: 15px;
+  min-width: 85px;        // Largeur minimum pour éviter que les boutons sautent
 }
 
 .btn-details {
   background: transparent;
   color: #10b981;
   border: 1.5px solid #374151;
-  padding: 8px 8px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   font-weight: 900;
   font-size: 0.75rem;
   cursor: pointer;
@@ -110,7 +109,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 
   &:hover {
-    background: #2a2a2a; // Adapté pour le fond noir au lieu du gris clair
+    background: #2a2a2a;
   }
 }
 
@@ -118,7 +117,7 @@
   background: transparent;
   border: 1.5px solid #374151;
   color: #9ca3af;
-  width: 38px;
+  width: 100%;            // Prend toute la largeur disponible dans card-actions
   height: 38px;
   display: flex;
   align-items: center;
@@ -126,6 +125,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  
 
   &:hover {
     border-color: #6b7280;
