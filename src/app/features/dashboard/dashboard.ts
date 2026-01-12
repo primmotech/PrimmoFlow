@@ -135,21 +135,7 @@ plannedInterventions = computed(() => {
 
   setFilter(f: DashboardFilter) { this.dashService.activeFilter.set(f); }
   setOwnerFilter(id: string | null) { this.dashService.selectedOwnerId.set(id); }
-async deleteIntervention(id: string) {
-  try {
-    // Suppression dans la base de données Appwrite
-    await this.authService.databases.deleteDocument(
-      this.DB_ID, 
-      this.COL_INTERVENTIONS, 
-      id
-    );
-    // Note: Le signal "interventions" se mettra à jour automatiquement 
-    // grâce à votre méthode subscribeToChanges() déjà présente.
-  } catch (error) {
-    console.error("Erreur lors de la suppression :", error);
-    alert("Impossible de supprimer l'intervention.");
-  }
-}
+
   async initDashboard() {
     this.loading.set(true);
     await this.authService.checkSession();
@@ -268,4 +254,21 @@ makeCall(phone: string) {
       } catch (error) { console.error(error); }
     }
   }
+  async deleteIntervention(id: string) {
+  // DOUBLE SÉCURITÉ : Même si quelqu'un arrive à déclencher la fonction (via la console par ex)
+  if (!this.authService.hasPerm('dash_act_delete')) {
+    alert("Vous n'avez pas l'autorisation de supprimer.");
+    return;
+  }
+
+  try {
+    await this.authService.databases.deleteDocument(
+      this.DB_ID, 
+      this.COL_INTERVENTIONS, 
+      id
+    );
+  } catch (error) {
+    console.error("Erreur :", error);
+  }
+}
 }

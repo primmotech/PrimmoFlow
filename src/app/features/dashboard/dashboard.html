@@ -24,6 +24,7 @@
           [intervention]="inter"
           (deleteClick)="deleteIntervention($event)" 
           [statusConfig]="STATUS_CONFIG"
+          [canDelete]="authService.hasPerm('dash_act_delete')"
           [canEdit]="true"
           (cardClick)="goToPlanning(inter, $event)" 
           (actionClick)="openTasks(inter, $event)"
@@ -43,6 +44,7 @@
         <app-intervention-card 
           [intervention]="inter"
           (deleteClick)="deleteIntervention($event)"
+          [canDelete]="authService.hasPerm('dash_act_delete')"
           [statusConfig]="STATUS_CONFIG"
           [canEdit]= "true"
           (editClick)="goToEdit(inter)"
@@ -64,9 +66,10 @@
           [intervention]="inter"
           [statusConfig]="STATUS_CONFIG"
           (deleteClick)="deleteIntervention($event)"
+          [canDelete]="authService.hasPerm('dash_act_delete')"
           [canEdit]="true"
           (editClick)="goToEdit(inter)"
-          (cardClick)="inter.status === 'END' ? goToInvoice(inter.id) : (authService.hasPerm('dash_nav_billed') ? markAsPaid(inter, $event) : null)"
+          (cardClick)="inter.status === 'END' ? goToInvoice(inter) : (authService.hasPerm('dash_nav_billed') ? markAsPaid(inter, $event) : null)"
           (actionClick)="inter.status === 'END' ? router.navigate(['/history', inter.id]) : null"
           (callOwner)="makeCall($event)">
         </app-intervention-card>

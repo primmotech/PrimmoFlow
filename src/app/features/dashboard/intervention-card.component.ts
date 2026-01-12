@@ -12,12 +12,14 @@ import { Intervention } from './dashboard';
       [ngClass]="statusConfig[intervention.status]?.color || ''"
       (click)="cardClick.emit($event)"
     >
-      <button class="btn-delete" (click)="onDelete($event)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+@if (canDelete) {
+  <button class="btn-delete" (click)="onDelete($event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+}
 
       <div class="card-info">
         <span class="city">{{ intervention.adresse.ville || 'VILLE INCONNUE' }}</span>
@@ -88,6 +90,7 @@ export class InterventionCardComponent {
   @Input({ required: true }) intervention!: Intervention;
   @Input({ required: true }) statusConfig: any;
   @Input() canEdit = false;
+  @Input() canDelete = false;
 
   @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
