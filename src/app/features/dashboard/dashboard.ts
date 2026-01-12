@@ -230,7 +230,10 @@ makeCall(phone: string) {
     if (event) event.stopPropagation();
     this.router.navigate(['/edit-intervention', inter.id], { state: { data: inter } });
   }
-
+// Dans ton dashboard
+goToHistory(inter: any) {
+  this.router.navigate(['/history', inter.id]); // <--- Vérifie que c'est bien '/history'
+}
   goToInvoice(inter: any, event?: Event) {
     if (event) event.stopPropagation();
     this.router.navigate(['/invoice', inter.id], { state: { data: inter } });

@@ -1,5 +1,91 @@
-<div>
-  <h2>History for Intervention ID: {{ interventionId }}</h2>
-  <p>This is the history page. Content to be added here.</p>
-  <button (click)="goBack()">Back to Dashboard</button>
+<div class="mobile-wrapper">
+  
+  <header class="address-header">
+    <h1 class="city-title">{{ intervention()?.['adresse']?.ville }}</h1>
+    <span class="street-detail">
+      {{ intervention()?.['adresse']?.numero }} {{ intervention()?.['adresse']?.rue }}
+    </span>
+  </header>
+
+  <main class="container">
+    @if (!loading() && intervention()) {
+      
+      <section class="section">
+        <h3 class="title">Nouvelle note d'appel</h3>
+        <div class="generic-card padding-card">
+          <select [(ngModel)]="selectedReceiver" class="history-select">
+            <option value="">-- Choisir le destinataire --</option>
+            @for (c of availableContacts(); track $index) {
+              <option [value]="c.name">{{ c.role }}: {{ c.name }}</option>
+            }
+          </select>
+          
+          <textarea 
+            [(ngModel)]="newComment" 
+            class="history-textarea"
+            placeholder="Commentaire optionnel (ex: Messagerie...)"
+            rows="3"></textarea>
+        </div>
+
+        <button class="total-button-action" 
+                (click)="addCallLog()" 
+                [disabled]="!selectedReceiver()">
+          <div class="left-side">
+            <span class="action-label">Enregistrer l'appel</span>
+          </div>
+          <div class="right-side">
+            <span class="total-amount">💾</span>
+          </div>
+        </button>
+      </section>
+
+      <section class="section">
+        <h3 class="title">Journal des communications</h3>
+        <div class="generic-card">
+          @for (call of sortedCalls; track $index) {
+            <div class="row call-entry">
+              <div class="content">
+                <div class="call-meta">
+                  <div class="label-group">
+                    <span class="caller-name">{{ call.caller }}</span>
+                    <span class="receiver-name">→ {{ call.receiver }}</span>
+                  </div>
+
+                  <div class="meta-right">
+                    <span class="status">{{ call.timestamp | date:'dd/MM HH:mm' }}</span>
+                    <button class="delete-btn" (click)="deleteCallLog($index)" title="Supprimer">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p class="comment-text">{{ call.comment }}</p>
+              </div>
+            </div>
+          } @empty {
+            <div class="row"><span class="status">Aucun appel enregistré.</span></div>
+          }
+        </div>
+      </section>
+    }
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-item" (click)="goBack()">
+       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Accueil</span>
+    </button>
+  </nav>
+
 </div>
