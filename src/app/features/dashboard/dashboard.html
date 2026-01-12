@@ -29,6 +29,7 @@
           [canEdit]="authService.hasPerm('dash_act_edit')"
           (cardClick)="authService.hasPerm('dash_act_plan') ? goToPlanning(inter, $event) : openTasks(inter, $event)"
           (actionClick)="openTasks(inter, $event)"
+          (action2Click)="router.navigate(['/history', inter.id]) "
           (editClick)="goToEdit(inter)"
           (callOwner)="makeCall($event)">
         </app-intervention-card>

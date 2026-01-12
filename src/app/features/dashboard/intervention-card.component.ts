@@ -72,6 +72,11 @@ import { Intervention } from './dashboard';
               }
             }
           </button>
+           @if (intervention.status == 'OPEN'||intervention.status == 'WAITING') {
+                    <button class="btn-details" (click)="onAction2($event)">
+    Histo
+          </button>
+           }
         }
       }
 
@@ -98,6 +103,7 @@ export class InterventionCardComponent {
 
   @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
+   @Output() action2Click = new EventEmitter<Event>();
   @Output() editClick = new EventEmitter<string>();
   @Output() deleteClick = new EventEmitter<string>();
   @Output() callOwner = new EventEmitter<string>();
@@ -105,6 +111,10 @@ export class InterventionCardComponent {
   onAction(event: Event) {
     event.stopPropagation();
     this.actionClick.emit(event);
+  }
+    onAction2(event: Event) {
+    event.stopPropagation();
+    this.action2Click.emit(event);
   }
 
   onEdit(event: Event) {
