@@ -58,10 +58,11 @@ import { Intervention } from './dashboard';
       </div>
 
       <div class="card-actions">
-        @if (intervention.status !== 'BILLED') {
+        @if (intervention.status !== 'BILLED' && showActionButton && (isBasicStatus || canPlan)) {
+          @if (['WAITING', 'OPEN', 'END'].includes(intervention.status) || canPlan) {
           <button class="btn-details" (click)="onAction($event)">
             @switch (intervention.status) {
-              @case ('WAITING') { Détails }
+              @case ('WAITING') { Détails } 
               @case ('OPEN') { Détails }
               @case ('END') { Histo }
               @default {
@@ -72,6 +73,7 @@ import { Intervention } from './dashboard';
             }
           </button>
         }
+      }
 
         @if (canEdit) {
           <button class="btn-edit" (click)="onEdit($event)">
@@ -91,6 +93,8 @@ export class InterventionCardComponent {
   @Input({ required: true }) statusConfig: any;
   @Input() canEdit = false;
   @Input() canDelete = false;
+  @Input() showActionButton = true;
+  @Input() canPlan = false;
 
   @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
@@ -121,7 +125,11 @@ export class InterventionCardComponent {
       this.callOwner.emit(phone);
     }
   }
-
+// Dans intervention-card.component.ts
+get isBasicStatus(): boolean {
+  const basic = ['WAITING', 'OPEN', 'END'];
+  return basic.includes(this.intervention.status);
+}
   parseJson(jsonString: any) {
     if (!jsonString) return [];
     if (typeof jsonString === 'object') return jsonString;

@@ -224,10 +224,7 @@ makeCall(phone: string) {
     this.router.navigate(['/intervention-details', inter.id], { state: { data: inter } });
   }
 
-  goToPlanning(inter: any, event?: Event) {
-    if (event) event.stopPropagation();
-    this.router.navigate(['/planning', inter.id], { state: { data: inter } });
-  }
+
 
   goToEdit(inter: any, event?: Event) {
     if (event) event.stopPropagation();
@@ -270,5 +267,17 @@ makeCall(phone: string) {
   } catch (error) {
     console.error("Erreur :", error);
   }
+}
+goToPlanning(inter: any, event?: Event) {
+  if (event) event.stopPropagation();
+  
+  // Sécurité supplémentaire
+  if (!this.authService.hasPerm('dash_act_plan')) {
+    // Si pas de droit, on ouvre juste la modale au lieu de changer de page
+    this.openTasks(inter);
+    return;
+  }
+  
+  this.router.navigate(['/planning', inter.id], { state: { data: inter } });
 }
 }

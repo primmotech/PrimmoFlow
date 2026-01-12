@@ -83,11 +83,12 @@ import { AuthService } from '../../core/services/auth.service';
           <p class="remarks-text">{{ intervention.remarques }}</p>
         </div>
       }
- @if (authService.hasPerm('dash_nav_orders')) {
-      <button class="action-btn secondary" >
-        Plannifer
-      </button>
- }
+@if (authService.hasPerm('dash_act_plan')) {
+  <button class="action-btn secondary" (click)="planRequest.emit()">
+    Planifier
+  </button>
+}
+ 
     </div>
   </div>
 </div>
@@ -100,6 +101,7 @@ export class TaskModalComponent {
   @Input({ required: true }) intervention!: Intervention;
   @Output() close = new EventEmitter<void>();
 @Output() callRequest = new EventEmitter<string>();
+@Output() planRequest = new EventEmitter<void>();
 
   public authService = inject(AuthService);
   private readonly BUCKET_ID = '69502be400074c6f43f5';
