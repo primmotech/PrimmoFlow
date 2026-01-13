@@ -158,15 +158,55 @@
   background: var(--card-bg);
   border: 1.5px solid var(--border-color);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  // Groupement des textes à gauche
+  .timer-display-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   .clock {
     font-size: 2.2rem;
     font-weight: 900;
     font-family: monospace;
+    line-height: 1;
+    transition: color 0.3s ease;
   }
-  &.active {
+
+  // Petit timer de pause
+  .pause-clock {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.8;
+    
+    svg {
+      color: #f1c40f; // Rappel de la couleur pause
+    }
+  }
+
+  // État Actif (Travail en cours)
+  &.active:not(.is-paused) {
     border-color: #3498db !important;
     .clock {
       color: #3498db;
+    }
+  }
+
+  // État Pause
+  &.is-paused {
+    border-color: #f1c40f !important;
+    .clock {
+      color: #f1c40f;
+    }
+    .pause-clock {
+      opacity: 1;
+      color: var(--text-primary);
     }
   }
 }

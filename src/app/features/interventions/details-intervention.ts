@@ -5,7 +5,6 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ID } from 'appwrite';
 import { ThemeService } from '../../core/services/theme';
 import { AuthService } from '../../core/services/auth.service';
-import imageCompression from 'browser-image-compression';
 import { ImageService } from '../../core/services/image.service';
 
 @Component({
@@ -20,12 +19,14 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   public themeService = inject(ThemeService);
   public authService = inject(AuthService);
+  public imageService = inject(ImageService);
+
   protected readonly JSON = JSON;
+
   // Configuration Appwrite
   private readonly DB_ID = '694eba69001c97d55121';
   private readonly COLL_INTERVENTIONS = 'interventions';
   private readonly BUCKET_PHOTOS = '69502be400074c6f43f5';
-  public imageService = inject(ImageService);
 
   // État de l'UI
   intervention = signal<any>(null);
@@ -39,14 +40,16 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
   orderName = signal('');
   manualHours = signal<number | null>(null);
   manualMinutes = signal<number | null>(null);
+pauseDisplay = signal('00:00:00');
 
-  // Paramètres techniques (chargés depuis profil)
+  // Paramètres techniques
   hourlyRate = signal(28);
   travelFee = signal(12);
   rounding = signal(5);
   gps = signal('maps');
 
   // Chronomètre
+  startTime = signal<string | null>(null);
   timerDisplay = signal('00:00:00');
   isRunning = signal(false);
   private timerInterval: any;
@@ -54,21 +57,27 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
   public pauseSeconds = 0;
   public lastState: 'work' | 'pause' | 'idle' = 'idle';
 
-  // --- LOGIQUE RÉACTIVE (COMPUTED) ---
+  // --- LOGIQUE RÉACTIVE ---
 
-  /**
-   * Extrait les tâches de la mission au nouveau format objet
-   */
   missionTasks = computed(() => {
     const item = this.intervention();
     if (!item || !item.mission) return [];
-    
-    const parsedMission = typeof item.mission === 'string' ? JSON.parse(item.mission) : item.mission;
+    const parsedMission = this.parseJson(item.mission);
     return parsedMission?.tasks || [];
   });
 
+  canAddMaterial = computed(() => {
+    return this.itemName().trim().length > 0 && this.itemPrice() !== null;
+  });
 
+  displayedOrders = computed(() => {
+    const orders = (this.intervention()?.orders || []).map((o: any) => this.parseJson(o));
+    return orders.filter((o: any) => o.status !== 'COMMANDÉ');
+  });
 
+  displayedMaterials = computed(() => {
+    return (this.intervention()?.materials || []).map((m: any) => this.parseJson(m));
+  });
 
   ngOnInit() {
     this.themeService.initTheme();
@@ -94,18 +103,152 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
 
   async fetchData(id: string) {
     try {
-      const doc = await this.authService.databases.getDocument(this.DB_ID, this.COLL_INTERVENTIONS, id);
+      let doc = await this.authService.databases.getDocument(this.DB_ID, this.COLL_INTERVENTIONS, id);
+      doc = this.recoverTimerState(doc);
       this.intervention.set(doc);
+
+      if (doc['startTime'] && (doc['status'] === 'STARTED' || doc['status'] === 'PAUSED')) {
+        this.startTime.set(doc['startTime']);
+        this.isRunning.set(true);
+        this.startDisplayLoop();
+      }
+
       this.loading.set(false);
 
       this.authService.client.subscribe(
         `databases.${this.DB_ID}.collections.${this.COLL_INTERVENTIONS}.documents.${id}`,
-        response => this.intervention.set(response.payload)
+        response => {
+          const updatedDoc = this.recoverTimerState(response.payload);
+          this.intervention.set(updatedDoc);
+        }
       );
     } catch (error) {
       console.error("Erreur fetchData:", error);
     }
   }
+
+  // --- GESTION DU TEMPS (OFFLINE / ONLINE) ---
+
+  private async syncTimerState(data: any) {
+    const docId = this.intervention()?.$id;
+    if (!docId) return;
+
+    localStorage.setItem(`timer_${docId}`, JSON.stringify({
+      ...data,
+      updatedAt: new Date().getTime()
+    }));
+
+    try {
+      await this.updateIntervention(data);
+    } catch (e) {
+      console.warn("Offline sync failed");
+    }
+  }
+
+  private recoverTimerState(doc: any) {
+    const localDataRaw = localStorage.getItem(`timer_${doc.$id}`);
+    if (localDataRaw) {
+      const local = JSON.parse(localDataRaw);
+      const remoteUpdate = new Date(doc['$updatedAt']).getTime();
+      if (local.updatedAt > remoteUpdate) {
+        return { ...doc, ...local };
+      }
+    }
+    return doc;
+  }
+
+  async playTimer() {
+    const currentInter = this.intervention();
+    const now = new Date();
+
+    if (currentInter?.['status'] === 'PAUSED' && currentInter?.['pauseStartTime']) {
+      const pStart = new Date(currentInter['pauseStartTime']).getTime();
+      const pDuration = Math.floor((now.getTime() - pStart) / 1000);
+      const newTotalPause = (currentInter['totalPauseSeconds'] || 0) + pDuration;
+      
+      await this.syncTimerState({
+        status: 'STARTED',
+        pauseStartTime: null,
+        totalPauseSeconds: newTotalPause
+      });
+    } 
+    else if (!currentInter?.['startTime']) {
+      await this.syncTimerState({
+        status: 'STARTED',
+        startTime: now.toISOString(),
+        totalPauseSeconds: 0
+      });
+      this.startTime.set(now.toISOString());
+    } else {
+      await this.syncTimerState({ status: 'STARTED' });
+    }
+
+    this.isRunning.set(true);
+    this.startDisplayLoop();
+  }
+
+  async pauseTimer() {
+    const now = new Date().toISOString();
+    await this.syncTimerState({
+      status: 'PAUSED',
+      pauseStartTime: now
+    });
+    this.lastState = 'pause';
+  }
+
+private startDisplayLoop() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+
+    this.timerInterval = setInterval(() => {
+      const inter = this.intervention();
+      if (!inter?.['startTime']) return;
+
+      const start = new Date(inter['startTime']).getTime();
+      const now = new Date().getTime();
+      
+      let totalElapsed = Math.floor((now - start) / 1000);
+      let cumulativePause = Number(inter['totalPauseSeconds'] || 0);
+      let currentPauseSession = 0;
+
+      // Si on est en pause, on calcule la durée de la pause en cours
+      if (inter['status'] === 'PAUSED' && inter['pauseStartTime']) {
+        const pStart = new Date(inter['pauseStartTime']).getTime();
+        currentPauseSession = Math.floor((now - pStart) / 1000);
+      }
+
+      this.pauseSeconds = cumulativePause + currentPauseSession;
+      this.workSeconds = Math.max(0, totalElapsed - this.pauseSeconds);
+
+      // Mise à jour des deux signaux d'affichage
+      this.timerDisplay.set(this.formatDuration(this.workSeconds, true));
+      this.pauseDisplay.set(this.formatDuration(this.pauseSeconds, true));
+    }, 1000);
+  }
+
+  async stopAndSaveTimer() {
+    const inter = this.intervention();
+    if (!inter?.['startTime']) return;
+
+    this.isRunning.set(false);
+    clearInterval(this.timerInterval);
+
+    await this.addTimeSession(this.workSeconds, this.pauseSeconds);
+    
+    await this.syncTimerState({ 
+      startTime: null, 
+      pauseStartTime: null,
+      totalPauseSeconds: 0,
+      status: 'STOPPED' 
+    });
+
+    localStorage.removeItem(`timer_${inter.$id}`);
+    this.startTime.set(null);
+    this.workSeconds = 0;
+    this.pauseSeconds = 0;
+    this.timerDisplay.set('00:00:00');
+  }
+
+  // --- ACTIONS DOCUMENT ---
 
   private async updateIntervention(data: any) {
     const docId = this.intervention()?.$id;
@@ -113,94 +256,20 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
     return await this.authService.databases.updateDocument(this.DB_ID, this.COLL_INTERVENTIONS, docId, data);
   }
 
-  // --- GESTION DES TÂCHES (NOUVEAU FORMAT) ---
+  async updateStatus(status: string) {
+    await this.updateIntervention({ status });
+  }
+
+  // --- TÂCHES & MISSIONS ---
 
   async toggleMissionTask(index: number) {
     const current = this.intervention();
     if (!current) return;
-
-    const missionData = typeof current.mission === 'string' ? JSON.parse(current.mission) : { ...current.mission };
-    
-    if (missionData.tasks && missionData.tasks[index]) {
+    const missionData = this.parseJson(current.mission);
+    if (missionData.tasks?.[index]) {
       missionData.tasks[index].done = !missionData.tasks[index].done;
-      
-      try {
-        await this.updateIntervention({ mission: JSON.stringify(missionData) });
-      } catch (e) {
-        console.error("Erreur toggleTask:", e);
-      }
+      await this.updateIntervention({ mission: JSON.stringify(missionData) });
     }
-  }
-
-  // --- GESTION DU TEMPS ---
-
-  playTimer() {
-    this.isRunning.set(true);
-    this.lastState = 'work';
-    this.updateStatus('STARTED');
-    if (!this.timerInterval) {
-      this.timerInterval = setInterval(() => {
-        if (this.lastState === 'work') this.workSeconds++;
-        else this.pauseSeconds++;
-        this.timerDisplay.set(this.formatDuration(this.workSeconds + this.pauseSeconds, true));
-      }, 1000);
-    }
-  }
-
-  pauseTimer() {
-    this.lastState = 'pause';
-    this.updateStatus('PAUSED');
-  }
-
-  async stopAndSaveTimer() {
-    if (this.workSeconds === 0 && this.pauseSeconds === 0) return;
-    this.isRunning.set(false);
-    clearInterval(this.timerInterval);
-    this.timerInterval = null;
-    await this.addTimeSession(this.workSeconds, this.pauseSeconds);
-    await this.updateStatus('STOPPED');
-    this.workSeconds = 0; 
-    this.pauseSeconds = 0;
-    this.lastState = 'idle';
-    this.timerDisplay.set('00:00:00');
-  }
-
-  async addTimeSession(workSec: number, pauseSec: number) {
-    const currentSessions = this.intervention()?.timeSessions || [];
-    const roundingSec = this.rounding() * 60;
-    const roundedWorkSec = roundingSec > 0 ? Math.ceil(workSec / roundingSec) * roundingSec : workSec;
-
-    const newSession = {
-      id: Date.now().toString(),
-      workDuration: this.formatDuration(roundedWorkSec, true),
-      pauseDuration: this.formatDuration(pauseSec, true),
-      price: (roundedWorkSec / 3600) * this.hourlyRate(),
-      date: new Date().toISOString()
-    };
-
-    await this.updateIntervention({
-      timeSessions: [...currentSessions, JSON.stringify(newSession)]
-    });
-  }
-
-  async removeSession(session: any) {
-    const updated = this.intervention().timeSessions.filter((s: any) => s !== session);
-    await this.updateIntervention({ timeSessions: updated });
-  }
-
-  async addManualSession() {
-    const rawSec = ((this.manualHours() || 0) * 3600) + ((this.manualMinutes() || 0) * 60);
-    if (rawSec > 0) {
-      const roundingSec = this.rounding() * 60;
-      const roundedSec = roundingSec > 0 ? Math.ceil(rawSec / roundingSec) * roundingSec : rawSec;
-      await this.addTimeSession(roundedSec, 0);
-      this.manualHours.set(null); 
-      this.manualMinutes.set(null);
-    }
-  }
-
-  async updateStatus(status: string) {
-    await this.updateIntervention({ status });
   }
 
   // --- MATÉRIAUX & COMMANDES ---
@@ -244,30 +313,58 @@ export class DetailsInterventionComponent implements OnInit, OnDestroy {
     await this.updateIntervention({ orders: updatedOrders });
   }
 
+  // --- SESSIONS DE TEMPS ---
+
+  async addTimeSession(workSec: number, pauseSec: number) {
+    const currentSessions = this.intervention()?.timeSessions || [];
+    const roundingSec = this.rounding() * 60;
+    const roundedWorkSec = roundingSec > 0 ? Math.ceil(workSec / roundingSec) * roundingSec : workSec;
+
+    const newSession = {
+      id: Date.now().toString(),
+      workDuration: this.formatDuration(roundedWorkSec, true),
+      pauseDuration: this.formatDuration(pauseSec, true),
+      price: (roundedWorkSec / 3600) * this.hourlyRate(),
+      date: new Date().toISOString()
+    };
+
+    await this.updateIntervention({
+      timeSessions: [...currentSessions, JSON.stringify(newSession)]
+    });
+  }
+
+  async removeSession(session: any) {
+    const updated = this.intervention().timeSessions.filter((s: any) => s !== session);
+    await this.updateIntervention({ timeSessions: updated });
+  }
+
+  async addManualSession() {
+    const rawSec = ((this.manualHours() || 0) * 3600) + ((this.manualMinutes() || 0) * 60);
+    if (rawSec > 0) {
+      const roundingSec = this.rounding() * 60;
+      const roundedSec = roundingSec > 0 ? Math.ceil(rawSec / roundingSec) * roundingSec : rawSec;
+      await this.addTimeSession(roundedSec, 0);
+      this.manualHours.set(null); 
+      this.manualMinutes.set(null);
+    }
+  }
+
   // --- PHOTOS ---
 
-async uploadPhoto(event: any) {
+  async uploadPhoto(event: any) {
     const file = event.target.files[0];
     if (!file || !this.imageService.isValid(file)) return;
-
     this.uploading.set(true);
     try {
-      // 1. Compression via Web Worker (plus de freeze UI)
       const compressedFile = await this.imageService.compress(file);
-      
-      // 2. Upload
       const photoId = ID.unique();
       await this.authService.storage.createFile(this.BUCKET_PHOTOS, photoId, compressedFile);
-      
-      // 3. Récupération URL et Update document
       const finalUrl = this.authService.storage.getFileView(this.BUCKET_PHOTOS, photoId).toString();
       const currentPhotos = this.intervention()?.photos || [];
       const photoData = JSON.stringify({ id: photoId, url: finalUrl, full: finalUrl });
-      
       await this.updateIntervention({ photos: [...currentPhotos, photoData] });
     } catch (e) {
-      console.error(e);
-      alert("Erreur lors du traitement de l'image.");
+      alert("Erreur photo.");
     } finally {
       this.uploading.set(false);
       event.target.value = '';
@@ -277,23 +374,34 @@ async uploadPhoto(event: any) {
   async removePhoto(photo: any) {
     const photoObj = this.parseJson(photo);
     const updated = this.intervention().photos.filter((p: any) => p !== photo);
-    try {
-      await this.authService.storage.deleteFile(this.BUCKET_PHOTOS, photoObj.id);
-    } catch (e) {}
+    try { await this.authService.storage.deleteFile(this.BUCKET_PHOTOS, photoObj.id); } catch (e) {}
     await this.updateIntervention({ photos: updated });
   }
 
-  // --- CALCULS & ACTIONS ---
+  // --- CALCULS & NAVIGATION ---
 
+  getBreakdown() {
+    const inter = this.intervention();
+    if (!inter) return { mat: 0, time: 0, travel: 0 };
+    const sessions = (inter.timeSessions || []).map((s: any) => this.parseJson(s));
+    const totalSessionsPrice = sessions.reduce((acc: number, s: any) => acc + (Number(s.price) || 0), 0);
+    const roundingSec = this.rounding() * 60;
+    const liveWorkSec = roundingSec > 0 ? Math.ceil(this.workSeconds / roundingSec) * roundingSec : this.workSeconds;
+    const livePrice = (liveWorkSec / 3600) * this.hourlyRate();
+    const totalMat = this.displayedMaterials().reduce((acc: number, m: any) => acc + (Number(m.price) || 0), 0);
+    const totalTravel = (inter.travelCount || 0) * this.travelFee();
+    return { mat: totalMat, time: totalSessionsPrice + livePrice, travel: totalTravel };
+  }
 
+  calculateTotal() {
+    const b = this.getBreakdown();
+    return b.mat + b.time + b.travel;
+  }
 
-
-  async pauseAndRequestVisit() {
-    if (this.isRunning() || !window.confirm("Placer cette mission en attente ?")) return;
-    try {
-      await this.updateIntervention({ status: 'WAITING', $updatedAt: new Date().toISOString() });
-      this.goBack();
-    } catch (e) { alert("Erreur."); }
+  async updateTravel(inc: number) {
+    const currentCount = this.intervention()?.travelCount || 0;
+    const newCount = Math.max(0, currentCount + inc);
+    await this.updateIntervention({ travelCount: newCount, travelCost: newCount * this.travelFee() });
   }
 
   async finishIntervention() {
@@ -310,7 +418,34 @@ async uploadPhoto(event: any) {
     } catch (e) { console.error(e); }
   }
 
+  async pauseAndRequestVisit() {
+    if (this.isRunning() || !window.confirm("Placer cette mission en attente ?")) return;
+    try {
+      await this.updateIntervention({ status: 'WAITING', $updatedAt: new Date().toISOString() });
+      this.goBack();
+    } catch (e) { alert("Erreur."); }
+  }
+
+  openGPS() {
+    const rawAddr = this.intervention()?.adresse;
+    if (!rawAddr) return;
+    const addr = this.parseJson(rawAddr);
+    const queryText = `${addr.ville || ''}, ${addr.rue || ''} ${addr.numero || ''}`.trim();
+    const query = encodeURIComponent(queryText);
+    let url = '';
+    switch (this.gps()) {
+      case 'waze': url = `https://waze.com/ul?q=${query}&navigate=yes`; break;
+      case 'iphone': url = `maps://maps.apple.com/?q=${query}`; break;
+      default: url = `https://www.google.com/maps/search/?api=1&query=${query}`; break;
+    }
+    window.open(url, '_blank');
+  }
+
   // --- UTILS ---
+  parseJson(data: any) {
+    if (typeof data !== 'string') return data;
+    try { return JSON.parse(data); } catch { return data; }
+  }
 
   formatDuration(t: number, s = false): string {
     const h = Math.floor(t / 3600).toString().padStart(2, '0');
@@ -319,95 +454,7 @@ async uploadPhoto(event: any) {
     return s ? `${h}:${m}:${sec}` : `${h}:${m}`;
   }
 
-  openGPS() {
-    const rawAddr = this.intervention()?.adresse;
-    if (!rawAddr) return;
-    const addr = this.parseJson(rawAddr);
-    const q = encodeURIComponent(`${addr.numero} ${addr.rue}, ${addr.ville}`);
-    const url = this.gps() === 'waze' ? `https://waze.com/ul?q=${q}` : 
-                this.gps() === 'iphone' ? `http://maps.apple.com/?q=${q}` : 
-                `https://www.google.com/maps/search/?api=1&query=${q}`;
-    window.open(url, '_blank');
-  }
-
-  parseJson(data: any): any {
-    if (typeof data !== 'string') return data;
-    try { return JSON.parse(data); } catch { return data; }
-  }
-
   openLightbox(url: string) { this.selectedPhoto.set(url); }
   closeLightbox() { this.selectedPhoto.set(null); }
   goBack() { this.router.navigate(['/dashboard']); }
-  // À placer sous vos autres computed
-canAddMaterial = computed(() => {
-  // .trim() évite que le bouton s'active si l'utilisateur tape juste des espaces
-  const nameValid = this.itemName().trim().length > 0;
-  // On vérifie que le prix n'est pas nul
-  const priceValid = this.itemPrice() !== null;
-  return nameValid && priceValid;
-});
-
-// 1. Uniquement les commandes qui ne sont pas encore passées en matériel
-  displayedOrders = computed(() => {
-    const orders = (this.intervention()?.orders || []).map((o: any) => this.parseJson(o));
-    return orders.filter((o: any) => o.status !== 'COMMANDÉ');
-  });
-
-  // 2. Uniquement les matériaux RÉELS (y compris ceux transférés depuis une commande)
-  displayedMaterials = computed(() => {
-    return (this.intervention()?.materials || []).map((m: any) => this.parseJson(m));
-  });
-
-  // 3. CALCUL DU TOTAL (Timer + Sessions + Matériel + Trajets)
-  getBreakdown() {
-    const inter = this.intervention();
-    if (!inter) return { mat: 0, time: 0, travel: 0 };
-    
-    // --- PARTIE TEMPS ---
-    // A. Sessions déjà enregistrées
-    const sessions = (inter.timeSessions || []).map((s: any) => this.parseJson(s));
-    const totalSessionsPrice = sessions.reduce((acc: number, s: any) => acc + (Number(s.price) || 0), 0);
-
-    // B. Temps du timer en cours (si il tourne)
-    const roundingSec = this.rounding() * 60;
-    const liveWorkSec = roundingSec > 0 ? Math.ceil(this.workSeconds / roundingSec) * roundingSec : this.workSeconds;
-    const livePrice = (liveWorkSec / 3600) * this.hourlyRate();
-    
-    // --- PARTIE MATÉRIEL ---
-    const totalMat = this.displayedMaterials().reduce((acc: number, m: any) => acc + (Number(m.price) || 0), 0);
-
-    // --- PARTIE DÉPLACEMENT ---
-    const totalTravel = (inter.travelCount || 0) * this.travelFee();
-
-    return { 
-      mat: totalMat, 
-      time: totalSessionsPrice + livePrice, // Somme du passé et du timer actuel
-      travel: totalTravel 
-    };
-  }
-
-  // Assure-toi que calculateTotal utilise bien le breakdown mis à jour
-  calculateTotal() {
-    const b = this.getBreakdown();
-    return b.mat + b.time + b.travel;
-  }
-  updateTravel(inc: number) {
-  const currentInter = this.intervention();
-  if (!currentInter) return;
-
-  // 1. Calculer le nouveau nombre de trajets (minimum 0)
-  const currentCount = currentInter.travelCount || 0;
-  const newCount = Math.max(0, currentCount + inc);
-  
-  // 2. Calculer le nouveau coût total des déplacements
-  // On force le calcul avec le tarif actuel pour garantir la précision
-  const newTravelCost = newCount * this.travelFee();
-
-  // 3. Mise à jour du document dans Appwrite
-  // On envoie les deux valeurs pour garder la cohérence dans la DB
-  this.updateIntervention({ 
-    travelCount: newCount, 
-    travelCost: newTravelCost 
-  });
-}
 }

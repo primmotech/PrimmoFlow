@@ -21,27 +21,42 @@
 
   <main class="container" *ngIf="intervention() as item">
     
-    <div class="timer-card sticky-timer" [class.active]="isRunning()">
-      <div class="clock">{{ timerDisplay() }}</div>
+<div class="timer-card sticky-timer" [class.active]="isRunning()" [class.is-paused]="intervention()?.status === 'PAUSED'">
+      <div class="timer-display-group">
+        <div class="clock">{{ timerDisplay() }}</div>
+        
+        <div class="pause-clock" *ngIf="intervention()?.startTime">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+          Pause : {{ pauseDisplay() }}
+        </div>
+      </div>
+
       <div class="timer-actions">
-        <button class="btn-timer {{ lastState === 'work' && isRunning() ? 'pause' : 'play' }}" 
-                (click)="lastState === 'work' && isRunning() ? pauseTimer() : playTimer()">
+        <button class="btn-timer" 
+                [class.pause]="intervention()?.status === 'STARTED'"
+                [class.play]="intervention()?.status !== 'STARTED'"
+                (click)="intervention()?.status === 'STARTED' ? pauseTimer() : playTimer()">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-            @if (lastState === 'work' && isRunning()) {
+            @if (intervention()?.status === 'STARTED') {
               <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>
             } @else {
               <path d="M8 5v14l11-7z"/>
             }
           </svg>
         </button>
-        <button class="btn-timer stop" (click)="stopAndSaveTimer()" [disabled]="workSeconds === 0 && pauseSeconds === 0">
+
+        <button class="btn-timer stop" 
+                (click)="stopAndSaveTimer()" 
+                [disabled]="!intervention()?.startTime">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           </svg>
         </button>
       </div>
     </div>
-
   <div class="info-group sticky-tasks" *ngIf="missionTasks().length > 0">
   <div class="glass-card tasks-card">
     <div class="tasks-vertical-list">
