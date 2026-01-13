@@ -79,13 +79,14 @@ export class Planning implements OnInit {
   /**
    * Récupère et formate les missions pour un jour donné
    */
-  getMissionsForDay(date: Date | null): any[] {
-    const missions = this.allPlannedMissions();
-    if (!date || !missions) return [];
+ getMissionsForDay(date: Date | null): any[] {
+  const missions = this.allPlannedMissions();
+  if (!date || !missions) return [];
 
-    const targetDateStr = date.toDateString();
+  const targetDateStr = date.toDateString();
 
-    return missions.map((m: any) => {
+  return missions
+    .map((m: any) => {
       const adr = this.safeParse(m.adresse, {});
       const habs = this.safeParse(m.habitants, []);
 
@@ -97,43 +98,43 @@ export class Planning implements OnInit {
         displayNumero: adr?.numero || '',
         displayHabitant: habs.length > 0 ? habs[0].nom : 'Client'
       };
-    }).filter((m: any) => {
+    })
+    .filter((m: any) => {
       if (!m.plannedAt) return false;
       const mDate = new Date(m.plannedAt);
       return !isNaN(mDate.getTime()) && mDate.toDateString() === targetDateStr;
+    })
+    // AJOUT DU TRI PAR HEURE
+    .sort((a, b) => {
+      const timeA = a.scheduledTime || '00:00';
+      const timeB = b.scheduledTime || '00:00';
+      return timeA.localeCompare(timeB);
     });
-  }
+}
 
   /**
    * Charge une mission depuis la liste pour modification
    */
-  loadMissionToEdit(mission: any) {
-    this.isSubmissionComplete.set(false);
+loadMissionToEdit(mission: any) {
+  this.isSubmissionComplete.set(false);
 
-    // On force le parsing des données complexes de la DB
-    const cleanedMission = {
-      ...mission,
-      adresse: this.safeParse(mission.adresse, {}),
-      habitants: this.safeParse(mission.habitants, []),
-      mission: this.processMissionTasks(mission.mission)
-    };
+  const cleanedMission = {
+    ...mission,
+    adresse: this.safeParse(mission.adresse, {}),
+    habitants: this.safeParse(mission.habitants, []),
+    mission: this.processMissionTasks(mission.mission)
+  };
 
-    this.targetIntervention.set(cleanedMission);
-    this.selectedHabitantIndex.set(0); // Reset sur le premier habitant
-
+  this.targetIntervention.set(cleanedMission);
+  
+  if (mission.plannedAt) {
     const mDate = new Date(mission.plannedAt);
-    if (!isNaN(mDate.getTime())) {
-      this.selectedDate.set(mDate);
-      this.viewDate.set(mDate); // Centre le calendrier sur le mois de la mission
-    }
-
-    if (mission.scheduledTime?.includes(':')) {
-      const [h, m] = mission.scheduledTime.split(':').map(Number);
-      this.selectedHour.set(h);
-      this.selectedMinute.set(m);
-      this.updateFormattedTime();
-    }
+    this.selectedDate.set(mDate); // Met à jour la date sélectionnée pour le bouton
+    this.viewDate.set(mDate);     // Centre le calendrier
   }
+  
+  // ... reste du code (selectedHour, etc)
+}
 
   /**
    * Change l'habitant affiché dans le header (cycle)

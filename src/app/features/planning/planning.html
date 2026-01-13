@@ -91,18 +91,19 @@
       </div>
     </section>
 
-    @if (selectedDate() && targetIntervention()) {
-      <section >
-        <button class="btn-plan" (click)="confirmPlanning()" [disabled]="isSubmitting()">
-          @if (isSubmitting()) { <span>Enregistrement...</span> }
-          @else { 
-            Planifier le {{ selectedDate() | date:'dd' }} 
-            <span class="capitalize">{{ selectedDate() | date:'MMMM':'':'fr' }}</span>
-          }
-          
-        </button>
-      </section>
-    }
+@if (selectedDate() && targetIntervention()) {
+  <section class="planning-action"> <button class="btn-plan" (click)="confirmPlanning()" [disabled]="isSubmitting()">
+      @if (isSubmitting()) { 
+        <span>Enregistrement...</span> 
+      } @else { 
+        <span>
+          Planifier pour le {{ selectedDate() | date:'EEEE dd' : '' : 'fr' }} 
+          <span class="capitalize">{{ selectedDate() | date:'MMMM':'':'fr' }}</span>
+        </span>
+      }
+    </button>
+  </section>
+}
 
     <section class="daily-missions">
       <h3 class="section-title">
