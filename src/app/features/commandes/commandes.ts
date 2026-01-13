@@ -81,7 +81,7 @@ export class CommandesComponent implements OnInit {
       this.DB_ID,
       this.COL_INTERVENTIONS,
       [
-        Query.equal('status', ['OPEN', 'WAITING']),
+        Query.equal('status', ['OPEN', 'WAITING', 'STOPPED', 'STARTED', 'PAUSED', 'PLANNED']),
         Query.limit(100)
       ]
     ).then(response => {
