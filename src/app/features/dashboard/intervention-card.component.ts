@@ -12,73 +12,65 @@ import { Intervention } from './dashboard';
       [ngClass]="statusConfig[intervention.status]?.color || ''"
       (click)="cardClick.emit($event)"
     >
-@if (canDelete) {
-  <button class="btn-delete" (click)="onDelete($event)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  </button>
-}
+      @if (canDelete) {
+        <button class="btn-delete" (click)="onDelete($event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      }
 
       <div class="card-info">
         <span class="city">{{ intervention.adresse.ville || 'VILLE INCONNUE' }}</span>
         <span class="street">{{ intervention.adresse.numero }} {{ intervention.adresse.rue }}</span>
 
-        @if (
-        true
-        ) {
-          @if (intervention.owner && intervention.owner[0]) {
-            <span class="created-by">
-              Par 
-              <span class="author-name" (click)="onCall($event, intervention.owner[0].tel)">
-                {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
-              </span>
+        @if (intervention.owner && intervention.owner[0]) {
+          <span class="created-by">
+            Par 
+            <span class="author-name" (click)="onCall($event, intervention.owner[0])">
+              {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
             </span>
-          }
+          </span>
         }
 
-        @if (
-          true
-        ) {
-          @let occupants = parseJson(intervention.habitants);
-          @for (habitant of occupants; track $index) {
-            <div class="habitant-row">
-              @if (habitant.tel) {
-                <span class="created-by">
-                  Pour 
-                  <span class="author-name" (click)="onCall($event, habitant.tel)">
-                    {{ habitant.prenom }} {{ habitant.nom }}
-                  </span>
+        @let occupants = parseJson(intervention.habitants);
+        @for (habitant of occupants; track $index) {
+          <div class="habitant-row">
+            @if (habitant.tel) {
+              <span class="created-by">
+                Pour 
+                <span class="author-name" (click)="onCall($event, habitant)">
+                  {{ habitant.prenom }} {{ habitant.nom }}
                 </span>
-              }
-            </div>
-          }
+              </span>
+            }
+          </div>
         }
       </div>
 
       <div class="card-actions">
         @if (intervention.status !== 'BILLED' && showActionButton && (isBasicStatus || canPlan)) {
           @if (['WAITING', 'OPEN', 'END'].includes(intervention.status) || canPlan) {
-          <button class="btn-details" (click)="onAction($event)">
-            @switch (intervention.status) {
-              @case ('WAITING') { Détails } 
-              @case ('OPEN') { Détails }
-              @case ('END') { Histo }
-              @default {
-                @if (intervention.plannedAt) {
-                  <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}</span>
-                } @else { DÉTAILS }
+            <button class="btn-details" (click)="onAction($event)">
+              @switch (intervention.status) {
+                @case ('WAITING') { Détails } 
+                @case ('OPEN') { Détails }
+                @case ('END') { Histo }
+                @default {
+                  @if (intervention.plannedAt) {
+                    <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}</span>
+                  } @else { DÉTAILS }
+                }
               }
+            </button>
+            @if (intervention.status == 'OPEN' || intervention.status == 'WAITING') {
+              <button class="btn-details" (click)="onAction2($event)">
+                Histo
+              </button>
             }
-          </button>
-           @if (intervention.status == 'OPEN'||intervention.status == 'WAITING') {
-                    <button class="btn-details" (click)="onAction2($event)">
-    Histo
-          </button>
-           }
+          }
         }
-      }
 
         @if (canEdit) {
           <button class="btn-edit" (click)="onEdit($event)">
@@ -103,16 +95,17 @@ export class InterventionCardComponent {
 
   @Output() cardClick = new EventEmitter<Event>();
   @Output() actionClick = new EventEmitter<Event>();
-   @Output() action2Click = new EventEmitter<Event>();
+  @Output() action2Click = new EventEmitter<Event>();
   @Output() editClick = new EventEmitter<string>();
   @Output() deleteClick = new EventEmitter<string>();
-  @Output() callOwner = new EventEmitter<string>();
+  @Output() callOwner = new EventEmitter<any>(); // Transmet l'objet complet
 
   onAction(event: Event) {
     event.stopPropagation();
     this.actionClick.emit(event);
   }
-    onAction2(event: Event) {
+
+  onAction2(event: Event) {
     event.stopPropagation();
     this.action2Click.emit(event);
   }
@@ -129,17 +122,19 @@ export class InterventionCardComponent {
     }
   }
 
-  onCall(event: Event, phone: string | undefined) {
+  onCall(event: Event, person: any) {
     event.stopPropagation();
-    if (phone) {
-      this.callOwner.emit(phone);
+    // On vérifie si l'objet contient un téléphone avant d'émettre
+    if (person && person.tel) {
+      this.callOwner.emit(person);
     }
   }
-// Dans intervention-card.component.ts
-get isBasicStatus(): boolean {
-  const basic = ['WAITING', 'OPEN', 'END'];
-  return basic.includes(this.intervention.status);
-}
+
+  get isBasicStatus(): boolean {
+    const basic = ['WAITING', 'OPEN', 'END'];
+    return basic.includes(this.intervention.status);
+  }
+
   parseJson(jsonString: any) {
     if (!jsonString) return [];
     if (typeof jsonString === 'object') return jsonString;

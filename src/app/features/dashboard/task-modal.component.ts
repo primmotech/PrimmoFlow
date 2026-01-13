@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Intervention } from './dashboard';
 import { AuthService } from '../../core/services/auth.service';
 
-
 @Component({
   selector: 'app-task-modal',
   standalone: true,
@@ -28,16 +27,16 @@ import { AuthService } from '../../core/services/auth.service';
             <h5 class="section-label">Habitant(s)</h5>
             <div class="occupants-list">
               @for (habitant of occupants; track $index) {
-<div class="habitant-row">
-  @if (habitant.tel) {
-    <div class="habitant-tel-btn" (click)="callRequest.emit(habitant.tel)">
-      <span class="icon">📞</span> {{ habitant.prenom }} {{ habitant.nom }}
-    </div>
-  }
-  @else { 
-    <span class="habitant-name">{{ habitant.prenom }} {{ habitant.nom }}</span>
-  }
-</div>
+                <div class="habitant-row">
+                  @if (habitant.tel) {
+                    <div class="habitant-tel-btn" (click)="callRequest.emit(habitant)">
+                      <span class="icon">📞</span> {{ habitant.prenom }} {{ habitant.nom }}
+                    </div>
+                  }
+                  @else { 
+                    <span class="habitant-name">{{ habitant.prenom }} {{ habitant.nom }}</span>
+                  }
+                </div>
               }
             </div>
           </div>
@@ -83,37 +82,37 @@ import { AuthService } from '../../core/services/auth.service';
           <p class="remarks-text">{{ intervention.remarques }}</p>
         </div>
       }
-@if (authService.hasPerm('dash_act_plan')) {
-  <button class="action-btn secondary" (click)="planRequest.emit()">
-    Planifier
-  </button>
-}
- 
+
+      @if (authService.hasPerm('dash_act_plan')) {
+        <button class="action-btn secondary" (click)="planRequest.emit()">
+          Planifier
+        </button>
+      }
     </div>
   </div>
 </div>
-
   `,
-  styleUrls: ['./task-modal.scss'] // On va créer ce fichier juste après
+  styleUrls: ['./task-modal.scss']
 })
 export class TaskModalComponent {
   
   @Input({ required: true }) intervention!: Intervention;
   @Output() close = new EventEmitter<void>();
-@Output() callRequest = new EventEmitter<string>();
-@Output() planRequest = new EventEmitter<void>();
+  
+  // MODIFICATION ICI : On passe en type any pour recevoir l'objet complet
+  @Output() callRequest = new EventEmitter<any>();
+  @Output() planRequest = new EventEmitter<void>();
 
   public authService = inject(AuthService);
   private readonly BUCKET_ID = '69502be400074c6f43f5';
 
- parseJson(jsonString: any) {
-  if (!jsonString) return []; // Retourne un tableau vide par défaut pour les habitants
-  if (Array.isArray(jsonString) || typeof jsonString === 'object') return jsonString;
-  try { 
-    return JSON.parse(jsonString); 
-  } catch (e) { 
-    // Si c'est un ID d'image (cas de tes photos)
-    return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
+  parseJson(jsonString: any) {
+    if (!jsonString) return [];
+    if (Array.isArray(jsonString) || typeof jsonString === 'object') return jsonString;
+    try { 
+      return JSON.parse(jsonString); 
+    } catch (e) { 
+      return { url: this.authService.storage.getFileView(this.BUCKET_ID, jsonString) }; 
+    }
   }
-}
 }

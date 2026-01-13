@@ -206,14 +206,15 @@ plannedInterventions = computed(() => {
 
   goToAdd() { this.router.navigate(['/add-intervention']); }
 
-makeCall(phone: string) {
-  if (phone) {
-    // La fenêtre de confirmation s'ouvre d'abord
-    const confirmCall = confirm(`Voulez-vous appeler le ${phone} ?`);
+makeCall(person: any) {
+  if (person && person.tel) {
+    const name = `${person.prenom || ''} ${person.nom || ''}`.trim();
+    const displayName = name ? name : person.tel; // Fallback sur le numéro si pas de nom
+
+    const confirmCall = confirm(`Voulez-vous appeler ${displayName} au ${person.tel} ?`);
     
-    // Si l'utilisateur clique sur OK (true), on lance l'appel
     if (confirmCall) {
-      window.location.href = `tel:${phone}`;
+      window.location.href = `tel:${person.tel}`;
     }
   } else {
     console.warn("Numéro non disponible");
