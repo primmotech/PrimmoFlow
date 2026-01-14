@@ -1,0 +1,88 @@
+/* --- MODAL OVERLAY --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; 
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;      /* Centrage vertical parfait */
+  justify-content: center;   /* Centrage horizontal parfait */
+  z-index: 9999;             /* Au-dessus de tout */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* --- CONTENU DE LA MODALE --- */
+.modal-content.payment-style {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg, #1a1a1a); 
+  border-radius: 28px;
+  border: 1px solid var(--border-color, #333);
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  color: var(--text-primary, #fff); 
+  box-sizing: border-box;
+}
+
+/* --- CHAMP TEXTE --- */
+.payment-textarea {
+  width: 100%;            /* Utilise toute la largeur disponible */
+  display: block;         
+  box-sizing: border-box; /* Crucial pour que le padding ne fasse pas déborder */
+  min-height: 140px;
+  background: var(--bg-color, #111);
+  border: 2px solid var(--border-color, #222);
+  border-radius: 18px;
+  color: var(--text-primary, #fff);
+  padding: 15px;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: none;           
+  margin: 15px 0;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--success, #2ecc71);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+  }
+}
+
+/* --- BOUTON DE VALIDATION --- */
+.action-btn.success {
+  width: 100%;
+  padding: 18px;
+  background: var(--success, #2ecc71);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  display: block;
+
+  &:active { transform: scale(0.96); }
+  &:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+  }
+}
+
+/* --- ANIMATIONS --- */
+@keyframes modalPop {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

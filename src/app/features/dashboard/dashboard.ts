@@ -10,6 +10,7 @@ import { DashboardFiltersComponent, Owner } from './dashboard-filters.component'
 import { BottomNavComponent } from './bottom-nav';
 import { AppHeaderComponent } from './app-header';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { PaymentModalComponent } from './payment-modal.component';
 
 export interface Task { label: string; done: boolean; }
 
@@ -29,6 +30,8 @@ export interface Intervention {
   totalFinal?: number;
   remarques?: string;
   $createdAt: string;
+  paymentComment?: string; // Ajoute cette ligne
+  paidAt?: string;
 }
 
 export type DashboardFilter = 'ALL' | 'WAITING' | 'PLANNED' | 'DONE';
@@ -50,7 +53,7 @@ export const STATUS_CONFIG: Record<string, { label: string, color: string, categ
   imports: [
     CommonModule, BottomNavComponent, RouterModule, 
     InterventionCardComponent, TaskModalComponent, 
-    DashboardFiltersComponent, AppHeaderComponent
+    DashboardFiltersComponent, AppHeaderComponent, PaymentModalComponent
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
@@ -69,6 +72,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isOffline = signal(!navigator.onLine);
   selectedIntervention = signal<Intervention | null>(null);
   colleagueEmails = signal<string[]>([]);
+  selectedPaymentIntervention = signal<Intervention | null>(null);
 
   private unsubscribeRealtime: (() => void) | null = null;
   private readonly DB_ID = '694eba69001c97d55121';
@@ -245,16 +249,33 @@ goToHistory(inter: any) {
     this.selectedIntervention.set(inter);
   }
 
-  async markAsPaid(intervention: Intervention, event: Event) {
-    event.stopPropagation();
-    if (confirm(`Confirmer le paiement reçu ?`)) {
-      try {
-        await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, intervention.id, { 
-          status: 'PAID', paidAt: new Date().toISOString() 
-        });
-      } catch (error) { console.error(error); }
-    }
+// Remplace ton ancienne fonction markAsPaid par celle-ci
+openPaymentModal(intervention: Intervention, event: Event) {
+  event.stopPropagation();
+  this.selectedPaymentIntervention.set(intervention);
+}
+
+async confirmPayment(comment: string) {
+  const intervention = this.selectedPaymentIntervention();
+  if (!intervention) return;
+
+  try {
+    await this.authService.databases.updateDocument(
+      this.DB_ID, 
+      this.COL_INTERVENTIONS, 
+      intervention.id, 
+      { 
+        status: 'PAID', 
+        paidAt: new Date().toISOString(),
+        paymentComment: comment // Assure-toi d'avoir ce champ dans Appwrite
+      }
+    );
+    this.selectedPaymentIntervention.set(null); // Fermer la modale
+  } catch (error) { 
+    console.error(error); 
+    alert("Erreur lors de l'enregistrement");
   }
+}
   async deleteIntervention(id: string) {
   // DOUBLE SÉCURITÉ : Même si quelqu'un arrive à déclencher la fonction (via la console par ex)
   if (!this.authService.hasPerm('dash_act_delete')) {

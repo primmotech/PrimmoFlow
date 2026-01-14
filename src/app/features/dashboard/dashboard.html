@@ -60,7 +60,7 @@
     </section>
     }
 
-    @if (showCompleted() && completedInterventions().length > 0) {
+@if (showCompleted() && completedInterventions().length > 0) {
     <section class="intervention-section">
       <h2 class="section-title">Terminées ({{ completedInterventions().length }})</h2>
       <div class="cards-grid">
@@ -72,7 +72,7 @@
           [canDelete]="authService.hasPerm('dash_act_delete')"
           [canEdit]="authService.hasPerm('dash_act_plan')"
           (editClick)="goToEdit(inter)"
-          (cardClick)="inter.status === 'END' ? goToInvoice(inter) : (authService.hasPerm('dash_nav_billed') ? markAsPaid(inter, $event) : null)"
+          (cardClick)="inter.status === 'END' ? goToInvoice(inter) : (inter.status === 'BILLED' && authService.hasPerm('dash_nav_billed') ? openPaymentModal(inter, $event) : null)"
           (actionClick)="inter.status === 'END' ? router.navigate(['/history', inter.id]) : null"
           (callOwner)="makeCall($event)">
         </app-intervention-card>
@@ -99,5 +99,12 @@
   (planRequest)="goToPlanning(selectedIntervention()); selectedIntervention.set(null)">
 
   </app-task-modal>
+  }
+  @if (selectedPaymentIntervention(); as inter) {
+    <app-payment-modal 
+      [address]="(inter.adresse.numero || '') + ' ' + (inter.adresse.rue || '') + ', ' + (inter.adresse.ville || '')"
+      (close)="selectedPaymentIntervention.set(null)"
+      (confirm)="confirmPayment($event)">
+    </app-payment-modal>
   }
 </div>
