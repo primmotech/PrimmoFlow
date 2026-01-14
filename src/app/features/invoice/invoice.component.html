@@ -57,7 +57,9 @@
                 <span class="label">{{ s.date | date:'dd/MM' }} ({{ s.workDuration }})</span>
               </div>
               <div class="input-box" [class.saving]="savingId() === s.id.toString()">
-                <input [readonly]=true type="number" step="0.01" [value]="s.price" (change)="updateItemPrice('timeSessions', s.id, $any($event.target).value)">
+                <input [readonly]="!canEditPrice()" 
+                       type="number" step="0.01" [value]="s.price" 
+                       (change)="updateItemPrice('timeSessions', s.id, $any($event.target).value)">
                 <span class="eur">€</span>
               </div>
             </div>
@@ -65,7 +67,9 @@
           <div class="row price">
             <div class="content"><span class="label">{{ travelLabel() }}</span></div>
             <div class="input-box" [class.saving]="savingId() === 'travelCost'">
-              <input [readonly]=true type="number" step="0.01" [value]="intervention()?.travelCost" (change)="updateSingleField('travelCost', $any($event.target).value)">
+              <input [readonly]="!canEditPrice()" 
+                     type="number" step="0.01" [value]="intervention()?.travelCost" 
+                     (change)="updateSingleField('travelCost', $any($event.target).value)">
               <span class="eur">€</span>
             </div>
           </div>
@@ -79,7 +83,9 @@
             <div class="row price">
               <div class="content"><span class="label">{{ m.description }}</span></div>
               <div class="input-box" [class.saving]="savingId() === m.id.toString()">
-                <input [readonly]=true type="number" step="0.01" [value]="m.price" (change)="updateItemPrice('materials', m.id, $any($event.target).value)">
+                <input [readonly]="!canEditPrice()" 
+                       type="number" step="0.01" [value]="m.price" 
+                       (change)="updateItemPrice('materials', m.id, $any($event.target).value)">
                 <span class="eur">€</span>
               </div>
             </div>
@@ -87,17 +93,27 @@
         </div>
       </section>
 
-<button class="total-button-action" 
+  <button class="total-button-action" 
         [class.is-billed]="intervention()?.status === 'BILLED'"
         (click)="sendNotification()" 
-        [disabled]="loading() || intervention()?.status === 'BILLED'">
+        [disabled]="loading() || intervention()?.status === 'BILLED' || isSendingEmail()">
+  
   <div class="left-side">
     <span class="action-label">
-      {{ intervention()?.status === 'BILLED' ? 'Paiement déjà notifié' : 'Cliquer pour notifier la réception du paiement' }}
+      @if (isSendingEmail()) {
+        Notification en cours...
+      } @else {
+        {{ intervention()?.status === 'BILLED' ? 'Paiement déjà notifié' : 'Cliquer pour notifier le paiement' }}
+      }
     </span>
   </div>
+
   <div class="right-side">
-    <span class="total-amount">{{ grandTotal() | number:'1.2-2' }}€</span>
+    @if (isSendingEmail()) {
+      <div class="loader"></div>
+    } @else {
+      <span class="total-amount">{{ grandTotal() | number:'1.2-2' }}€</span>
+    }
   </div>
 </button>
     }
@@ -115,12 +131,13 @@
       </svg>
       <span>Accueil</span>
     </button>
-
   </nav>
-@if (showNotificationModal()) {
-  <app-notification-modal 
-    [email]="assignedName() "
-    (confirm)="handleNotificationConfirmation($event)"
-    (close)="showNotificationModal.set(false)">
-  </app-notification-modal>
-}
+
+  @if (showNotificationModal()) {
+    <app-notification-modal 
+      [email]="assignedName()"
+      (confirm)="handleNotificationConfirmation($event)"
+      (close)="showNotificationModal.set(false)">
+    </app-notification-modal>
+  }
+</div>

@@ -18,7 +18,7 @@ export class InvoiceComponent implements OnInit {
   private router = inject(Router);
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
-
+private notificationService = inject(NotificationService);
   private DB_ID = '694eba69001c97d55121';
   private COL_INTERVENTIONS = 'interventions';
 
@@ -26,6 +26,7 @@ export class InvoiceComponent implements OnInit {
   loading = signal(true);
   showNotificationModal = signal(false);
   savingId = signal<string | null>(null);
+  isSendingEmail = signal(false);
 
   ngOnInit() {
     this.themeService.initTheme();
@@ -43,31 +44,12 @@ export class InvoiceComponent implements OnInit {
     return t + m + (Number(i.travelCost) || 0);
   });
 
+canEditPrice = computed(() => {
+    const hasPerm = this.authService.hasPerm('dash_view_addAdmin');
+    const isNotBilled = this.intervention()?.status !== 'BILLED';
+    return hasPerm && isNotBilled;
+  });
   creatorEmail = computed(() => this.intervention()?.createdByEmail || '');
-
-  async updateSingleField(fieldName: string, newValue: any) {
-    let price = Number(parseFloat(newValue).toFixed(2));
-    if (isNaN(price)) return;
-    this.savingId.set(fieldName);
-    try {
-      await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.intervention().id, { [fieldName]: price });
-      this.intervention.update(p => ({ ...p, [fieldName]: price }));
-      setTimeout(() => this.savingId.set(null), 800);
-    } catch (e) { this.savingId.set(null); }
-  }
-
-  async updateItemPrice(arrayName: 'timeSessions' | 'materials', itemId: string, newPrice: any) {
-    let price = Number(parseFloat(newPrice).toFixed(2));
-    if (isNaN(price)) return;
-    this.savingId.set(itemId);
-    const curr = this.intervention();
-    const updated = curr[arrayName].map((i: any) => i.id === itemId ? { ...i, price } : i).map((i: any) => JSON.stringify(i));
-    try {
-      await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, curr.id, { [arrayName]: updated });
-      await this.fetchIntervention(curr.id);
-      setTimeout(() => this.savingId.set(null), 800);
-    } catch (e) { this.savingId.set(null); }
-  }
 
   async fetchIntervention(id: string) {
     try {
@@ -102,23 +84,60 @@ travelLabel = computed(() => {
 // À ajouter après ton computed travelLabel
 assignedName = computed(() => this.intervention()?.assigned || 'le technicien');
 
-// N'oublie pas d'injecter le service dans le constructor ou via inject()
-private notificationService = inject(NotificationService);
 
+async updateSingleField(fieldName: string, newValue: any) {
+    if (!this.canEditPrice()) return; // Sécurité supplémentaire côté TS
+
+    let price = Number(parseFloat(newValue).toFixed(2));
+    if (isNaN(price)) return;
+    this.savingId.set(fieldName);
+    try {
+      await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.intervention().id, { [fieldName]: price });
+      this.intervention.update(p => ({ ...p, [fieldName]: price }));
+      setTimeout(() => this.savingId.set(null), 800);
+    } catch (e) { this.savingId.set(null); }
+  }
+
+  async updateItemPrice(arrayName: 'timeSessions' | 'materials', itemId: string, newPrice: any) {
+    if (!this.canEditPrice()) return; // Sécurité supplémentaire côté TS
+
+    let price = Number(parseFloat(newPrice).toFixed(2));
+    if (isNaN(price)) return;
+    this.savingId.set(itemId);
+    const curr = this.intervention();
+    const updated = curr[arrayName].map((i: any) => i.id === itemId ? { ...i, price } : i);
+    const dbPayload = updated.map((i: any) => JSON.stringify(i));
+    
+    try {
+      await this.authService.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, curr.id, { [arrayName]: dbPayload });
+      this.intervention.update(i => ({ ...i, [arrayName]: updated }));
+      setTimeout(() => this.savingId.set(null), 800);
+    } catch (e) { this.savingId.set(null); }
+  }
 
 async handleNotificationConfirmation(confirmed: boolean) {
-  if (confirmed) {
-    const intervention = this.intervention();
-    const email = intervention?.createdBy;
-    const technician = this.assignedName();
-    const total = this.grandTotal();
-    const city = intervention?.adresse?.ville || 'Intervention';
+  // 1. Si l'utilisateur annule, on ferme juste la modale
+  if (!confirmed) {
+    this.showNotificationModal.set(false);
+    return;
+  }
+
+  // 2. Si l'utilisateur confirme et qu'on n'est pas déjà en train d'envoyer
+  if (!this.isSendingEmail()) {
+    this.isSendingEmail.set(true); 
+    this.showNotificationModal.set(false); // FERMETURE IMMÉDIATE de la fenêtre ici
 
     try {
-      // 1. Envoi de l'email
+      const intervention = this.intervention();
+      const email = intervention?.createdBy;
+      const technician = this.assignedName();
+      const total = this.grandTotal();
+      const city = intervention?.adresse?.ville || 'Intervention';
+
+      // 3. Envoi de l'email (le bouton est gris + loader)
       await this.notificationService.sendPaymentNotification(technician, email, total, city);
       
-      // 2. Mise à jour en base de données
+      // 4. Mise à jour Appwrite
       await this.authService.databases.updateDocument(
         this.DB_ID, 
         this.COL_INTERVENTIONS, 
@@ -126,17 +145,19 @@ async handleNotificationConfirmation(confirmed: boolean) {
         { status: "BILLED" }
       );
 
-      // 3. MISE À JOUR DU SIGNAL (Pour le direct update)
-      this.intervention.update(curr => ({
-        ...curr,
-        status: "BILLED"
-      }));
+      // 5. Mise à jour du Signal local
+      this.intervention.update(curr => ({ ...curr, status: "BILLED" }));
       
-      //console.log("Notification envoyée et interface mise à jour !");
+      // 6. ARRÊT DE L'ANIMATION : On libère l'état d'envoi
+      // Le bouton deviendra VERT (is-billed) et ne sera plus "sending"
+      this.isSendingEmail.set(false);
+
     } catch (error) {
       console.error("Erreur :", error);
+      // En cas d'erreur, on arrête l'animation pour que l'utilisateur puisse réessayer
+      this.isSendingEmail.set(false);
+      alert("L'envoi a échoué, veuillez réessayer.");
     }
   }
-  this.showNotificationModal.set(false);
 }
 }
