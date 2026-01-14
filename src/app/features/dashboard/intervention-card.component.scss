@@ -111,6 +111,16 @@
   &:hover {
     background: #2a2a2a;
   }
+  &.read-only {
+    cursor: default;     /* Pas de main cliquable */
+    pointer-events: none; /* Désactive les clics au niveau CSS également */
+    opacity: 0.9;        /* Légèrement plus terne pour montrer que c'est informatif */
+    
+    &:active, &:hover {
+      background: inherit; /* Pas d'effet de clic/survol */
+      transform: none;
+    }
+  }
 }
 
 .btn-edit {
@@ -140,5 +150,6 @@
 }
 
 .date-text {
-  text-transform: capitalize;
+  font-weight: 700;
+  text-transform: capitalize; // "Lun." au lieu de "lun."
 }
