@@ -26,7 +26,7 @@ export const PERMISSION_STRUCTURE: PageStructure[] = [
       { id: 'dash_act_edit', label: 'Modifier une fiche (Bouton Crayon)' },
       { id: 'dash_act_tasks', label: 'Voir les Tâches et Photos' },
       { id: 'dash_act_plan', label: 'Planifier/Modifier date et heure' },
-      { id: 'dash_act_delete', label: 'Supprimer une fiche (Clic long)' }
+      { id: 'dash_act_delete', label: 'Supprimer une fiche' }
     ]
   },
   {
@@ -58,7 +58,7 @@ export const PERMISSION_STRUCTURE: PageStructure[] = [
       { id: 'param_edit_nickname', label: 'Modifier le Surnom' },
       { id: 'param_edit_phone', label: 'Modifier le Téléphone' },
       { id: 'param_edit_gps', label: 'Modifier le GPS par défaut' },
-      { id: 'param_edit_costs', label: 'Modifier Déplacement / Taux / Arrondi' },
+      { id: 'param_edit_costs', label: 'Modifier Prix Déplacement / Taux / Arrondi' },
       { id: 'param_edit_theme', label: 'Modifier l\'Apparence (Mode Sombre)' }
     ]
   },
@@ -66,8 +66,8 @@ export const PERMISSION_STRUCTURE: PageStructure[] = [
     key: 'param_panel',
     label: 'Paramètres : Administration Système',
     perms: [
-      { id: 'param_panel_equipes', label: 'Gérer les Équipes' },
-      { id: 'param_panel_roles', label: 'Gérer les Rôles et Droits' },
+      { id: 'param_panel_equipes', label: 'Gérer les Groupes' },
+      { id: 'param_panel_roles', label: 'Gérer les Rôles et Permissions' },
       { id: 'param_panel_whitelist', label: 'Gérer la Whitelist (Accès Email)' }
     ]
   }
