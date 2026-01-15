@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme';
@@ -21,6 +21,7 @@ export class InvoiceComponent implements OnInit {
 private notificationService = inject(NotificationService);
   private DB_ID = '694eba69001c97d55121';
   private COL_INTERVENTIONS = 'interventions';
+private location = inject(Location);
 
   intervention = signal<any>(null);
   loading = signal(true);
@@ -35,7 +36,9 @@ private notificationService = inject(NotificationService);
       if (id) { this.fetchIntervention(id); }
     });
   }
-
+goBack() {
+  this.location.back();
+}
   grandTotal = computed(() => {
     const i = this.intervention();
     if (!i) return 0;
@@ -74,7 +77,7 @@ canEditPrice = computed(() => {
   private parseSafe(d: any) { try { return typeof d === 'string' ? JSON.parse(d) : d; } catch { return d; } }
   private parseArraySafe(d: any[]) { return (d || []).map(i => this.parseSafe(i)); }
   sendNotification() { this.showNotificationModal.set(true); }
-  goBack() { this.router.navigate(['/dashboard']); }
+ 
   // À ajouter dans votre classe
 travelLabel = computed(() => {
   const count = this.intervention()?.travelCount || 0;

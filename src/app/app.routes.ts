@@ -43,7 +43,7 @@ export const routes: Routes = [
     canActivate: [permissionGuard('dash_nav_orders')] 
   },
   { 
-    path: 'completed-missions', 
+    path: 'archives', 
     component: CompletedInterventionsComponent,
     canActivate: [permissionGuard('dash_nav_archives')] 
   },

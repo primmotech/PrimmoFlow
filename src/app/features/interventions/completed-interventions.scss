@@ -1,5 +1,4 @@
-
-
+/* --- STRUCTURE GLOBALE & HEADER --- */
 .badge-count {
   background: #2ecc71;
   color: white;
@@ -9,36 +8,102 @@
   font-weight: 800;
 }
 
+/* --- CARTE D'ARCHIVE --- */
 .archive-card {
   border-left: 4px solid #2ecc71 !important;
   margin-bottom: 12px;
-  
-  .archive-price {
-    color: #2ecc71;
-    font-weight: 800;
-    font-size: 0.9rem;
-    margin-top: 5px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  transition: transform 0.1s;
+  cursor: pointer;
+
+  &:active { 
+    transform: scale(0.98); 
   }
 }
 
-.check-circle {
-  background: rgba(46, 204, 113, 0.1);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.card-main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; // Centre la poubelle verticalement par rapport au texte
+  gap: 15px;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1; // Prend tout l'espace restant
+}
+
+/* --- TYPOGRAPHIE & DÉTAILS --- */
+.client-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  
+  .city {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .ref-id {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    background: var(--filter-pill-bg, rgba(255,255,255,0.1));
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+}
+
+.street { 
+  font-size: 0.85rem; 
+  color: var(--text-primary); 
+  font-weight: 500; 
+}
+
+.date-detail { 
+  font-size: 0.75rem; 
+  color: var(--text-secondary); 
+}
+
+.archive-price {
+  color: #2ecc71;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-top: 6px;
+}
+
+/* --- BOUTONS & ACTIONS --- */
+.btn-delete-archive {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0; // Empêche le bouton de s'écraser
+
+  &:hover {
+    background: #e74c3c;
+    color: white;
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
 }
 
-.empty-state {
-  text-align: center;
-  padding: 50px 20px;
-  opacity: 0.5;
-  font-style: italic;
-  color: var(--text-primary);
-}
-
+/* --- NAVIGATION & ÉTATS VIDES --- */
 .nav-item {
   background: none;
   border: none;
@@ -48,4 +113,12 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  opacity: 0.5;
+  font-style: italic;
+  color: var(--text-primary);
 }

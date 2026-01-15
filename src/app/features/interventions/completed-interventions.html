@@ -9,34 +9,58 @@
 
   <main class="container">
     <section class="recent-activity">
-      <h3>Interventions encaissées</h3>
+      <div class="section-header">
+        <h3>Interventions encaissées {{ totalRevenu() | number:'1.2-2' }}€</h3>
+      </div>
 
       @if (loading()) {
-        <div class="loader">Accès aux archives...</div>
+        <div class="loader-container">
+          <div class="spinner"></div>
+          <p>Accès aux archives...</p>
+        </div>
       } @else {
         <div class="intervention-list">
           @for (m of missions(); track m.$id) {
             <div class="intervention-card archive-card" (click)="viewInvoice(m.$id)">
-              <div class="card-info">
-                <span class="city">{{ m.habitants?.[0]?.nom || m.habitants?.nom || 'Client' }}</span>
-                <span class="street">
-                  {{ m.adresse?.ville }} — {{ m.completedAt | date:'dd/MM/yy' }}
-                </span>
-                <div class="archive-price">
-                   Encaissé : {{ (m.travelCost || 0) + (m.totalFinal || 0) | number:'1.2-2' }}€
-                </div>
-              </div>
               
-              <div class="card-status">
-                <div class="check-circle">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2ecc71" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+              <div class="card-main-content">
+                <div class="card-info">
+                  <div class="client-row">
+                    <span class="city">
+                      {{ m.habitants?.[0]?.nom || m.habitants?.nom || 'Nom' }} 
+                      {{ m.habitants?.[0]?.prenom || m.habitants?.prenom || 'Prénom' }}
+                    </span>
+                    <span class="ref-id">#{{ m.$id.slice(-5).toUpperCase() }}</span>
+                  </div>
+
+                  <div class="street">
+                    {{ m.adresse?.numero }} {{ m.adresse?.rue || 'Adresse non renseignée' }}
+                  </div>
+                  
+                  <div class="date-detail">
+                    {{ m.adresse?.ville }} • {{ m.completedAt | date:'dd/MM/yy' }}
+                  </div>
+
+                  <div class="archive-price">
+                     Encaissé : {{ (m.totalFinal || 0) | number:'1.2-2' }}€
+                  </div>
+                </div>
+                
+                <div class="card-actions-right">
+                  <button class="btn-delete-archive" (click)="deleteMission($event, m.$id)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
                 </div>
               </div>
+
             </div>
           } @empty {
-            <div class="empty-state">Aucun historique de paiement.</div>
+            <div class="empty-state">Aucun historique de paiement trouvé.</div>
           }
         </div>
       }
