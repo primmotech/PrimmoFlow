@@ -27,22 +27,26 @@
                 <div class="card-info">
                   <div class="client-row">
                     <span class="city">
-                      {{ m.habitants?.[0]?.nom || m.habitants?.nom || 'Nom' }} 
-                      {{ m.habitants?.[0]?.prenom || m.habitants?.prenom || 'Prénom' }}
+                      {{ m.adresse?.ville }} •  {{ m.adresse?.rue || 'Adresse non renseignée' }} {{ m.adresse?.numero }}
                     </span>
-                    <span class="ref-id">#{{ m.$id.slice(-5).toUpperCase() }}</span>
+                         <div class="date-detail">
+                   {{ m.completedAt | date:'dd/MM/yy' }}
+                  </div>
                   </div>
 
                   <div class="street">
-                    {{ m.adresse?.numero }} {{ m.adresse?.rue || 'Adresse non renseignée' }}
-                  </div>
+                 
+                      {{ m.habitants?.[0]?.nom || m.habitants?.nom || 'Nom' }} 
+                      {{ m.habitants?.[0]?.prenom || m.habitants?.prenom || '' }}
+                    </div>
                   
-                  <div class="date-detail">
-                    {{ m.adresse?.ville }} • {{ m.completedAt | date:'dd/MM/yy' }}
-                  </div>
+             
 
                   <div class="archive-price">
                      Encaissé : {{ (m.totalFinal || 0) | number:'1.2-2' }}€
+                     @if (m.paymentComment) {
+                       <span class="comment-text">({{ m.paymentComment }})</span>
+                     }
                   </div>
                 </div>
                 
