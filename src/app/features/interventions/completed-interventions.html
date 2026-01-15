@@ -1,16 +1,14 @@
 <div class="mobile-wrapper" [class.dark-mode]="themeService.darkMode()">
   
   <header class="app-header">
-    <div class="brand"><h1>Archives</h1></div>
-    <div class="header-user">
-      <span class="badge-count">{{ missions().length }}</span>
-    </div>
+    <div class="brand"><h1>Archives ({{ missions().length }})</h1></div>
+
   </header>
 
   <main class="container">
     <section class="recent-activity">
       <div class="section-header">
-        <h3>Interventions encaissées {{ totalRevenu() | number:'1.2-2' }}€</h3>
+        <h3>Total :  {{ totalRevenu() | number:'1.2-2' }}€</h3>
       </div>
 
       @if (loading()) {
