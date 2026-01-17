@@ -16,7 +16,7 @@ import { Intervention } from './dashboard';
     <div class="header-main">
       <span class="city">{{ intervention.adresse.ville || 'VILLE' }}</span>
       <span class="full-address">
-        {{ intervention.adresse.numero }} {{ intervention.adresse.rue }}
+        {{ intervention.adresse.rue }}, {{ intervention.adresse.numero }}
       </span>
       
       <button class="btn-toggle">
