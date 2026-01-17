@@ -26,17 +26,17 @@ export class ProfileComponent implements OnInit {
   private initialUserData: string = "";
 
   // Options de configuration
-  roundingOptions: number[] = Array.from({ length: 13 }, (_, i) => i * 5); // 0 à 60 par pas de 5
-  themeOptions = [
-    { label: 'Clair', value: 'light' }, 
-    { label: 'Sombre', value: 'dark' }
+  roundingOptions: number[] = Array.from({ length: 13 }, (_, i) => i * 5);
+  
+  // Palette de 20 couleurs pour les bordures et textes spécifiques
+  colorPalette: string[] = [
+    '#49dd6b', '#3498db', '#e74c3c', '#f1c40f', '#9b59b6', 
+    '#1abc9c', '#e67e22', '#34495e', '#27ae60', '#2980b9',
+    '#8e44ad', '#16a085', '#f39c12', '#d35400', '#c0392b',
+    '#7f8c8d', '#ff4757', '#2f3542', '#70a1ff', '#5352ed'
   ];
 
   constructor() {
-    /**
-     * Surveille le signal currentUser.
-     * Si l'utilisateur est chargé et que userData est vide, on charge le profil.
-     */
     effect(() => {
       const user = this.authService.currentUser();
       if (user && user.email && !this.userData()) {
@@ -48,17 +48,21 @@ export class ProfileComponent implements OnInit {
   ngOnInit() {}
 
   /**
-   * Récupère les données depuis Firestore (user_profiles)
+   * Applique la variable CSS pour l'aperçu immédiat
    */
+  private applyCustomColor(color: string) {
+    document.documentElement.style.setProperty('--user-custom-color', color);
+  }
+
   async loadProfile(email: string) {
     try {
       const profileData = await this.authService.getUserProfile(email);
       
-      // Valeurs par défaut si le profil est incomplet
       const defaultData = {
         nickName: this.authService.userNickName() || email.split('@')[0],
         lastname: '',
         firstname: '',
+        customColor: '#49dd6b', // Vert par défaut
         phone: '',
         travelCost: 12,
         hourlyRate: 28,
@@ -70,37 +74,35 @@ export class ProfileComponent implements OnInit {
       const data = profileData ? { ...defaultData, ...profileData } : defaultData;
       
       this.userData.set(structuredClone(data));
-      // On stocke une version stringifiée pour comparer facilement les changements
       this.initialUserData = JSON.stringify(data);
       
-      // Applique le thème stocké
+      // Applique les préférences visuelles au chargement
       this.themeService.initTheme(data.themePreference);
+      this.applyCustomColor(data.customColor);
+
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
     }
   }
 
-  /**
-   * Détecte si des modifications ont été apportées au formulaire
-   */
   onFieldChange() {
     const current = this.userData();
     if (!current) return;
 
-    // Mise à jour visuelle du thème en temps réel lors du changement de toggle/select
+    // 1. Mise à jour visuelle du thème en temps réel
     const activeTheme = this.themeService.darkMode() ? 'dark' : 'light';
     if (current.themePreference !== activeTheme) {
       this.themeService.setThemePreference(current.themePreference);
     }
 
-    // Comparaison avec l'état initial
+    // 2. Mise à jour visuelle de la couleur personnalisée en temps réel (aperçu)
+    this.applyCustomColor(current.customColor);
+
+    // 3. Comparaison avec l'état initial
     const hasChanged = JSON.stringify(current) !== this.initialUserData;
     this.isDirty.set(hasChanged);
   }
 
-  /**
-   * Sauvegarde les données dans Firestore et met à jour les signaux globaux
-   */
   async saveProfile() {
     const currentData = this.userData();
     const email = this.authService.userEmail();
@@ -108,14 +110,11 @@ export class ProfileComponent implements OnInit {
     if (currentData && email) {
       this.saving.set(true);
       try {
-        // 1. Mise à jour Firestore (via AuthService qui mettra aussi à jour le signal nickName)
+        // Envoie toutes les données (incluant customColor) à Appwrite
         await this.authService.updateUserProfile(email, currentData);
         
-        // 2. On fige le nouvel état comme état de référence
         this.initialUserData = JSON.stringify(currentData);
         this.isDirty.set(false);
-        
-        //console.log('Profil mis à jour avec succès');
       } catch (error) {
         console.error('Erreur lors de la sauvegarde :', error);
       } finally {

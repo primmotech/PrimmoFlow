@@ -65,7 +65,36 @@
             </select>
           </div>
         </ng-container>
+<section class="settings-group">
+  <h3>Couleur Personnelle</h3>
+  <div class="settings-card color-picker-container">
+    <div class="color-preview-wrapper">
+      <div class="color-preview-circle" 
+           [style.background-color]="userData().customColor"
+           [style.box-shadow]="'0 0 20px ' + userData().customColor">
+      </div>
+      
+      <div class="color-info">
+        <span class="color-hex">{{ userData().customColor || '#49dd6b' }}</span>
+        <p class="color-label">Cette couleur illuminera vos interventions</p>
+      </div>
 
+      <div class="color-input-wrapper">
+        <button class="btn-change-color">Choisir</button>
+        <input 
+          type="color" 
+          [(ngModel)]="userData().customColor" 
+          (ngModelChange)="onFieldChange()"
+          class="hidden-color-input"
+        >
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="settings-group">
+  <h3>Apparence</h3>
+  </section>
         <section class="settings-group">
           <h3>Apparence</h3>
           <div class="settings-card">

@@ -4,50 +4,78 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: #1a1a1a;
+  background: #1a1a1a !important;
   border-radius: 12px;
   margin-bottom: 12px;
-  border-left: 4px solid transparent;
   cursor: pointer;
-  transition: transform 0.1s ease, background-color 0.2s;
+  
+  // 1. Bordure épaisse à gauche
+  border-left: 4px solid var(--status-color, transparent) !important; 
+
+  // 2. Contour fin discret par défaut
+  border-top: 1px solid color-mix(in srgb, var(--status-color), transparent 85%) !important;
+  border-right: 1px solid color-mix(in srgb, var(--status-color), transparent 85%) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--status-color), transparent 85%) !important;
+  
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:active {
-    background: #222;
+    background: #222 !important;
+    transform: scale(0.98);
+  }
+  
+  &:hover {
+    border-color: color-mix(in srgb, var(--status-color), transparent 60%) !important;
   }
 
-  // Styles de bordure conservés
-  &.blue-card { border-left-color: #3b82f6; }
-  &.green-card { border-left-color: #10b981; }
-  &.yellow-card { border-left-color: #f59e0b; }
-  &.red-card { border-left-color: #ef4444; }
+  // --- MODE NÉON (WAITING, STARTED, STOPPED, PAUSED, END) ---
+  &.neon-mode {
+    // On renforce les bordures pour porter la lueur
+    border: 1px solid var(--status-color) !important;
+    border-left: 5px solid var(--status-color) !important;
+    
+    // Effet de halo lumineux (Néon)
+    box-shadow: 
+      0 0 10px color-mix(in srgb, var(--status-color), transparent 70%),
+      inset 0 0 5px color-mix(in srgb, var(--status-color), transparent 80%) !important;
 
-  // --- BOUTON SUPPRIMER (CROIX ROUGE) ---
+    // Animation de pulsation légère
+    animation: neon-pulse 3s infinite alternate;
+
+    // Les boutons brillent aussi un peu plus en mode néon
+    .btn-details, .btn-edit {
+      box-shadow: 0 0 8px color-mix(in srgb, var(--status-color), transparent 80%);
+      background: color-mix(in srgb, var(--status-color), transparent 95%);
+    }
+  }
+
   .btn-delete {
     position: absolute;
-    top: -6px;
-    right: -6px;
+    top: -8px;
+    right: -8px; 
     background: #ef4444; 
     color: #ffffff;
-    border: none;
-    width: 22px;
-    height: 22px;
+    border: 2px solid #1a1a1a;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    cursor: pointer;
     z-index: 10;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     &:hover {
       background: #dc2626;
-      transform: scale(1.2);
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
     svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
+      stroke-width: 3.5;
     }
   }
 }
@@ -74,82 +102,72 @@
   
   .created-by {
     font-size: 0.8rem;
-    color: #6b7280;
+    color: #6b7280; 
     margin-top: 4px;
     
     .author-name {
-      color: #10b981;
+      color: var(--status-color) !important; 
       font-weight: 700;
       cursor: pointer;
+      &:hover { text-decoration: underline; }
     }
   }
 }
 
-// --- ACTIONS ALIGNÉES VERTICALEMENT ---
 .card-actions {
   display: flex;
-  flex-direction: column; // Aligne btn-details et btn-edit l'un sous l'autre
-  gap: 8px;               // Espace entre les deux boutons
-  align-items: stretch;   // Étire les boutons pour une largeur uniforme
+  flex-direction: column; 
+  gap: 8px;              
+  align-items: stretch;   
   justify-content: center;
   margin-left: 15px;
-  min-width: 85px;        // Largeur minimum pour éviter que les boutons sautent
+  min-width: 85px;        
 }
 
 .btn-details {
   background: transparent;
-  color: #10b981;
-  border: 1.5px solid #374151;
-  padding: 8px;
+  color: var(--status-color) !important;
+  border: 1.5px solid var(--status-color) !important;
+  padding: 2px,;
   border-radius: 8px;
   font-weight: 900;
   font-size: 0.75rem;
-  cursor: pointer;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s;
 
-  &:hover {
-    background: #2a2a2a;
-  }
-  &.read-only {
-    cursor: default;     /* Pas de main cliquable */
-    pointer-events: none; /* Désactive les clics au niveau CSS également */
-    opacity: 0.9;        /* Légèrement plus terne pour montrer que c'est informatif */
-    
-    &:active, &:hover {
-      background: inherit; /* Pas d'effet de clic/survol */
-      transform: none;
-    }
-  }
+  &:hover { background: #2a2a2a; }
 }
 
 .btn-edit {
   background: transparent;
-  border: 1.5px solid #374151;
-  color: #9ca3af;
-  width: 100%;            // Prend toute la largeur disponible dans card-actions
+  border: 1.5px solid var(--status-color, #374151) !important;
+  color: var(--status-color, #9ca3af) !important;
+  width: 100%;            
   height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.2s;
-  
 
   &:hover {
-    border-color: #6b7280;
-    color: #ffffff;
     background: #2a2a2a;
+    filter: brightness(1.2);
   }
 
   svg { 
     width: 20px; 
-    height: 20px; 
+    height: 20px;
+    stroke: currentColor; 
   }
 }
 
 .date-text {
   font-weight: 700;
-  text-transform: capitalize; // "Lun." au lieu de "lun."
+  text-transform: capitalize; 
+}
+
+@keyframes neon-pulse {
+  from { filter: drop-shadow(0 0 2px var(--status-color)); }
+  to { filter: drop-shadow(0 0 5px var(--status-color)); }
 }

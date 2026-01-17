@@ -72,7 +72,49 @@ export class AddInterventionComponent implements OnInit {
   });
 
 
+async save() {
+  if (!this.isFormValid()) return;
+  this.loading.set(true);
 
+  try {
+    // FORCE la mise à jour des infos owner (dont la couleur) juste avant de sauver
+    const creatorEmail = this.data.createdBy || this.auth.userEmail();
+    if (creatorEmail) {
+      await this.fetchAndSetOwnerProfile(creatorEmail);
+    }
+
+    const structuredTasks = this.tasks()
+      .filter(t => t.text.trim() !== '')
+      .map(t => ({ label: t.text.trim(), done: t.done || false }));
+
+    const payload = {
+      adresse: JSON.stringify(this.data.adresse),
+      mission: JSON.stringify({ tasks: structuredTasks }),
+      habitants: JSON.stringify(this.data.habitants || []),
+      proprietaire: JSON.stringify(this.data.proprietaire),
+      remarques: this.data.remarques || '',
+      assigned: this.data.assigned,
+      createdBy: creatorEmail,
+      status: this.data.status || 'OPEN',
+      photos: this.data.photos || [],
+      owner: this.data.owner // Contient maintenant le JSON avec customColor
+    };
+
+    if (this.isEditMode() && this.interventionId) {
+      await this.auth.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.interventionId, payload);
+    } else {
+      await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), payload);
+    }
+
+    this.hasChanges.set(false);
+    this.router.navigate(['/dashboard']);
+  } catch (e) {
+    console.error("Save Error:", e);
+    alert("Erreur lors de l'enregistrement.");
+  } finally {
+    this.loading.set(false);
+  }
+}
 
   // Fonctions de synchronisation de profil fusionnées
   async fetchAndSetOwnerProfile(email: string) {
@@ -90,7 +132,8 @@ export class AddInterventionComponent implements OnInit {
           prenom: profile['firstname'] || '', 
           nom: profile['lastname'] || '',    
           tel: profile['phone'] || '',
-          email: email
+          email: email,
+          customColor : profile['customColor'] || '#15bb3cff'
         };
         this.data.owner = [JSON.stringify(ownerInfo)];
       }
@@ -199,51 +242,7 @@ export class AddInterventionComponent implements OnInit {
     this.data.habitants.push({ nom: '', prenom: '', tel: '' }); 
     this.onValueChange(); 
   }
-  async save() {
-  if (!this.isFormValid()) return;
-  this.loading.set(true);
 
-  try {
-    const structuredTasks = this.tasks()
-      .filter(t => t.text.trim() !== '')
-      .map(t => ({ label: t.text.trim(), done: t.done || false }));
-
-    // Préparation du payload de base
-    const payload = {
-      adresse: JSON.stringify(this.data.adresse),
-      mission: JSON.stringify({ tasks: structuredTasks }),
-      habitants: JSON.stringify(this.data.habitants || []),
-      proprietaire: JSON.stringify(this.data.proprietaire),
-      remarques: this.data.remarques || '',
-      assigned: this.data.assigned,
-      // On utilise la valeur du formulaire ou l'utilisateur actuel par défaut
-      createdBy: this.data.createdBy || this.auth.userEmail(),
-      status: this.data.status || 'OPEN',
-      photos: this.data.photos || [],
-      owner: this.data.owner || []
-    };
-
-    if (this.isEditMode() && this.interventionId) {
-      // MODE EDITION
-      await this.auth.databases.updateDocument(this.DB_ID, this.COL_INTERVENTIONS, this.interventionId, payload);
-    } else {
-      // MODE CREATION : L'admin peut choisir l'auteur original
-      const createPayload = {
-        ...payload,
-        $createdAt: new Date().toISOString()
-      };
-      await this.auth.databases.createDocument(this.DB_ID, this.COL_INTERVENTIONS, ID.unique(), createPayload);
-    }
-
-    this.hasChanges.set(false);
-    this.router.navigate(['/dashboard']);
-  } catch (e) {
-    console.error("Save Error:", e);
-    alert("Erreur lors de l'enregistrement.");
-  } finally {
-    this.loading.set(false);
-  }
-}
 
   removeHabitant(index: number) { 
     if (this.data.habitants.length > 1) { 

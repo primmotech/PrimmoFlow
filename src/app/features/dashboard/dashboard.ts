@@ -36,15 +36,16 @@ export interface Intervention {
 
 export type DashboardFilter = 'ALL' | 'WAITING' | 'PLANNED' | 'DONE';
 
-export const STATUS_CONFIG: Record<string, { label: string, color: string, category: 'pending' | 'planned' | 'completed' }> = {
-  'WAITING': { label: 'En attente', color: 'blue-card', category: 'pending' },
-  'OPEN': { label: 'Ouvert', color: 'green-card', category: 'pending' },
-  'STARTED': { label: 'En cours', color: 'green-card', category: 'planned' },
-  'PAUSED': { label: 'En pause', color: 'yellow-card', category: 'planned' },
-  'STOPPED': { label: 'Arrêté', color: 'red-card', category: 'planned' },
-  'PLANNED': { label: 'Planifié', color: 'blue-card', category: 'planned' },
-  'END': { label: 'Terminé', color: 'red-card', category: 'completed' },
-  'BILLED': { label: 'Facturé', color: 'green-card', category: 'completed' },
+// On définit explicitement que les clés sont des strings et la valeur un objet
+export const STATUS_CONFIG: { [key: string]: { label: string; category: string } } = {
+  'WAITING': { label: 'En attente', category: 'pending' },
+  'OPEN':    { label: 'Ouvert',     category: 'pending' },
+  'STARTED': { label: 'En cours',   category: 'planned' },
+  'PAUSED':  { label: 'En pause',   category: 'planned' },
+  'STOPPED': { label: 'Arrêté',     category: 'planned' },
+  'PLANNED': { label: 'Planifié',   category: 'planned' },
+  'END':     { label: 'Terminé',    category: 'completed' },
+  'BILLED':  { label: 'Facturé',    category: 'completed' },
 };
 
 @Component({
@@ -139,7 +140,33 @@ plannedInterventions = computed(() => {
 
   setFilter(f: DashboardFilter) { this.dashService.activeFilter.set(f); }
   setOwnerFilter(id: string | null) { this.dashService.selectedOwnerId.set(id); }
+// Dans DashboardComponent
+userProfiles = signal<Record<string, { color: string }>>({});
 
+// Dans loadInterventions ou une fonction dédiée
+async loadUserColors(emails: string[]) {
+  if (emails.length === 0) return;
+  
+  try {
+    const response = await this.authService.databases.listDocuments(
+      this.DB_ID,
+      'user_profiles',
+      [Query.equal('email', emails), Query.limit(100)]
+    );
+
+    const profileMap: Record<string, { color: string }> = {};
+    response.documents.forEach(doc => {
+      profileMap[doc['email']] = { 
+        color: doc['customColor'] || '#49dd6b' 
+      };
+    });
+
+    // On met à jour le dictionnaire des profils
+    this.userProfiles.set(profileMap);
+  } catch (e) {
+    console.error("Erreur chargement couleurs profils:", e);
+  }
+}
   async initDashboard() {
     this.loading.set(true);
     await this.authService.checkSession();
@@ -151,19 +178,7 @@ plannedInterventions = computed(() => {
     this.loading.set(false);
   }
 
-  async loadInterventions(userEmail: string) {
-    try {
-      let queries = [Query.orderDesc('$createdAt'), Query.limit(100)];
-      if (!this.authService.hasPerm('dash_view_all')) {
-        const shares = await this.authService.databases.listDocuments(this.DB_ID, 'shares', [Query.contains('allowed_emails', [userEmail])]);
-        const emails = shares.documents.map(doc => doc['user_email']);
-        this.colleagueEmails.set(emails);
-        queries.push(Query.or([Query.equal('assigned', userEmail), Query.equal('createdBy', userEmail), ...emails.map(e => Query.equal('createdBy', e))]));
-      }
-      const response = await this.authService.databases.listDocuments(this.DB_ID, this.COL_INTERVENTIONS, queries);
-      this.interventions.set(response.documents.map(d => this.sanitizeIntervention(d)));
-    } catch (e) { console.error(e); }
-  }
+
 
   private sanitizeIntervention(payload: any): Intervention {
     const adr = typeof payload.adresse === 'string' ? JSON.parse(payload.adresse) : payload.adresse;
@@ -229,7 +244,52 @@ makeCall(person: any) {
     this.router.navigate(['/intervention-details', inter.id], { state: { data: inter } });
   }
 
+async loadInterventions(userEmail: string) {
+  try {
+    // 1. On prépare les requêtes de base (visibles par tous)
+    let queries = [Query.orderDesc('$createdAt'), Query.limit(100)];
 
+    // 2. On ajoute les restrictions de sécurité si pas admin
+    if (!this.authService.hasPerm('dash_view_all')) {
+      const shares = await this.authService.databases.listDocuments(
+        this.DB_ID, 
+        'shares', 
+        [Query.contains('allowed_emails', [userEmail])]
+      );
+      const emails = shares.documents.map(doc => doc['user_email']);
+      this.colleagueEmails.set(emails);
+
+      // On ajoute la requête OR à la liste existante
+      queries.push(
+        Query.or([
+          Query.equal('assigned', userEmail), 
+          Query.equal('createdBy', userEmail), 
+          ...emails.map(e => Query.equal('createdBy', e))
+        ])
+      );
+    }
+
+    // 3. APPEL : Maintenant 'queries' est bien accessible ici
+    const response = await this.authService.databases.listDocuments(
+      this.DB_ID, 
+      this.COL_INTERVENTIONS, 
+      queries
+    );
+
+    // 4. On sanitize et on met à jour le signal
+    const data = response.documents.map(d => this.sanitizeIntervention(d));
+    this.interventions.set(data);
+
+    // 5. RÉCUPÉRATION DES COULEURS DES PROFILS
+    const uniqueEmails = [...new Set(data.map(i => i.createdBy))];
+    if (uniqueEmails.length > 0) {
+      await this.loadUserColors(uniqueEmails);
+    }
+
+  } catch (e) { 
+    console.error("Erreur chargement interventions:", e); 
+  }
+}
 
   goToEdit(inter: any, event?: Event) {
     if (event) event.stopPropagation();

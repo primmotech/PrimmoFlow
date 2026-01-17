@@ -32,9 +32,16 @@ export class Parameters implements OnInit {
   teamName = signal<string>('Non assigné');
   roundingOptions = [0, 5, 10, 15, 30];
 
+  // Palette de 20 couleurs pour les bordures et éléments personnalisés
+  colorPalette: string[] = [
+    '#49dd6b', '#1ddbe9ff', '#e74c3c', '#f1c40f', '#9b59b6', 
+    '#1abc9c', '#e67e22', '#34495e', '#27ae60', '#2980b9',
+    '#8e44ad', '#16a085', '#f39c12', '#d35400', '#c0392b',
+    '#e90cb9ff', '#ff4757', '#2f3542', '#70a1ff', '#5352ed'
+  ];
+
   /**
    * Computed : Surveille si des changements ont été faits par rapport à la base
-   * Le bouton de sauvegarde utilisera ce signal pour passer au vert (.dirty)
    */
   isDirty = computed(() => {
     if (!this.userData()) return false;
@@ -42,11 +49,32 @@ export class Parameters implements OnInit {
   });
 
   async ngOnInit() {
-    // Initialise le thème visuel au démarrage
     this.themeService.initTheme();
     await this.loadInitialData();
   }
 
+  /**
+   * Applique la variable CSS au document pour l'aperçu immédiat
+   */
+  private applyCustomColor(color: string) {
+    document.documentElement.style.setProperty('--user-custom-color', color);
+  }
+/**
+   * Sélection d'une couleur dans la palette
+   */
+  selectColor(color: string) {
+    const current = this.userData();
+    if (current && this.authService.hasPerm('param_edit_theme')) {
+      // 1. Mise à jour de l'objet local pour Appwrite
+      this.userData.set({ ...current, customColor: color });
+      
+      // 2. Notification immédiate au ThemeService (pour le Dashboard)
+      this.themeService.setUserColor(color); 
+      
+      // 3. Mise à jour visuelle locale
+      this.onFieldChange();
+    }
+  }
   /**
    * CHARGEMENT : Lecture du profil dans Appwrite
    */
@@ -67,30 +95,30 @@ export class Parameters implements OnInit {
       );
 
       if (data) {
-        // On inclut themePreference pour le lier à la DB
         const profile = {
           lastname: data['lastname'] || '',
           firstname: data['firstname'] || '',
           nickName: data['nickName'] || '',
-          phone: data['phone'] || '',
+              phone: data['phone'] || '',
           role: data['role'] || 'Utilisateur',
           gps: data['gps'] || 'maps',
           travelCost: Number(data['travelCost'] || 0),
           hourlyRate: Number(data['hourlyRate'] || 0),
           rounding: Number(data['rounding'] || 0),
           teamId: data['teamId'] || '',
-          themePreference: data['themePreference'] || 'light' 
+          themePreference: data['themePreference'] || 'light',
+          customColor: data['customColor'] || '#49dd6b' // Couleur par défaut si absente
         };
 
         this.userData.set(profile);
-        
-        // --- Synchronisation du thème visuel avec la préférence DB ---
+        this.themeService.setUserColor(profile.customColor);
+        // Appliquer la couleur et le thème au chargement
+        this.applyCustomColor(profile.customColor);
         const isDarkTheme = profile.themePreference === 'dark';
         if (isDarkTheme !== this.themeService.darkMode()) {
           this.themeService.toggleTheme();
         }
 
-        // Fige l'état initial pour la comparaison (isDirty)
         setTimeout(() => {
           this.initialDataSnapshot.set(JSON.stringify(this.userData()));
         }, 50);
@@ -114,7 +142,10 @@ export class Parameters implements OnInit {
       this.teamName.set(teamId);
     }
   }
-
+// Exemple de fonction appelée par ton input color ou ton bouton de sauvegarde
+onColorChange(newColor: string) {
+  this.themeService.setUserColor(newColor);
+}
   /**
    * SAUVEGARDE : Mise à jour du document dans Appwrite
    */
@@ -138,13 +169,9 @@ export class Parameters implements OnInit {
         updatedData
       );
 
-      // Réinitialise l'état "Dirty" car les données sont maintenant synchronisées
       this.initialDataSnapshot.set(JSON.stringify(this.userData()));
-
-      // Met à jour le nickname global (utilisé dans le header)
       this.authService.userNickName.set(this.userData().nickName);
       
-      //console.log("Profil Appwrite mis à jour avec succès ✅");
     } catch (error) {
       console.error("Erreur sauvegarde profil Appwrite:", error);
       alert("Erreur lors de la sauvegarde.");
@@ -154,11 +181,14 @@ export class Parameters implements OnInit {
   }
 
   /**
-   * Appelé à chaque modification d'un champ input pour forcer la mise à jour du signal
+   * Appelé à chaque modification d'un champ ou d'une couleur
    */
   onFieldChange() {
     const current = this.userData();
     if (current) {
+      // Appliquer la couleur visuellement en temps réel
+      this.applyCustomColor(current.customColor);
+
       this.userData.set({ 
         ...current,
         travelCost: Number(current.travelCost),
@@ -168,17 +198,15 @@ export class Parameters implements OnInit {
     }
   }
 
+
+
   /**
-   * Change le thème visuellement ET met à jour le signal userData
-   * pour activer le bouton de sauvegarde.
+   * Bascule le thème
    */
   toggleTheme() {
     const current = this.userData();
     if (current) {
-      // 1. Bascule l'apparence visuelle via le service
       this.themeService.toggleTheme();
-
-      // 2. Met à jour la valeur dans le signal pour le futur saveProfile()
       const newPref = current.themePreference === 'light' ? 'dark' : 'light';
       this.userData.set({ ...current, themePreference: newPref });
     }

@@ -24,6 +24,8 @@
           [intervention]="inter"
           [showActionButton]="authService.hasPerm('dash_act_plan')"
           (deleteClick)="deleteIntervention($event)" 
+          class="card-pending" 
+[style.--status-color]="userProfiles()[inter.createdBy]?.color || '#49dd6b'"
           [statusConfig]="STATUS_CONFIG"
           [canDelete]="authService.hasPerm('dash_act_delete')"
           [canEdit]="authService.hasPerm('dash_act_edit')"
@@ -47,6 +49,8 @@
           [intervention]="inter"
           (deleteClick)="deleteIntervention($event)"
           [canDelete]="authService.hasPerm('dash_act_delete')"
+          class="card-planned" 
+[style.--status-color]="userProfiles()[inter.createdBy]?.color || '#49dd6b'"
           [statusConfig]="STATUS_CONFIG"
           [canPlan]="authService.hasPerm('dash_act_plan')"
           [canEdit]="authService.hasPerm('dash_act_plan')"
@@ -67,6 +71,8 @@
         @for (inter of completedInterventions(); track inter.id) {
         <app-intervention-card 
           [intervention]="inter"
+          class="card-completed" 
+ [style.--status-color]="userProfiles()[inter.createdBy]?.color || '#49dd6b'"
           [statusConfig]="STATUS_CONFIG"
           (deleteClick)="deleteIntervention($event)"
           [canDelete]="authService.hasPerm('dash_act_delete')"

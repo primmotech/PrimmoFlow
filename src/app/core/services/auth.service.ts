@@ -40,7 +40,10 @@ export class AuthService {
   hasPerm(permId: string): boolean {
     return this.permissions().includes(permId);
   }
-
+private applyCustomColor(color: string | null) {
+  const defaultColor = '#3498db'; // Votre bleu par défaut
+  document.documentElement.style.setProperty('--user-custom-color', color || defaultColor);
+}
   // --- AUTH & SESSION ---
 
   async checkSession(): Promise<boolean> {
@@ -100,29 +103,40 @@ export class AuthService {
     }
   }
 
-  async loadUserProfile(email: string): Promise<any> {
-    const profile = await this.getUserProfile(email);
-    if (profile) {
-      this.userNickName.set(profile['nickName'] || email.split('@')[0]);
-      const role = profile['role'] || 'Utilisateur';
-      this.userRole.set(role);
-      await this.loadPermissions(role);
-      this.themeService.initTheme(profile['themePreference'] || 'dark');
-    }
-    return profile;
+ async loadUserProfile(email: string): Promise<any> {
+  const profile = await this.getUserProfile(email);
+  if (profile) {
+    this.userNickName.set(profile['nickName'] || email.split('@')[0]);
+    const role = profile['role'] || 'Utilisateur';
+    this.userRole.set(role);
+    await this.loadPermissions(role);
+    
+    // 1. Appliquer le thème
+    this.themeService.initTheme(profile['themePreference'] || 'dark');
+    
+    // 2. Appliquer la couleur personnalisée stockée en DB
+    this.applyCustomColor(profile['customColor']);
+  }
+  return profile;
+}
+
+ async updateUserProfile(email: string, data: any): Promise<void> {
+  const docId = this.formatId(email);
+  await this.databases.updateDocument(APPWRITE_CONFIG.dbId, APPWRITE_CONFIG.colProfiles, docId, data);
+  
+  if (data.nickName) this.userNickName.set(data.nickName);
+  if (data.themePreference) this.themeService.initTheme(data.themePreference);
+  
+  // 3. Si la couleur est dans les données envoyées, on l'applique immédiatement
+  if (data.customColor) {
+    this.applyCustomColor(data.customColor);
   }
 
-  async updateUserProfile(email: string, data: any): Promise<void> {
-    const docId = this.formatId(email);
-    await this.databases.updateDocument(APPWRITE_CONFIG.dbId, APPWRITE_CONFIG.colProfiles, docId, data);
-    
-    if (data.nickName) this.userNickName.set(data.nickName);
-    if (data.themePreference) this.themeService.initTheme(data.themePreference);
-    if (data.role) {
-      this.userRole.set(data.role);
-      await this.loadPermissions(data.role);
-    }
+  if (data.role) {
+    this.userRole.set(data.role);
+    await this.loadPermissions(data.role);
   }
+}
 
   async doesAccountExist(email: string): Promise<boolean> {
     try {
@@ -180,5 +194,6 @@ export class AuthService {
     this.userRole.set(null);
     this.permissions.set([]);
     this.themeService.initTheme('dark');
+    this.applyCustomColor(null); // Reset à la couleur par défau
   }
 }

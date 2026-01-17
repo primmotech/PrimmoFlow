@@ -48,7 +48,19 @@
             <option *ngFor="let i of roundingOptions" [value]="i">{{ i }} min</option>
           </select>
         </div>
-
+<div class="form-field">
+  <label>Couleur personnalisée (Bordures & Textes)</label>
+  <div class="color-picker-grid">
+    <div 
+      *ngFor="let color of colorPalette" 
+      class="color-dot" 
+      [style.background-color]="color"
+      [class.selected]="userData().customColor === color"
+      (click)="userData().customColor = color; onFieldChange()">
+      <span class="check-icon" *ngIf="userData().customColor === color">✓</span>
+    </div>
+  </div>
+</div>
 <div class="form-field theme-toggle-row">
   <label>
     {{ userData().themePreference === 'dark' ? 'Mode Sombre' : 'Mode Clair' }}

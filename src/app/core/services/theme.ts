@@ -7,7 +7,7 @@ export class ThemeService {
   // Initialize darkMode signal based on localStorage or default to 'dark'
   // This will be overridden by user profile preference once loaded
   darkMode = signal<boolean>(localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme'));
-
+userColor = signal<string>(localStorage.getItem('user-color') || '#3b82f6');
   /**
    * Sets the theme preference, applies it, and persists it in localStorage.
    * @param theme 'light' or 'dark'
@@ -20,7 +20,10 @@ export class ThemeService {
     this.applyTheme(isDark);
     return theme;
   }
-
+setUserColor(color: string) {
+    this.userColor.set(color);
+    localStorage.setItem('user-color', color);
+  }
   /**
    * Applies the theme class to the document body.
    * @param isDark True for dark theme, false for light theme.
