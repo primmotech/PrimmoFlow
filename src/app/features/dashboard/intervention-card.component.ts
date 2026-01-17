@@ -7,75 +7,85 @@ import { Intervention } from './dashboard';
   standalone: true,
   imports: [CommonModule, DatePipe],
   template: `
-    <div 
-      class="intervention-card" 
-      [class.neon-mode]="isNeonStatus"
-      (click)="cardClick.emit($event)"
-    >
-      @if (canDelete) {
-        <button class="btn-delete" (click)="onDelete($event)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      }
+<div 
+  class="intervention-card" 
+  [class.neon-mode]="isNeonStatus"
+  [class.is-expanded]="isExpanded"
+>
+  <div class="card-header-row" (click)="toggleAccordion($event)">
+    <div class="header-main">
+      <span class="city">{{ intervention.adresse.ville || 'VILLE' }}</span>
+      <span class="full-address">
+        {{ intervention.adresse.numero }} {{ intervention.adresse.rue }}
+      </span>
+      
+      <button class="btn-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" 
+             [style.transform]="isExpanded ? 'rotate(180deg)' : 'rotate(0)'" 
+             style="transition: transform 0.3s ease">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+    
+    @if (canDelete) {
+      <button class="btn-delete" (click)="onDelete($event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    }
+  </div>
 
-      <div class="card-info">
-        <span class="city">{{ intervention.adresse.ville || 'VILLE INCONNUE' }}</span>
-        <span class="street">{{ intervention.adresse.numero }} {{ intervention.adresse.rue }}</span>
+  @if (isExpanded) {
+<div class="accordion-content">
+  <div class="card-info">
+    @if (intervention.owner && intervention.owner[0]) {
+      <span class="created-by">
+        Par <span class="author-name" (click)="onCall($event, intervention.owner[0])">
+          {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
+        </span>
+      </span>
+    }
 
-        @if (intervention.owner && intervention.owner[0]) {
+    @let occupants = parseJson(intervention.habitants);
+    @for (habitant of occupants; track $index) {
+      <div class="habitant-row">
+        @if (habitant.tel) {
           <span class="created-by">
-            Par 
-            <span class="author-name" (click)="onCall($event, intervention.owner[0])">
-              {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
+            Pour <span class="author-name" (click)="onCall($event, habitant)">
+              {{ habitant.prenom }} {{ habitant.nom }}
             </span>
           </span>
         }
-
-        @let occupants = parseJson(intervention.habitants);
-        @for (habitant of occupants; track $index) {
-          <div class="habitant-row">
-            @if (habitant.tel) {
-              <span class="created-by">
-                Pour 
-                <span class="author-name" (click)="onCall($event, habitant)">
-                  {{ habitant.prenom }} {{ habitant.nom }}
-                </span>
-              </span>
-            }
-          </div>
-        }
       </div>
+    }
+  </div>
 
-<div class="card-actions">
-  @if (intervention.status !== 'BILLED' && isBasicStatus) {
-      <button class="btn-details" (click)="onAction($event)">
-         {{ intervention.status === 'END' ? 'Histo' : 'Détails' }}
+  <div class="card-actions-row">
+    @if (intervention.status !== 'BILLED' && isBasicStatus) {
+        <button class="btn-action" (click)="onAction($event)">
+           {{ intervention.status === 'END' ? 'Histo' : 'Détails' }}
+        </button>
+        @if (intervention.status == 'OPEN' || intervention.status == 'WAITING') {
+          <button class="btn-action" (click)="onAction2($event)">Histo</button>
+        }
+    }
+    
+    @if (intervention.plannedAt && !isBasicStatus && intervention.status !== 'BILLED') {
+      <button class="btn-action date-btn" [disabled]="!canPlan" (click)="onAction($event)">
+        {{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}
       </button>
-      @if (intervention.status == 'OPEN' || intervention.status == 'WAITING') {
-        <button class="btn-details" (click)="onAction2($event)">Histo</button>
-      }
-  }
-  
-  @if (intervention.plannedAt && !isBasicStatus && intervention.status !== 'BILLED') {
-    <button 
-      class="btn-details" 
-      [class.read-only]="!canPlan"
-      [disabled]="!canPlan"
-      (click)="onAction($event)">
-      <span class="date-text">{{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}</span>
-    </button>
-  }
+    }
 
-  @if (canEdit) {
-    <button class="btn-details" (click)="onEdit($event)">
-    Modif
-    </button>
+    @if (canEdit) {
+      <button class="btn-action" (click)="onEdit($event)">Modif</button>
+    }
+  </div>
+</div>
   }
 </div>
-    </div>
   `,
   styleUrls: ['./intervention-card.component.scss']
 })
@@ -92,17 +102,20 @@ export class InterventionCardComponent {
   @Output() action2Click = new EventEmitter<Event>();
   @Output() editClick = new EventEmitter<string>();
   @Output() deleteClick = new EventEmitter<string>();
-  @Output() callOwner = new EventEmitter<any>(); // Transmet l'objet complet
-/**
-   * Détermine si la carte doit afficher l'effet Néon
-   */
+  @Output() callOwner = new EventEmitter<any>();
+
+  isExpanded = false;
+
   get isNeonStatus(): boolean {
-    // Liste des statuts qui activent l'effet lumineux
     const neonList = ['WAITING', 'STOPPED', 'STARTED', 'PAUSED', 'BILLED'];
-    
-    // On vérifie si le statut actuel est dans la liste
     return this.intervention && neonList.includes(this.intervention.status);
   }
+
+  toggleAccordion(event: Event) {
+    event.stopPropagation();
+    this.isExpanded = !this.isExpanded;
+  }
+
   onAction(event: Event) {
     event.stopPropagation();
     this.actionClick.emit(event);
@@ -127,7 +140,6 @@ export class InterventionCardComponent {
 
   onCall(event: Event, person: any) {
     event.stopPropagation();
-    // On vérifie si l'objet contient un téléphone avant d'émettre
     if (person && person.tel) {
       this.callOwner.emit(person);
     }
