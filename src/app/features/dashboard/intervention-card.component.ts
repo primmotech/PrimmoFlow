@@ -133,8 +133,9 @@ export class InterventionCardComponent {
   }
 
   onDelete(event: Event) {
+    console.log(this.intervention)
     event.stopPropagation();
-    if (confirm('Voulez-vous vraiment supprimer cette intervention ?')) {
+    if (confirm('Supprimer ' + this.intervention.adresse.ville + " " +this.intervention.adresse.rue +" "+this.intervention.adresse.numero + '?')) {
       this.deleteClick.emit(this.intervention.id);
     }
   }
