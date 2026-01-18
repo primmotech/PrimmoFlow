@@ -81,7 +81,7 @@
   width: 200px;
   background: var(--card-bg);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #ffffff !important;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15);
   z-index: 2100;
 
@@ -89,6 +89,8 @@
 
   .menu-item {
     padding: 14px 16px;
+      border-bottom: 1px solid  #ffffff !important;
+      border-radius: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
