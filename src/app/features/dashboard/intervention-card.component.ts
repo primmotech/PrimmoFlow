@@ -8,18 +8,19 @@ import { Intervention } from './dashboard';
   imports: [CommonModule, DatePipe],
   template: `
 <div 
+(click)="cardClick.emit($event)"
   class="intervention-card" 
   [class.neon-mode]="isNeonStatus"
   [class.is-expanded]="isExpanded"
 >
-  <div class="card-header-row" (click)="toggleAccordion($event)">
+  <div class="card-header-row"  >
     <div class="header-main">
       <span class="city">{{ intervention.adresse.ville || 'VILLE' }}</span>
       <span class="full-address">
         {{ intervention.adresse.rue }}, {{ intervention.adresse.numero }}
       </span>
       
-      <button class="btn-toggle">
+      <button class="btn-toggle" (click)="toggleAccordion($event)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" 
              [style.transform]="isExpanded ? 'rotate(180deg)' : 'rotate(0)'" 
              style="transition: transform 0.3s ease">
