@@ -1,115 +1,188 @@
-/* --- MODAL OVERLAY --- */
+/* --- VARIABLES LOCALES (Style History) --- */
+:host {
+  --bg-main: #111;
+  --card-bg: #1a1a1a;
+  --accent-blue: #3498db;
+  --border-color: #222;
+  --text-muted: #555;
+  --text-secondary: #888;
+  --success-green: #2ecc71;
+}
+
+/* --- OVERLAY & CONTAINER --- */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: var(--bg-main); /* Fond noir pur comme une page */
   z-index: 2000;
-  display: flex;
-  align-items: flex-end; // Apparaît du bas sur mobile
+  display: block; 
+  overflow-y: auto;
 }
 
 .modal-content {
   width: 100%;
-  max-height: 90vh;
-  background: var(--bg-color);
-  border-radius: 20px 20px 0 0;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease-out;
-  color: var(--text-primary);
+  min-height: 100vh;
+  background: var(--bg-main);
+  color: #fff;
+  padding-bottom: 40px;
 }
 
-/* --- HEADER --- */
+/* --- HEADER (Identique à History) --- */
 .modal-header {
-  padding: 20px;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
+  padding: 40px 20px 25px;
+  background: var(--bg-main);
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  position: sticky; top: 0; z-index: 10;
+  align-items: flex-start;
 
-  .city-title { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--accent-color); text-transform: uppercase; }
-  .street-subtitle { font-size: 0.85rem; color: var(--text-secondary); }
-  .close-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; }
+  .city-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff !important;
+    text-transform: uppercase;
+  }
+
+  .street-subtitle {
+    font-size: 1.1rem;
+    color: var(--accent-blue) !important;
+    font-weight: 600;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .close-btn {
+    background: #222;
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
 }
 
 /* --- BODY & CARDS --- */
 .modal-body {
-  padding: 20px;
+  padding: 0 15px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .section-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 15px;
-  padding: 15px;
+  border-radius: 16px;
+  padding: 16px;
 
   .section-label {
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
     text-transform: uppercase;
+    letter-spacing: 1px;
     margin-bottom: 12px;
-    display: flex; align-items: center;
-    &::after { content: ""; flex: 1; height: 1px; background: var(--border-color); margin-left: 10px; opacity: 0.3; }
+    display: block;
   }
 }
 
-/* --- HABITANTS --- */
+/* --- HABITANTS (Bouton d'appel style Row) --- */
 .habitant-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0;
-  &:not(:last-child) { border-bottom: 1px solid var(--border-color); }
-  .habitant-name { font-weight: 600; font-size: 0.95rem; }
-  .habitant-tel { color: var(--accent-color); text-decoration: none; font-size: 0.85rem; font-weight: 700; }
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+  &:last-child { border-bottom: none; }
+
+  .habitant-tel-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-weight: 600;
+    
+    .icon { color: var(--accent-blue); }
+  }
+  
+  .habitant-name {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
 }
 
 /* --- MISSIONS --- */
-.task-list { list-style: none; padding: 0; margin: 0; }
-.task-item {
-  display: flex; align-items: center; gap: 12px; padding: 10px 0;
-  &.is-done {
-    .task-text { text-decoration: line-through; color: var(--text-secondary); }
-    .check-icon { color: var(--success); }
+.task-list {
+  list-style: none; padding: 0; margin: 0;
+  
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    &:last-child { border-bottom: none; }
+
+    .bullet {
+      width: 6px; height: 6px;
+      background: var(--text-muted);
+      border-radius: 50%;
+    }
+
+    .check-icon { color: var(--success-green); font-weight: bold; }
+    
+    .task-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #eee;
+    }
+
+    &.is-done .task-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
   }
-  .bullet { width: 8px; height: 8px; border: 2px solid var(--border-color); border-radius: 50%; }
 }
 
-/* --- BOUTON ACTION --- */
-.action-btn {
-  width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 800;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin-top: 10px;
-  background: var(--accent-color);
-  color: white;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-  
-  &:active { transform: scale(0.98); }
-}
-
-/* --- ANIMATIONS --- */
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
+/* --- PHOTOS SLIDER --- */
 .photo-slider {
-  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;
-  scroll-snap-type: x mandatory;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 5px;
   &::-webkit-scrollbar { display: none; }
-  
+
   .photo-slide {
-    flex: 0 0 140px; height: 140px; border-radius: 14px; overflow: hidden;
-    border: 1px solid var(--border-color); scroll-snap-align: start;
+    flex: 0 0 120px;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    
     img { width: 100%; height: 100%; object-fit: cover; }
   }
+}
+
+/* --- REMARQUES --- */
+.remarks-text {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- BOUTON ACTION (Style History) --- */
+.action-btn {
+  width: 100%;
+  padding: 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--accent-blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 10px;
+  
+  &:active { transform: scale(0.98); background: #2980b9; }
 }

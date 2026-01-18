@@ -7,84 +7,90 @@ import { Intervention } from './dashboard';
   standalone: true,
   imports: [CommonModule, DatePipe],
   template: `
-<div 
-(click)="cardClick.emit($event)"
-  class="intervention-card" 
-  [class.neon-mode]="isNeonStatus"
-  [class.is-expanded]="isExpanded"
->
-  <div class="card-header-row"  >
+<div (click)="cardClick.emit($event)"
+     class="intervention-card" 
+     [class.neon-mode]="isNeonStatus"
+     [class.is-expanded]="isExpanded">
+
+  @if (canDelete) {
+    <button class="btn-delete" (click)="onDelete($event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  }
+
+  <div class="card-header-row">
     <div class="header-main">
-      <span class="city">{{ intervention.adresse.ville || 'VILLE' }}</span>
-      <span class="full-address">
-        {{ intervention.adresse.rue }}, {{ intervention.adresse.numero }}
-      </span>
+      <div class="location-line">
+        <span class="city">{{ intervention.adresse.ville || 'VILLE' }}</span>
+        <span class="full-address">
+          {{ intervention.adresse.rue }}, {{ intervention.adresse.numero }}
+        </span>
+      </div>
       
-      <button class="btn-toggle" (click)="toggleAccordion($event)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" 
-             [style.transform]="isExpanded ? 'rotate(180deg)' : 'rotate(0)'" 
-             style="transition: transform 0.3s ease">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
+      @if (intervention.plannedAt && !isBasicStatus && intervention.status !== 'BILLED') {
+        <span class="planned-date-header">
+          {{ intervention.plannedAt | date:'EEEE dd MMMM HH:mm':'':'fr' }}
+        </span>
+      }
     </div>
-    
-    @if (canDelete) {
-      <button class="btn-delete" (click)="onDelete($event)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    }
+
+    <button class="btn-toggle" (click)="toggleAccordion($event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" 
+           [style.transform]="isExpanded ? 'rotate(180deg)' : 'rotate(0)'">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
   </div>
 
   @if (isExpanded) {
-<div class="accordion-content">
-  <div class="card-info">
-    @if (intervention.owner && intervention.owner[0]) {
-      <span class="created-by">
-        Par <span class="author-name" (click)="onCall($event, intervention.owner[0])">
-          {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
-        </span>
-      </span>
-    }
-
-    @let occupants = parseJson(intervention.habitants);
-    @for (habitant of occupants; track $index) {
-      <div class="habitant-row">
-        @if (habitant.tel) {
+    <div class="accordion-content">
+      <div class="card-info">
+        @if (intervention.owner && intervention.owner[0]) {
           <span class="created-by">
-            Pour <span class="author-name" (click)="onCall($event, habitant)">
-              {{ habitant.prenom }} {{ habitant.nom }}
+            Par <span class="author-name" (click)="onCall($event, intervention.owner[0])">
+              {{ intervention.owner[0].prenom }} {{ intervention.owner[0].nom }}
             </span>
           </span>
         }
-      </div>
-    }
-  </div>
 
-  <div class="card-actions-row">
-    @if (intervention.status !== 'BILLED' && isBasicStatus) {
-        <button class="btn-action" (click)="onAction($event)">
-           {{ intervention.status === 'END' ? 'Histo' : 'Détails' }}
-        </button>
-        @if (intervention.status == 'OPEN' || intervention.status == 'WAITING') {
-          <button class="btn-action" (click)="onAction2($event)">Histo</button>
+        @let occupants = parseJson(intervention.habitants);
+        @for (habitant of occupants; track $index) {
+          <div class="habitant-row">
+            @if (habitant.tel) {
+              <span class="created-by">
+                Pour <span class="author-name" (click)="onCall($event, habitant)">
+                  {{ habitant.prenom }} {{ habitant.nom }}
+                </span>
+              </span>
+            }
+          </div>
         }
-    }
-    
-    @if (intervention.plannedAt && !isBasicStatus && intervention.status !== 'BILLED') {
-      <button class="btn-action date-btn" [disabled]="!canPlan" (click)="onAction($event)">
-        {{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}
-      </button>
-    }
+      </div>
 
-    @if (canEdit) {
-      <button class="btn-action" (click)="onEdit($event)">Modif</button>
-    }
-  </div>
-</div>
+      <div class="card-actions-row">
+        @if (intervention.status !== 'BILLED' && isBasicStatus) {
+            <button class="btn-action" (click)="onAction($event)">
+               {{ intervention.status === 'END' ? 'Histo' : 'Détails' }}
+            </button>
+            @if (intervention.status == 'OPEN' || intervention.status == 'WAITING') {
+              <button class="btn-action" (click)="onAction2($event)">Histo</button>
+            }
+        }
+        
+        @if (intervention.plannedAt && !isBasicStatus && intervention.status !== 'BILLED') {
+          <button class="btn-action date-btn" [disabled]="!canPlan" (click)="onAction($event)">
+            {{ intervention.plannedAt | date:'EEE dd/MM HH:mm':'':'fr' }}
+          </button>
+        }
+
+        @if (canEdit) {
+          <button class="btn-action" (click)="onEdit($event)">Modif</button>
+        }
+      </div>
+    </div>
   }
 </div>
   `,

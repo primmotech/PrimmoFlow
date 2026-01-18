@@ -1,221 +1,103 @@
 .intervention-card {
   position: relative;
   display: flex;
-  flex-direction: column; 
-  align-items: stretch; 
-  
-  padding: 3px 6px; 
+  flex-direction: column;
+  padding: 8px 10px;
   background: #1a1a1a !important;
   border-radius: 8px;
-  margin-bottom: -8px; 
+  margin-bottom: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  border-left: 2px solid var(--section-border-color, transparent) !important; 
- border-top: 1px solid var(--section-border-color) !important; 
- border-bottom: 1px solid var(--section-border-color) !important;
- border-right: 1px solid var(--section-border-color) !important;
-  &:active {
-    background: #222 !important;
-    transform: scale(0.99);
-  }
-  
-  &.neon-mode {
-   
-    border-left: 4px solid var(--section-border-color) !important;
-    border-top: 1px solid var(--section-border-color) !important; 
- border-bottom: 1px solid var(--section-border-color) !important;
- border-right: 1px solid var(--section-border-color) !important;
-  
+  border: 1px solid var(--section-border-color) !important;
+  border-left: 2px solid var(--section-border-color, transparent) !important;
 
- 
-    .btn-details, .btn-edit {
-      box-shadow: 0 0 8px color-mix(in srgb, var(--status-color), transparent 80%);
-      background: color-mix(in srgb, var(--status-color), transparent 95%);
-    }
-  }
+  &.neon-mode { border-left-width: 4px !important; }
 
   .btn-delete {
     position: absolute;
-    top: -6px;
-    right: -6px; 
-    background: #703333; 
-    color: #ffffff;
+    top: -8px; right: -8px;
+    background: #703333; color: #fff;
     border: 2px solid #1a1a1a;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 22px; height: 22px;
     border-radius: 50%;
     z-index: 10;
-
-    
+    display: flex; align-items: center; justify-content: center;
+    svg { width: 12px; height: 12px; }
   }
 }
 
-// HEADER (Ville + Rue + Numéro côte à côte)
 .card-header-row {
-  min-height: 32px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  align-items: flex-start;
 
   .header-main {
     display: flex;
-    align-items: baseline; 
-    flex-wrap: wrap;       
-    gap: 2px 10px;         
+    flex-direction: column; 
     flex: 1;
-      
-    
-    .city { 
+
+    // Ville et Adresse sur la même ligne
+    .location-line {
+      display: flex;
+      align-items: baseline;
+      gap: 10px; // Espace entre ville et rue
+
+      .city { 
+        font-weight: 700; 
+        color: #fff; 
+        text-transform: uppercase; 
+        font-size: 0.95rem;
+        white-space: nowrap; 
+      }
+      .full-address { 
+        font-size: 0.85rem; 
+        color: #9ca3af; 
+      }
+    }
+
+    // Date en dessous, petite et grise
+    .planned-date-header { 
+      font-size: 0.72rem; 
+      color: #8d8989; 
       font-weight: 600; 
-      font-size: 0.95rem; 
-     
-      text-transform: uppercase;
-    }
-
-   
-    .address-header { // Pour regrouper numéro et rue dans le HTML
-      font-size: 0.9rem;
-      color: #9ca3af;
-      flex: 1;
-      min-width: 120px; 
+      text-transform: uppercase; 
+      margin-top: 2px; 
     }
   }
-}
 
-// CONTENU DÉPLIÉ
-.accordion-content {
-  display: flex;
-  flex-direction: column; // Empilement vertical des infos puis des boutons
-  gap: 12px;
-  margin-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 10px;
-}
-
-.card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-// NOUVEAU : Les boutons sur une ligne en bas
-.card-actions-row {
-  display: flex;
-  flex-direction: row; // Côte à côte
-  flex-wrap: wrap;     // Retour à la ligne si trop de boutons
-  gap: 8px;
-  justify-content: flex-start; // Aligné à gauche, ou 'space-between' si tu veux qu'ils occupent tout l'espace
-}
-
-.btn-action {
-  flex: 1;             // Les boutons prennent une largeur égale
-  min-width: 80px;      // Mais ne deviennent pas minuscules
-  background: transparent;
-  color:whitesmoke;
-  border: 1.5px solid ;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.75rem;
-  text-align: center;
-  transition: all 0.2s;
-
-  &:hover { background: color-mix(in srgb, var(--status-color), transparent 90%); }
-}
-
-.date-btn {
-  flex: 1.5; // Le bouton date est un peu plus large car le texte est plus long
-}
-
-.card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.created-by {
-  font-size: 0.75rem;
-  color: #6b7280; 
-  
-  .author-name {
+  .btn-toggle {
+    background: none; 
+    border: 1px solid var(--status-color) !important;
     color: var(--status-color) !important; 
-    font-weight: 700;
-    cursor: pointer;
-    &:hover { text-decoration: underline; }
+    border-radius: 8px;
+    padding: 1px 1px;
+    margin-right: 10px;
+    svg { width: 16px; height: 16px; transition: transform 0.3s; }
   }
 }
 
-// BLOC ACTIONS (Tes boutons sont ici !)
-.card-actions {
-  display: flex;
-  flex-direction: column; 
-  gap: 6px;               
-  margin-left: 12px;
-  min-width: 90px;         
+// ON GARDE LE RESTE INTACT
+.accordion-content {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex; flex-direction: column; gap: 12px;
 }
 
-.btn-details {
-  background: transparent;
- 
-  border: 1.5px solid ;
-  padding: 6px 8px;
-  border-radius: 8px;
-  font-weight: 900;
-  font-size: 0.7rem;
-  text-align: center;
-  transition: all 0.2s;
-  cursor: pointer;
-
-  &:hover { background: rgba(255,255,255,0.1); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-}
-
-.btn-edit {
-  background: transparent;
-  border: 1.5px solid ;
- 
-  padding: 6px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.7rem;
-  transition: all 0.2s;
-
-  &:hover { background: rgba(255,255,255,0.1); }
-}
-
-.btn-toggle {
-  background: none;
-  border: var(--status-color)
-  1px solid !important;
-  padding: 0 4px;
-  display: flex;
-  align-items: center;
-  color: var(--status-color) !important;
-   border-radius: 12px;
-  
-  svg { 
-    width: 18px; 
-    height: 18px; 
-    transition: transform 0.3s ease;
-    
+.card-info {
+  display: flex; flex-direction: column; gap: 4px;
+  .created-by {
+    font-size: 0.75rem; color: #6b7280;
+    .author-name { color: var(--status-color) !important; font-weight: 700; cursor: pointer; &:hover { text-decoration: underline; } }
   }
 }
 
-@keyframes neon-pulse {
-  from { filter: drop-shadow(0 0 1px var(--status-color)); }
-  to { filter: drop-shadow(0 0 4px var(--status-color)); }
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+.card-actions-row {
+  display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px;
+  .btn-action {
+    flex: 1; min-width: 80px;
+    background: transparent; color: whitesmoke;
+    border: 1.5px solid var(--status-color, #444);
+    padding: 6px 10px; border-radius: 8px;
+    font-weight: 700; font-size: 0.75rem; text-align: center;
+    &.date-btn { flex: 1.5; }
+  }
 }
