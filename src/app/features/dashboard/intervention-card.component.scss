@@ -4,31 +4,27 @@
   flex-direction: column; 
   align-items: stretch; 
   
-  padding: 6px 12px; 
+  padding: 3px 6px; 
   background: #1a1a1a !important;
   border-radius: 8px;
-  margin-bottom: 4px; 
+  margin-bottom: -8px; 
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
-  border-left: 4px solid var(--status-color, transparent) !important; 
-  border-top: 1px solid color-mix(in srgb, var(--status-color), transparent 90%) !important;
-  border-right: 1px solid color-mix(in srgb, var(--status-color), transparent 90%) !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--status-color), transparent 90%) !important;
-  
+  border-left: 2px solid var(--section-border-color, transparent) !important; 
+
   &:active {
     background: #222 !important;
     transform: scale(0.99);
   }
   
   &.neon-mode {
-    border: 1px solid var(--status-color) !important;
-    border-left: 5px solid var(--status-color) !important;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--status-color), transparent 80%),
-                inset 0 0 4px color-mix(in srgb, var(--status-color), transparent 85%) !important;
-    animation: neon-pulse 3s infinite alternate;
+   
+    border-left: 4px solid var(--section-border-color) !important;
+    border-right: 4px solid var(--section-border-color) !important;
+  
 
-    // On fait briller les boutons en mode néon
+ 
     .btn-details, .btn-edit {
       box-shadow: 0 0 8px color-mix(in srgb, var(--status-color), transparent 80%);
       background: color-mix(in srgb, var(--status-color), transparent 95%);
@@ -39,7 +35,7 @@
     position: absolute;
     top: -6px;
     right: -6px; 
-    background: #ef4444; 
+    background: #703333; 
     color: #ffffff;
     border: 2px solid #1a1a1a;
     width: 22px;
@@ -50,7 +46,7 @@
     border-radius: 50%;
     z-index: 10;
 
-    svg { width: 10px; height: 10px; stroke-width: 4; }
+    
   }
 }
 
@@ -68,14 +64,16 @@
     flex-wrap: wrap;       
     gap: 2px 10px;         
     flex: 1;
+       color: var(--status-color) !important;
     
     .city { 
-      font-weight: 800; 
+      font-weight: 600; 
       font-size: 0.95rem; 
-      color: #ffffff; 
+     
       text-transform: uppercase;
     }
 
+   
     .address-header { // Pour regrouper numéro et rue dans le HTML
       font-size: 0.9rem;
       color: #9ca3af;

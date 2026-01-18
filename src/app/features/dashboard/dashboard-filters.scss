@@ -103,9 +103,9 @@
     .item-icon {
       display: flex;
       svg { width: 16px; height: 16px; }
-      &.waiting { color: #f1c40f; }
-      &.planned { color: #3498db; }
-      &.done { color: var(--success); }
+      &.waiting {  color: var(--section-waiting-color); }
+      &.planned { color: var(--section-planned-color); }
+      &.done { color: var(--section-end-color); }
     }
   }
 }
